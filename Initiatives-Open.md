@@ -39,3 +39,10 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Pull sales from the Toast API and map menu items to recipes/ingredients so stock goes down automatically; counts become corrections.
 - **Fleshing-out notes:** Toast API access requires partner/integration approval, so check that first. `toast_employee_ref` on users (ADR-0004) prepares the ground.
 - **Related:** `knowledge/decisions/0004-pin-login.md`
+
+### INIT-0005 — Per-vendor shopping lists
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Cafe Manager (Kristyn) shopping efficiently; replaces par-level reorder idea INIT-0002 (merged here)
+- **Idea:** Shopping lists filtered by vendor, items with multiple preferred vendors appear under each, check-off removes them everywhere.
+- **Fleshing-out notes:** See `knowledge/architecture/stock-counting.md` (Shopping lists). Open: buying-unit vs counting-unit, prices.
+- **Related:** INIT-0002

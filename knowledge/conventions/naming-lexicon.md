@@ -24,6 +24,10 @@ updated: 2026-10-06
 | A recorded quantity of one item in one location at one time | **Stock count** (`stock_count`) | Append-only. Avoid "inventory record", "entry". |
 | Total of an item across locations | **Current stock** (`current_stock`) | Derived from latest counts; never stored. |
 | The volunteers' primary counting screen | **Quick Inventory** (`quick_inventory`) | |
+| A place the cafe buys from | **Vendor** (`vendor`) | Costco.com, Chef Store, Fred Meyer. Avoid "supplier", "store", "source". |
+| An item's approved vendor | **Item vendor** (`item_vendor`) | Ranked by `preference`. Never interchange with Item location (where stock sits vs. where it's bought). |
+| Items that need replacing, viewed by vendor | **Shopping list** (`shopping_list`) | Derived, not stored. |
+| A recorded buy/order of an item | **Purchase** (`purchase`) | Append-only. |
 | A signed-in browser | **Session** (`session`) | |
 | Link to the Toast POS employee | **Toast employee ref** (`toast_employee_ref`) | An identifier only, never a Toast PIN. |
 

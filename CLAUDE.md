@@ -65,7 +65,7 @@ Full contract: `knowledge/conventions/partnership-contract.md`.
 **Architecture / the big picture**
 - [hosting-and-deployment.md](knowledge/architecture/hosting-and-deployment.md) — Cloudflare hosting at inventory.jammin.cafe, API token scope & storage. READ WHEN: deploying, configuring Cloudflare/DNS, or handling the API token.
 - [auth-and-users.md](knowledge/architecture/auth-and-users.md) — PIN login, sessions, roles, user table. READ WHEN: touching login, sessions, users, roles, or permission checks.
-- [stock-counting.md](knowledge/architecture/stock-counting.md) — items, locations, Quick Inventory flow, count records (draft). READ WHEN: building items, locations, counts, or current-stock logic.
+- [stock-counting.md](knowledge/architecture/stock-counting.md) — items, locations, vendors, Quick Inventory, counts, shopping lists (draft). READ WHEN: building items, locations, vendors, counts, current-stock or shopping-list logic.
 
 **Decisions (ADRs)** — `knowledge/decisions/` — READ WHEN: revisiting *why* a foundational choice was made.
 
