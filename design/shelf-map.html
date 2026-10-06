@@ -49,6 +49,16 @@ select{font:700 17px var(--f);min-height:48px;border-radius:12px;border:2px soli
 .opt[aria-current="true"]{border-color:var(--ac);background:var(--so)}.opt small{color:var(--mu);font-weight:600}
 .opt.un2{border-style:dashed;border-color:var(--wn)}
 .quick{display:flex;gap:8px;margin:6px 0 2px}.quick .opt{margin:0;justify-content:center}
+.btn[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+.mode{background:var(--so);border-radius:14px;padding:10px 14px;margin-bottom:14px;font-weight:600}
+.tile .grip{display:none}body.rearr .tile .grip{display:grid}
+body.rearr .tile{border-style:dashed;border-color:var(--ac)}
+.tile.picked{outline:3px solid var(--ac);outline-offset:1px;background:var(--so)}
+.slot{flex:none;width:30px;align-self:stretch;min-height:98px;border:2px dashed var(--ac);border-radius:10px;background:transparent;color:var(--ac);font:800 20px var(--f);cursor:pointer;padding:0}
+.slot:hover,.slot:focus-visible{background:var(--so)}
+.arrows{display:flex;gap:4px;margin-left:auto}.arr{width:36px;height:30px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);border-radius:8px;font:800 16px var(--f);cursor:pointer;padding:0;line-height:1}
+.pickbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:55;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;gap:14px;align-items:center;max-width:calc(100% - 24px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.pickbar button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
 .sr{position:absolute;left:-9999px}
 @media (prefers-reduced-motion:no-preference){.tile{transition:transform .12s}}
 </style>
@@ -57,14 +67,16 @@ select{font:700 17px var(--f);min-height:48px;border-radius:12px;border:2px soli
   <h1>Shelf map</h1>
   <p class="lede">Admin view of one location, laid out the way the room is built. Each shelf scrolls sideways. Try it with a mouse or your finger; the items are sample pantry stock.</p>
   <ul class="how">
-    <li><b>Drag to reorder or move</b>Grab the dotted handle at the tile's top left and drop it on any shelf, or back in the Unplaced tray. The shelf scrolls itself near its edges.</li>
-    <li><b>Press and hold for "Move to"</b>Hold any tile (or tap the three dots, or right-click) to pick a rack and shelf from a list, or nudge it left or right. Same location only.</li>
-    <li><b>Swipe the shelf freely</b>Touching anywhere except the handle scrolls the shelf, so a long shelf never gets in your way.</li>
+    <li><b>Scrolling is the default</b>Swipe or scroll any shelf freely. Nothing moves by accident. Use the arrows on a shelf's header with a mouse.</li>
+    <li><b>Tap Rearrange to change things</b>Then drag a tile by its handle, or tap a tile to pick it up and tap a <b>+</b> gap to place it. Scrolling still works the whole time. Tap Done when finished.</li>
+    <li><b>Press and hold for "Move to"</b>Anytime, hold a tile (or tap its three dots, or right-click) to pick a rack and shelf from a list, or nudge it left or right. Same location only.</li>
   </ul>
   <div class="bar">
     <label for="loc">Location<select id="loc"></select></label>
+    <button class="btn" id="rearr" aria-pressed="false">Rearrange</button>
     <button class="btn" id="reset">Reset demo</button>
   </div>
+  <div id="mode" class="mode" hidden role="status"></div>
   <div id="map"></div>
 </div>
 <div id="live" class="sr" role="status" aria-live="polite"></div>
@@ -90,7 +102,7 @@ const seed=()=>{n=0;for(const k in IT)delete IT[k];
    {id:'b0',name:null,shelves:[
     {id:'b1',name:'Shelf 1 (top)',items:p(['Coke','bottles'],['Diet Coke','bottles'],['Sprite','bottles'],['Root beer','bottles'],['Ginger ale','bottles'])},
     {id:'b2',name:'Shelf 2',items:p(['Bottled water','bottles'],['Sparkling water','cans'],['Orange juice','bottles'])}]}]}};};
-let D=seed(),loc='pantry',history=[];
+let D=seed(),loc='pantry',history=[],rearr=false,picked=null;
 const L=()=>D[loc];
 const shelves=()=>L().racks.flatMap(r=>r.shelves.map(s=>({...s,rack:r.name,ref:s})));
 const listFor=key=>key==='unplaced'?L().unplaced:shelves().find(s=>s.id===key)?.ref.items;
@@ -99,9 +111,14 @@ const label=key=>{if(key==='unplaced')return 'Unplaced';const s=shelves().find(s
 
 const dots='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" fill="currentColor"><circle cx="6" cy="4" r="1.6"/><circle cx="12" cy="4" r="1.6"/><circle cx="6" cy="9" r="1.6"/><circle cx="12" cy="9" r="1.6"/><circle cx="6" cy="14" r="1.6"/><circle cx="12" cy="14" r="1.6"/></svg>';
 const more='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" fill="currentColor"><circle cx="3.5" cy="9" r="1.7"/><circle cx="9" cy="9" r="1.7"/><circle cx="14.5" cy="9" r="1.7"/></svg>';
-const tile=id=>`<div class="tile" data-item="${id}" tabindex="0" role="group" aria-label="${esc(IT[id].n)}. Press Enter for Move to."><div class="top"><button class="grip" data-grip aria-label="Drag ${esc(IT[id].n)}" tabindex="-1">${dots}</button><button class="kebab" data-menu aria-label="Move ${esc(IT[id].n)} to…">${more}</button></div><div class="nm">${esc(IT[id].n)}</div><div class="un">${esc(IT[id].u)}</div></div>`;
-const row=(key,title,items,sub)=>`<div class="shelf"><div class="slab"><b>${esc(title)}</b><span>${items.length} item${items.length===1?'':'s'}${sub||''}</span></div><div class="tiles" data-shelf="${key}">${items.map(tile).join('')||'<span class="empty">Drop items here</span>'}</div></div>`;
-function render(){const l=L();
+const tile=id=>`<div class="tile${picked===id?' picked':''}" data-item="${id}" tabindex="0" role="group" aria-label="${esc(IT[id].n)}. Press Enter for Move to."><div class="top"><button class="grip" data-grip aria-label="Drag ${esc(IT[id].n)}" tabindex="-1">${dots}</button><button class="kebab" data-menu aria-label="Move ${esc(IT[id].n)} to…">${more}</button></div><div class="nm">${esc(IT[id].n)}</div><div class="un">${esc(IT[id].u)}</div></div>`;
+const slot=(key,i)=>`<button class="slot" data-slot data-shelf="${key}" data-i="${i}" aria-label="Place here, position ${i+1}">+</button>`;
+const row=(key,title,items,sub)=>{const inner=items.length?items.map((id,i)=>(picked?slot(key,i):'')+tile(id)).join('')+(picked?slot(key,items.length):''):(picked?slot(key,0):'<span class="empty">'+(rearr?'Drag items here':'No items')+'</span>');
+ return `<div class="shelf"><div class="slab"><b>${esc(title)}</b><span>${items.length} item${items.length===1?'':'s'}${sub||''}</span><span class="arrows"><button class="arr" data-scroll="-1" aria-label="Scroll ${esc(title)} left">‹</button><button class="arr" data-scroll="1" aria-label="Scroll ${esc(title)} right">›</button></span></div><div class="tiles" data-shelf="${key}">${inner}</div></div>`};
+function setMode(){document.body.classList.toggle('rearr',rearr);const b=$('#rearr');b.setAttribute('aria-pressed',rearr);b.textContent=rearr?'Done':'Rearrange';const m=$('#mode');m.hidden=!rearr;m.textContent='Rearranging. Drag a tile by its handle, or tap a tile to pick it up and tap a + to place it. Scroll as usual. Tap Done when finished.';
+ let pb=$('#layer .pickbar');if(pb)pb.remove();
+ if(rearr&&picked){const d=document.createElement('div');d.className='pickbar';d.innerHTML=`<span>Picked up <b>${esc(IT[picked].n)}</b>. Tap a + to place it.</span><button>Cancel</button>`;d.querySelector('button').onclick=()=>{picked=null;render()};$('#layer').appendChild(d)}}
+function render(){setMode();const l=L();
  $('#map').innerHTML=`<section class="rack unp"><h3>Unplaced<small>${l.unplaced.length?'These need a shelf':'Everything has a shelf'}</small></h3>${row('unplaced','Not on a shelf yet',l.unplaced)}</section>`+
   l.racks.map(r=>`<section class="rack">${r.name?`<h3>${esc(r.name)}</h3>`:`<h3>${esc(l.name)}</h3>`}${r.shelves.map(s=>row(s.id,s.name,s.items)).join('')}</section>`).join('');}
 const live=m=>{$('#live').textContent=m};
@@ -128,7 +145,7 @@ document.addEventListener('click',e=>{const sc=e.target.closest('.scrim');
   return}
  const k=e.target.closest('[data-menu]');if(k&&!dragging){openMenu(k.closest('.tile').dataset.item)}});
 document.addEventListener('keydown',e=>{
- if(e.key==='Escape'){if($('#layer .scrim'))closeMenu();else cancelDrag()}
+ if(e.key==='Escape'){if($('#layer .scrim'))closeMenu();else if(dragging)cancelDrag();else if(picked){picked=null;render()}}
  const t=e.target.closest&&e.target.closest('.tile');if(t&&e.target===t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openMenu(t.dataset.item)}});
 document.addEventListener('contextmenu',e=>{const t=e.target.closest('.tile');if(t){e.preventDefault();openMenu(t.dataset.item)}});
 
@@ -138,7 +155,7 @@ document.addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if
  const sx=e.clientX,sy=e.clientY,id=t.dataset.item;t.classList.add('held');
  const move=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8)stop()};
  const stop=()=>{clearTimeout(timer);t.classList.remove('held');document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop);hold=null};
- const timer=setTimeout(()=>{stop();suppressClick=true;openMenu(id);if(navigator.vibrate)navigator.vibrate(15)},480);
+ const timer=setTimeout(()=>{stop();suppressClick=true;setTimeout(()=>{suppressClick=false},400);openMenu(id);if(navigator.vibrate)navigator.vibrate(15)},480);
  hold=stop;document.addEventListener('pointermove',move);document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)});
 let suppressClick=false;
 
@@ -146,7 +163,7 @@ let suppressClick=false;
 let dragging=null,raf=0;
 document.addEventListener('pointerdown',e=>{
  const g=e.target.closest('[data-grip]');const t=e.target.closest('.tile');
- if(!t||e.button>0||e.target.closest('[data-menu]'))return;
+ if(!rearr||!t||e.button>0||e.target.closest('[data-menu]'))return;
  if(!g&&e.pointerType!=='mouse')return;               // touch/pen: only the handle drags, the body scrolls the shelf
  if(e.pointerType==='mouse'&&!g){/* mouse: drag from body after a small move, keeping click-and-hold for the menu */
   const sx=e.clientX,sy=e.clientY;const mv=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>6){off();hold&&hold();begin(ev,t)}};const off=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',off)};
@@ -181,7 +198,12 @@ function onUp(){const d=end();if(!d)return;if(d.target)move(d.id,d.target.datase
 function cancelDrag(){end();render()}
 
 $('#loc').innerHTML=Object.entries(D).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
-$('#loc').onchange=e=>{loc=e.target.value;render()};
-$('#reset').onclick=()=>{D=seed();render();live('Demo reset')};
+$('#loc').onchange=e=>{loc=e.target.value;picked=null;render()};
+$('#rearr').onclick=()=>{rearr=!rearr;picked=null;render();live(rearr?'Rearrange mode on':'Rearrange mode off')};
+document.addEventListener('click',e=>{
+ const a=e.target.closest('[data-scroll]');if(a){const t=a.closest('.shelf').querySelector('.tiles');t.scrollBy({left:+a.dataset.scroll*Math.max(160,t.clientWidth*.8),behavior:'smooth'});return}
+ const sl=e.target.closest('[data-slot]');if(sl&&picked){const key=sl.dataset.shelf,i=+sl.dataset.i,list=listFor(key),pi=list.indexOf(picked);const idx=pi>=0&&i>pi?i-1:i;const id=picked;picked=null;move(id,key,idx);return}
+ const tl=e.target.closest('.tile');if(tl&&rearr&&!e.target.closest('[data-grip],[data-menu]')&&!$('#layer .scrim')){if(suppressClick){suppressClick=false;return}const id=tl.dataset.item;picked=picked===id?null:id;render()}});
+$('#reset').onclick=()=>{D=seed();picked=null;rearr=false;render();live('Demo reset')};
 render();
 </script>

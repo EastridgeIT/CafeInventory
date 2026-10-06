@@ -24,6 +24,7 @@ Category tags: `UX · Frontend · Backend · Database · API · Integrations · 
 - [Backend] Stackable cumulative roles (General, Shopper, Admin) replace the single role; permission-based checks; [Database] migration 0003; [Frontend] role checkboxes in Admin > Users and permission-driven home cards. ADR-0005. 42 tests. Build stamp `2610004`.
 - [Backend] Email address per user (migration 0004, Admin > Users); [Docs] design for shopping-list additions (more quantity, catalog picker, new item on the spot) and for scheduled inventories with alerts, emails and a scoped emailed link (ADR-0006, proposed). Build stamp `2610005`.
 - [Docs] Design: shelf map editor (prototype), notes on item cards (12-hour edit window, admin acknowledge, history), and reminders (one-time and recurring, shown to whoever is using the app); prototypes for each.
+- [UX] Design: shelf map scrolls by default with an explicit Rearrange mode (drag or tap-to-place); reminders toggle off when the box is clicked again, with an event log.
 - [UX] Shopping list store filter is a dropdown (with item counts) instead of pills.
 - [UX] Typeface chosen: Public Sans (self-hosted).
 - [UX] Layout prototype gains a typeface switcher (nine fonts).

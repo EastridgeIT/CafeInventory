@@ -105,6 +105,6 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 ### INIT-0014 — Shelf map editor (admin)
 - **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
 - **Serves:** Admins arrange racks and shelves the way the room is, fast, so Quick Inventory walks in the right order
-- **Idea:** Horizontally scrolling shelves, drag and drop to reorder or move between shelves, press and hold for Move to within the same location.
+- **Idea:** Horizontally scrolling shelves (scroll is the default), an intentional Rearrange mode with drag or tap-to-place, and press and hold for Move to within the same location.
 - **Fleshing-out notes:** `stock-counting.md` (Shelf map); prototype `design/shelf-map.html`. Touch drag by the handle needs a real-phone test.
 - **Related:** INIT-0005
