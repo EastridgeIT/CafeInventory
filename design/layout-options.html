@@ -166,8 +166,8 @@ const ITEMS={
  6:{id:6,n:'12 oz paper cups',s:'12 oz cups',u:'sleeves',m:'whole',q:12,last:8,when:'3 days ago'},
  7:{id:7,n:'12 oz cup lids',s:'12 oz lids',u:'sleeves',m:'whole',q:12,last:7,when:'3 days ago'},
  8:{id:8,n:'Bottled water',s:'Water',u:'bottles',m:'whole',q:24,last:18,when:'3 days ago'}};
-const META={1:['Fri Oct 3, 4:10 PM','Maria'],2:['Fri Oct 3, 4:10 PM','Maria'],3:['Tue Sep 30, 11:20 AM','Dev'],4:['Fri Oct 3, 4:12 PM','Maria'],5:['Tue Sep 30, 11:25 AM','Dev'],6:['Fri Oct 3, 4:15 PM','Maria'],7:['Fri Oct 3, 4:15 PM','Maria'],8:['Fri Oct 3, 4:18 PM','Maria']};
-for(const k in META){ITEMS[k].when=META[k][0];ITEMS[k].by=META[k][1]}
+const META={1:['2026-10-03T16:10','Maria'],2:['2026-10-05T17:05','Maria'],3:['2026-09-29T11:20','Dev'],4:['2026-10-03T16:12','Maria'],5:['2026-09-24T11:25','Dev'],6:['2026-10-03T16:15','Maria'],7:['2026-10-03T16:15','Maria'],8:['2026-10-06T08:40','Dev']};
+for(const k in META){ITEMS[k].when=new Date(META[k][0]);ITEMS[k].by=META[k][1]}
 const ORDER=[1,2,3,4,5,6,7,8];
 const SHELVES=[{n:'Shelf 1 (top)',ids:[1,2,3]},{n:'Shelf 2',ids:[4,5,6,7,8]}];
 const LEVELS=['Full','Over half','Under half','Low','Out'];
@@ -183,9 +183,16 @@ const OPTS={
    watch:'Only as good as the shelf setup (that is the bulk-placement job), and thin for locations with no racks.'}};
 const mk=()=>({rc:null,c:{},cur:1,conf:null,num:{},undo:null,open:false,err:'',touched:false});
 const S={a:mk(),b:mk(),c:mk()};
-const lastTxt=it=>it.m==='level'?`${it.lastL} · ${it.when} · ${it.by}`:`${it.last} ${it.u} · ${it.when} · ${it.by}`;
-const nowTxt=()=>'Today, '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
-const luTxt=(o,id)=>{const v=S[o].c[id];return v&&!v.skip?`${valTxt(ITEMS[id],v)} · ${v.t} · ${v.by}`:lastTxt(ITEMS[id])};
+const DEMO_TODAY=new Date(2026,9,6);
+const day0=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const fmtWhen=d=>{const n=Math.round((day0(DEMO_TODAY)-day0(d))/864e5);
+ if(n<=0)return 'Today '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+ if(n===1)return 'Yesterday';
+ if(n<7)return d.toLocaleDateString('en-US',{weekday:'long'});
+ return d.toLocaleDateString('en-US',{weekday:'short'})+' '+(d.getMonth()+1)+'/'+d.getDate()+(d.getFullYear()!==DEMO_TODAY.getFullYear()?'/'+String(d.getFullYear()).slice(2):'')};
+const lastTxt=it=>it.m==='level'?`${it.lastL} · ${fmtWhen(it.when)} · ${it.by}`:`${it.last} ${it.u} · ${fmtWhen(it.when)} · ${it.by}`;
+const nowTxt=()=>{const n=new Date();return new Date(2026,9,6,n.getHours(),n.getMinutes())};
+const luTxt=(o,id)=>{const v=S[o].c[id];return v&&!v.skip?`${valTxt(ITEMS[id],v)} · ${fmtWhen(v.t)} · ${v.by}`:lastTxt(ITEMS[id])};
 const luHTML=(o,id)=>`<div class="lu"><b>Last update:</b><br>${luTxt(o,id)}</div>`;
 const valTxt=(it,v)=>v.skip?'Skipped':v.l?v.l:v.v===0&&it.q?'None':v.min?`More than ${v.v} ${it.u}`:`${v.v} ${it.u}`;
 const modeOf=(st,id)=>{const it=ITEMS[id];return it.m==='level'?(st.num[id]?'key':'lvl'):(it.q&&!st.num[id]?'qb':'key')};
