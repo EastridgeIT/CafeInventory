@@ -15,6 +15,7 @@ const useHash = () => {
   return h;
 };
 
+// Placeholder text for sections that are not built yet.
 const SOON: Record<string, { title: string; text: string }> = {
   count: { title: "Quick Inventory", text: "Coming next: count items by location, one tap at a time." },
   shop: { title: "Shopping list", text: "Coming soon: what to buy, by store, and record what you bought." },
@@ -65,21 +66,11 @@ function Shell() {
           {active === "home" && (
             <>
               <h2>Hello, {user.display_name}</h2>
-              <ul className="cards">
-                {items.filter((i) => i.id !== "home" && i.id !== "admin").map((i) => (
-                  <li key={i.id}>
-                    <a className="card" href={i.hash}>
-                      <strong>{SOON[i.id]?.title}</strong>
-                      <div className="muted small">{SOON[i.id]?.text}</div>
-                    </a>
-                  </li>
-                ))}
-                {can("admin.users") && (
-                  <li>
-                    <a className="card link" href="#/admin/users"><strong>Users</strong><div className="muted small">Add people, set PINs, change roles.</div></a>
-                  </li>
-                )}
-              </ul>
+              <section className="reminders" aria-labelledby="rem-h">
+                <h3 id="rem-h">Reminders</h3>
+                {/* Reminders appear here at their time (design: knowledge/architecture/reminders.md). None are built yet. */}
+                <p className="none" role="status">No reminders due.</p>
+              </section>
               {user.roles.length === 0 && <p className="muted">You don't have any roles yet. Ask an admin to give you one.</p>}
             </>
           )}

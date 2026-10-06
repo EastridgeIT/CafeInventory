@@ -21,3 +21,6 @@ Prototype of record: `design/layout-options.html` (also a private artifact). Dec
 - **Five slots on a phone.** With more than five items the fifth slot becomes **More**, a bottom sheet with the rest (Escape or the scrim closes it). The current item is marked (`aria-current="page"`); Admin sub-pages such as Users keep Admin (or More) marked. Sign out stays in the header.
 - Adding a screen means adding one entry to `NAV` in `src/nav.ts` (with the permissions that see it); the bar, More sheet, side menu and tests follow from that list.
 
+## Home (user, 2026-10-06)
+**Home is where reminders appear** (`knowledge/architecture/reminders.md`): a Reminders section at the top, listing what is due now with its check box, or the line **"No reminders due."** when nothing is. Home no longer carries shortcut cards; the main menu is the way to every section. Built so far: the section and its empty state; reminders themselves are not built yet.
+

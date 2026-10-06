@@ -16,7 +16,7 @@ Source: user, 2026-10-06. Nothing is built yet.
 - (Clarified: not tied to a scheduled person or "lead". Anyone using the app that day.)
 
 ## Behavior
-- **Appears** on Home for every signed-in person when the reminder's time arrives on its day. Before its time it is hidden (Admins see it in the list).
+- **Appears** on **Home**, which is the reminders screen ("No reminders due." when there are none; user, 2026-10-06), for every signed-in person when the reminder's time arrives on its day. Before its time it is hidden (Admins see it in the list).
 - **One check completes it for everyone.** The first person to check wins (atomic update). Done reminders stay on Home for the rest of that day with "Done by Maria · 10:42 AM", then drop off.
 - **Clicking a checked box again removes the check** (user, 2026-10-06). Removing **your own** check is immediate. Removing **someone else's** first asks "Remove Maria's check? They marked this done at 10:42 AM." with **Keep it** / **Remove check** (user, 2026-10-06). **Anyone** using the app can do it, and every check and uncheck is kept in an **event log** (who, when, and whose check was removed), shown in Admin history, so a mistaken or disputed uncheck is visible. The reminder then shows as open again for everyone.
 - **Recurring** reminders appear only on their day (daily, selected weekdays; later every N weeks or a day of the month). If nobody checks one by the end of its day it becomes **Missed** (shown in admin history, not carried onto the next day).
