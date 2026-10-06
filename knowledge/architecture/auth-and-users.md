@@ -28,7 +28,8 @@ Why: ADR-0004. This file is the current design.
 
 ## Implementation status (2026-10-06)
 Built and deployed: migrations `0001`/`0002`, `worker/crypto.ts`, `worker/auth.ts` (login, logout, `/api/me`, session middleware, role guard, per-user lockout, per-IP throttle of 30 attempts per 10 min), `worker/users.ts` (admin-only user management), `scripts/seed-admin.ts`. Covered by `test/auth.test.ts`, `schema.test.ts`, `seed.test.ts`, `crypto.test.ts`. State-changing requests must be `application/json` (CSRF defence together with `SameSite=Lax`).
-Not built yet: sign-in screen, admin screens, and everything in `stock-counting.md`.
+Screens built (2026-10-06): sign-in (`src/SignIn.tsx`: pick a name, then PIN with friendly lockout/throttle messages), app shell with sign out (`src/App.tsx`, hash routing: `#/`, `#/admin/users`), and **Admin > Users** (`src/AdminUsers.tsx`: add, edit name/role/Toast ID, set PIN, deactivate/reactivate). Admin pages are hidden from non-admins in the UI and refused by the API. Verified end to end in a real browser against a local database (wrong PIN, sign in, session survives reload, add user, volunteer sign-in, volunteer can't reach admin, deactivate removes from picker); that run is not yet an automated test in the repo.
+Not built yet: locations/racks/shelves/items/vendors screens, bulk placement, Quick Inventory, shopping lists (see `stock-counting.md`).
 Notes: PBKDF2 iterations are 10,000 (free-plan CPU limit); the pepper is `HMAC-SHA256(pepper, "<userId>:<pin>")` before PBKDF2, so a PIN hash is bound to its user. The last active admin cannot be disabled or demoted. Changing a role, resetting a PIN, or deactivating ends that user's sessions.
 
 ## Flows

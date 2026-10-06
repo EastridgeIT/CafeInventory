@@ -3,7 +3,7 @@
   "short_name": "Inventory",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f7f5f0",
-  "theme_color": "#2f5d50",
+  "background_color": "#eef3f6",
+  "theme_color": "#1f55d6",
   "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }

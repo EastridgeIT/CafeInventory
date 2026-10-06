@@ -6,7 +6,7 @@ A stock tracker for the Eastridge cafe. Volunteers record deliveries, usage, and
 
 ## Status
 
-Scaffolded and deployed (hello-world shell) at https://inventory.jammin.cafe. PIN login backend and the inventory database schema are live; screens for sign-in, admin, counting and shopping lists are next.
+Scaffolded and deployed (hello-world shell) at https://inventory.jammin.cafe. Sign-in and admin user management are live; the inventory database schema is in place. Item/location setup, counting and shopping lists are next.
 
 ## How this repo is developed
 

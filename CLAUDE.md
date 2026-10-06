@@ -81,4 +81,4 @@ Full contract: `knowledge/conventions/partnership-contract.md`.
 - `CHANGELOG.md` — every publish, categorized.
 - `knowledge/` — the on-demand canon (conventions, architecture, decisions, templates).
 
-> Status: Scaffolded and deployed (hello-world shell) at inventory.jammin.cafe. Stack: Worker + Hono + React/Vite + D1 (ADR-0003). Login backend and schema are live; next: sign-in screen, admin screens, Quick Inventory.
+> Status: Scaffolded and deployed (hello-world shell) at inventory.jammin.cafe. Stack: Worker + Hono + React/Vite + D1 (ADR-0003). Sign-in + admin Users live. Next: locations/racks/shelves/items admin, bulk placement, Quick Inventory, shopping lists.
