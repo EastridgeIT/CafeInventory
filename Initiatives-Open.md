@@ -49,10 +49,10 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Related:** INIT-0002
 
 ### INIT-0006 — Pack sizes (buying unit vs. counting unit)
-- **Status:** Deferred · **Source:** User · **Added:** 2026-10-06
+- **Status:** Fleshing-out (reopened 2026-10-06 when the item list showed real variants: gallon/half gallon, sleeve/each) · **Source:** User · **Added:** 2026-10-06
 - **Serves:** Kristyn: shopping lists that say "1 case" instead of "24 bottles"
 - **Idea:** Per item (and likely per vendor), record how it is bought (case of 24, 5 lb bag) vs. how it is counted, and convert on the shopping list.
-- **Fleshing-out notes:** User: "will need to consider how to build this out effectively." Vendors may sell the same item in different pack sizes, so it probably lives on `item_vendor`. Needs a design discussion before v2; not in v1 tables. **Deferred by the user 2026-10-06**: for now the shopping list shows quantities in counting units and the shopper converts to packs mentally.
+- **Fleshing-out notes:** User: "will need to consider how to build this out effectively." Vendors may sell the same item in different pack sizes, so it probably lives on `item_vendor`. Needs a design discussion before v2; not in v1 tables. Was deferred; reopened 2026-10-06. Proposal under discussion: one item with optional "forms" (name, equals N base units, preferred buy form, preferred count form), counts and purchases recorded by form, totals/par/need in base units, an Unpack action (sleeve to each). See the conversation notes below once settled.
 - **Related:** `knowledge/architecture/stock-counting.md`, INIT-0005
 
 ### INIT-0007 — Prices and cost tracking
