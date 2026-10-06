@@ -1,0 +1,14 @@
+# Secrets — never commit (see knowledge/architecture/hosting-and-deployment.md)
+.envrc
+.dev.vars
+.dev.vars.*
+.env
+.env.*
+
+# Build / tooling
+node_modules/
+.wrangler/
+dist/
+
+# Personal Claude Code settings
+.claude/settings.local.json
