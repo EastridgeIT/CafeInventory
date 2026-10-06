@@ -60,3 +60,10 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Record price per item per vendor; show cost on shopping lists and totals.
 - **Fleshing-out notes:** Extra upkeep for whoever keeps prices current; pairs with INIT-0006 (price is per pack).
 - **Related:** INIT-0005, INIT-0006
+
+### INIT-0008 — Smarter quick buttons
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Volunteers: fewer taps, fewer scrolls
+- **Idea:** Highlight the likely answer on the number buttons (last count, or last count minus typical use); half-step buttons (½, 1, 1½) for `decimal` items; a "usually used per week" nudge.
+- **Fleshing-out notes:** Needs real count history first. Don't pre-select a value; an auto-filled guess invites wrong counts.
+- **Related:** `knowledge/architecture/stock-counting.md`

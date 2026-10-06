@@ -1,0 +1,337 @@
+<title>Cafe Inventory Layouts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;700;800&display=swap">
+<style>
+/* Layout: sticky option tabs; each option = pitch + three working frames (phone count screen, phone shopping list, desktop admin). */
+/* Tokens: page chrome on :root; each option scopes its own set (.o-a guided, .o-b checklist, .o-c rack map). */
+:root{--pbg:#F2F4F5;--pink:#16202A;--pmu:#586571;--pln:#D6DCE0;--psf:#FFFFFF;--pac:#1F55D6;
+ --bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pbg:#101315;--pink:#E9EEF1;--pmu:#9AA7B1;--pln:#2A3238;--psf:#181D20;--pac:#7FA6FF;color-scheme:dark}}
+:root[data-theme="dark"]{--pbg:#101315;--pink:#E9EEF1;--pmu:#9AA7B1;--pln:#2A3238;--psf:#181D20;--pac:#7FA6FF;color-scheme:dark}
+
+.o-a{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--fd:'Bricolage Grotesque','Atkinson Hyperlegible',system-ui,sans-serif;--fb:'Atkinson Hyperlegible',system-ui,sans-serif}
+.o-b{--bg:#F6F4F8;--sf:#FFFFFF;--ink:#231B2B;--mu:#6B5F75;--ln:#E0DAE6;--ac:#6A2C8F;--aci:#FFFFFF;--gd:#1F7A55;--wn:#B3361E;--so:#EFE6F6;--r:8px;--fd:'IBM Plex Sans',system-ui,sans-serif;--fb:'IBM Plex Sans',system-ui,sans-serif}
+.o-c{--bg:#E7EEE4;--sf:#F8FAF5;--ink:#1F2B20;--mu:#55655A;--ln:#CAD7C6;--ac:#B8620B;--aci:#FFFFFF;--gd:#2F7A3B;--wn:#B3361E;--so:#F3E1C8;--r:22px;--fd:'Fredoka','Nunito Sans',system-ui,sans-serif;--fb:'Nunito Sans',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) .o-a{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358}
+:root:not([data-theme="light"]) .o-b{--bg:#17121C;--sf:#211A28;--ink:#F0EAF5;--mu:#B0A4BC;--ln:#382E43;--ac:#C79BF0;--aci:#2A1040;--gd:#67D0A0;--wn:#FF9A82;--so:#33264A}
+:root:not([data-theme="light"]) .o-c{--bg:#131B14;--sf:#1C281E;--ink:#E7F0E4;--mu:#9FB1A3;--ln:#2C3C2F;--ac:#F0A64A;--aci:#2E1A00;--gd:#6FCB82;--wn:#FF9C84;--so:#3A2D18}}
+:root[data-theme="dark"] .o-a{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358}
+:root[data-theme="dark"] .o-b{--bg:#17121C;--sf:#211A28;--ink:#F0EAF5;--mu:#B0A4BC;--ln:#382E43;--ac:#C79BF0;--aci:#2A1040;--gd:#67D0A0;--wn:#FF9A82;--so:#33264A}
+:root[data-theme="dark"] .o-c{--bg:#131B14;--sf:#1C281E;--ink:#E7F0E4;--mu:#9FB1A3;--ln:#2C3C2F;--ac:#F0A64A;--aci:#2E1A00;--gd:#6FCB82;--wn:#FF9C84;--so:#3A2D18}
+
+*{box-sizing:border-box}
+body{background:var(--pbg);color:var(--pink);font:16px/1.5 'Atkinson Hyperlegible',system-ui,sans-serif;padding-inline:16px;padding-block:20px 56px;margin:0}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font:800 clamp(1.7rem,4vw,2.4rem)/1.1 'Bricolage Grotesque','Atkinson Hyperlegible',sans-serif;margin:0 0 8px;text-wrap:balance}
+.lede{max-width:68ch;color:var(--pmu);margin:0 0 20px}
+.cmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:20px}
+.cmp button{all:unset;box-sizing:border-box;cursor:pointer;padding:14px 16px;background:var(--psf);border:2px solid var(--pln);border-radius:12px;display:flex;flex-direction:column;gap:4px}
+.cmp button[aria-selected="true"]{border-color:var(--pac)}
+.cmp button:focus-visible,.btn:focus-visible,button:focus-visible{outline:3px solid var(--pac);outline-offset:2px}
+.cmp b{font-size:1.05rem}.cmp span{color:var(--pmu);font-size:.92rem}
+.pitch{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 28px;margin:0 0 20px;max-width:980px}
+.pitch h2{font-size:1rem;margin:0 0 2px}.pitch p{margin:0;color:var(--pmu);font-size:.95rem}
+.frames{display:flex;flex-wrap:wrap;gap:28px 32px;align-items:flex-start}
+.fr{min-width:0;max-width:100%}.fr>h3{font-size:.95rem;margin:0 0 8px;color:var(--pmu);font-weight:700}
+.reset{all:unset;cursor:pointer;color:var(--pac);font-size:.85rem;margin-left:10px;text-decoration:underline}
+.admin-fr{flex:1 1 100%}
+
+/* ---- shared app pieces ---- */
+.o{font-family:var(--fb);color:var(--ink)}
+.phone{position:relative;width:360px;max-width:100%;height:680px;background:var(--bg);border:1px solid var(--ln);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.scroll{flex:1;min-height:0;overflow:auto}
+.btn{min-height:52px;padding:0 18px;border-radius:calc(var(--r) - 4px);border:2px solid var(--ln);background:var(--sf);color:var(--ink);font:700 16px var(--fb);cursor:pointer}
+.btn.p{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+.btn.sm{min-height:44px;padding:0 14px;font-size:15px}
+.num{width:100%;border:2px solid var(--ln);border-radius:calc(var(--r) - 4px);background:var(--bg);color:var(--ink);font:700 40px var(--fb);height:78px;text-align:center;font-variant-numeric:tabular-nums}
+.num:focus{border-color:var(--ac);outline:3px solid var(--so)}
+.lv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lv button{min-height:60px;font:700 17px var(--fb);border-radius:calc(var(--r) - 4px);border:2px solid var(--ln);background:var(--bg);color:var(--ink);cursor:pointer}
+.qb{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.qb button{min-height:46px;font:700 18px var(--fb);border-radius:calc(var(--r) - 6px);border:2px solid var(--ln);background:var(--bg);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.qb .wide{grid-column:span 3;min-height:52px;font-size:16px}
+.qb button:active,.lv button:active{background:var(--so);border-color:var(--ac)}
+.lv .bad{border-color:var(--wn);color:var(--wn)}
+.link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:15px}
+.mu{color:var(--mu)}.err{color:var(--wn);font-weight:700;font-size:15px}
+.ask{background:var(--so);border-radius:calc(var(--r) - 6px);padding:12px;display:flex;flex-direction:column;gap:8px;font-weight:700}
+.ask div{display:flex;gap:8px}.ask .btn{flex:1}
+.toast{flex:none;margin:10px 12px 0;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:15px}
+.toast button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
+.prog{height:8px;border-radius:99px;background:var(--ln);overflow:hidden}.prog i{display:block;height:100%;background:var(--ac)}
+.sum{padding:22px 18px;display:flex;flex-direction:column;gap:12px}.sum h3{font:700 26px/1.15 var(--fd);margin:0}
+.sum ul{margin:0;padding-left:20px}
+
+/* A: guided card */
+.o-a .ahead{padding:18px 18px 10px;display:flex;flex-direction:column;gap:2px}
+.o-a .where{font-size:14px;color:var(--mu);font-weight:700}.o-a .loc{font:800 24px var(--fd)}
+.o-a .ahead .prog{margin-top:10px}.o-a .ptxt{font-size:13px;color:var(--mu);margin-top:4px}
+.o-a .card{margin:6px 14px;padding:20px 18px;background:var(--sf);border-radius:var(--r);flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.o-a .card h3{font:800 30px/1.08 var(--fd);margin:0}
+.o-a .act{display:grid;grid-template-columns:auto auto 1fr;gap:10px;padding:10px 14px 16px}
+
+/* B: checklist */
+.o-b .bhead{padding:14px 14px 12px;background:var(--sf);border-bottom:1px solid var(--ln)}
+.o-b .bhead h3{margin:0;font:600 18px var(--fd)}.o-b .bhead .prog{height:6px;margin-top:10px}
+.o-b .grp{padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--mu);background:var(--bg);position:sticky;top:0;z-index:1;border-bottom:1px solid var(--ln)}
+.o-b .row{background:var(--sf);border-bottom:1px solid var(--ln)}
+.o-b .row.cur{background:var(--so)}
+.o-b .hd{all:unset;box-sizing:border-box;width:100%;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 14px;align-items:center}
+.o-b .hd b{font-weight:500}.o-b .hd small{color:var(--mu);font-size:12.5px}
+.o-b .chip{font-size:13px;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--bg);border:1px solid var(--ln);font-variant-numeric:tabular-nums}
+.o-b .chip.ok{border-color:var(--gd);color:var(--gd)}.o-b .chip.bad{border-color:var(--wn);color:var(--wn)}
+.o-b .ex{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.o-b .ex .line{display:flex;gap:8px}.o-b .num{height:52px;font-size:24px;text-align:left;padding:0 12px}.o-b .qb button{min-height:44px}.o-b .lv button{min-height:48px;font-size:15px}
+.o-b .banner{margin:12px 14px;padding:12px;border-radius:8px;background:var(--so);font-weight:600}
+
+/* C: rack map */
+.o-c .chead{padding:16px 16px 6px}.o-c .chead h3{margin:0;font:600 24px var(--fd)}.o-c .chead p{margin:2px 0 0;color:var(--mu);font-size:14px}
+.o-c .rack{margin:10px 12px;padding:12px 12px 4px;background:var(--sf);border-radius:var(--r);border:2px solid var(--ln)}
+.o-c .rack>b{font:600 15px var(--fd);color:var(--mu)}
+.o-c .shelf{margin-top:8px;padding-bottom:12px;position:relative}
+.o-c .shelf::after{content:"";position:absolute;left:-4px;right:-4px;bottom:0;height:8px;border-radius:99px;background:var(--so)}
+.o-c .shelf>small{display:block;color:var(--mu);font-size:12.5px;margin-bottom:6px}
+.o-c .tiles{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.o-c .tile{all:unset;box-sizing:border-box;cursor:pointer;flex:1 1 92px;min-height:68px;padding:8px 10px;border-radius:16px;border:2px solid var(--ln);background:var(--bg);display:flex;flex-direction:column;justify-content:center;gap:2px;font-weight:700;font-size:14.5px;line-height:1.2}
+.o-c .tile small{font-weight:600;color:var(--mu);font-size:13px;font-variant-numeric:tabular-nums}
+.o-c .tile.done{background:var(--so);border-color:var(--ac)}.o-c .tile.bad{border-color:var(--wn)}.o-c .tile.bad small{color:var(--wn)}
+.o-c .tile.cur{outline:3px solid var(--ac);outline-offset:1px}
+.o-c .tile:focus-visible{outline:3px solid var(--ac)}
+.o-c .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--sf);border-radius:26px 26px 0 0;padding:16px 16px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 -10px 28px rgba(0,0,0,.22);z-index:4}
+.o-c .sheet h3{margin:0;font:600 24px/1.1 var(--fd)}
+.o-c .sheet .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.o-c .sheet .row2{display:flex;gap:8px}.o-c .sheet .row2 .btn{flex:1}
+
+/* shopping list */
+.slh{padding:16px 16px 8px}.slh h3{margin:0;font:700 22px var(--fd)}.slh p{margin:2px 0 0;font-size:14px;color:var(--mu)}
+.vt{display:flex;gap:8px;overflow-x:auto;padding:6px 16px 10px;scrollbar-width:none}
+.vt button{flex:none;cursor:pointer;font:700 15px var(--fb);padding:9px 14px;border-radius:99px;border:2px solid var(--ln);background:var(--sf);color:var(--ink)}
+.vt button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+.vt em{font-style:normal;opacity:.8;margin-left:6px}
+.si{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit;border:0;background:var(--sf)}
+.cb{width:30px;height:30px;border-radius:8px;border:2px solid var(--mu);display:grid;place-items:center;grid-row:1 / span 2}
+.si b{font-weight:700}.si .q{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}.si small{color:var(--mu);font-size:13px;grid-column:2 / span 2}
+.pref{display:inline-block;font-size:12px;font-weight:700;color:var(--gd);border:1px solid var(--gd);border-radius:99px;padding:0 7px;margin-left:6px}
+.empty{padding:28px 20px;text-align:center;color:var(--mu)}
+.strip{margin:10px 16px;padding:10px 12px;border-radius:12px;background:var(--so);font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.strip button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
+.o-a .si{padding:16px;margin:0 14px 10px;width:auto;border-radius:var(--r);min-height:72px}.o-a .si{width:calc(100% - 28px)}
+.o-a .cb{width:34px;height:34px;border-radius:12px}.o-a .si b{font-size:18px}
+.o-b .si{padding:11px 16px;border-bottom:1px solid var(--ln);border-radius:0}.o-b .vt button{border-radius:6px;padding:7px 12px;font-weight:600}.o-b .cb{width:24px;height:24px;border-radius:5px}
+.o-c .si{padding:14px;margin:0 12px 10px;width:calc(100% - 24px);border-radius:var(--r);border:2px solid var(--ln)}
+.o-c .si .pref{background:var(--so);border-color:transparent}.o-c .cb{border-radius:99px;width:32px;height:32px}
+.cb.on{background:var(--gd);border-color:var(--gd);color:#fff}
+
+/* admin */
+.adm{background:var(--bg);border:1px solid var(--ln);border-radius:var(--r);padding:16px;max-width:100%}
+.adm .tb{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.adm input[type=search]{flex:1 1 200px;min-width:0;min-height:44px;border:2px solid var(--ln);border-radius:calc(var(--r) - 6px);padding:0 12px;background:var(--sf);color:var(--ink);font:16px var(--fb)}
+.adm .chips{display:flex;gap:6px;flex-wrap:wrap}
+.adm .chips button{cursor:pointer;font:600 14px var(--fb);padding:8px 12px;border-radius:99px;border:2px solid var(--ln);background:var(--sf);color:var(--ink)}
+.adm .chips button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;margin-bottom:10px;border-radius:calc(var(--r) - 6px);background:var(--so);min-height:56px}
+.bar select{min-height:40px;border-radius:8px;border:2px solid var(--ln);background:var(--sf);color:var(--ink);font:15px var(--fb);padding:0 8px}
+.tw{overflow-x:auto;background:var(--sf);border-radius:calc(var(--r) - 6px);border:1px solid var(--ln)}
+.adm table{border-collapse:collapse;width:100%;min-width:720px;font-size:15px}
+.adm th{text-align:left;font-weight:700;font-size:13px;color:var(--mu);padding:10px 12px;border-bottom:1px solid var(--ln)}
+.adm td{padding:10px 12px;border-bottom:1px solid var(--ln);vertical-align:top}
+.adm tr.sel td{background:var(--so)}.adm input[type=checkbox]{width:20px;height:20px;accent-color:var(--ac)}
+.adm .un{color:var(--wn);font-weight:700}
+.o-b .adm td{padding:6px 12px}.o-b .adm table{font-size:14px}
+.adm .atoast{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--ink);color:var(--bg);display:flex;justify-content:space-between;gap:8px}
+.adm .atoast button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
+@media (max-width:420px){.phone{height:640px}}
+@media (prefers-reduced-motion:no-preference){.prog i{transition:width .25s}}
+</style>
+
+<div class="wrap">
+  <h1>Cafe Inventory layouts</h1>
+  <p class="lede">Three directions for how volunteers count, how Kristyn shops, and how admins place items on shelves. Every screen below is a working demo with sample cafe items. Counting uses one tap where it can: number buttons sized to each item (try the milk, cups and bottled water), fullness buttons for the cream cheese case, and a keypad only where needed. Option A is the chosen foundation; B and C are kept for reference.</p>
+  <div class="cmp" role="tablist" aria-label="Design options" id="tabs"></div>
+  <div id="panels"></div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const ITEMS={
+ 1:{id:1,n:'Coffee beans, house blend',s:'Beans',u:'bags',m:'whole',q:6,last:4,when:'3 days ago'},
+ 2:{id:2,n:'Oat milk',s:'Oat milk',u:'cartons',m:'whole',q:6,last:5,when:'3 days ago'},
+ 3:{id:3,n:'Cream cheese packets',s:'Cream cheese',u:'case',m:'level',lastL:'Over half',when:'1 week ago'},
+ 4:{id:4,n:'Raw sugar packets',s:'Sugar',u:'boxes',m:'whole',q:6,last:3,when:'3 days ago'},
+ 5:{id:5,n:'Cocoa powder',s:'Cocoa',u:'canisters',m:'decimal',last:0.5,when:'1 week ago'},
+ 6:{id:6,n:'12 oz paper cups',s:'12 oz cups',u:'sleeves',m:'whole',q:12,last:8,when:'3 days ago'},
+ 7:{id:7,n:'12 oz cup lids',s:'12 oz lids',u:'sleeves',m:'whole',q:12,last:7,when:'3 days ago'},
+ 8:{id:8,n:'Bottled water',s:'Water',u:'bottles',m:'whole',q:24,last:18,when:'3 days ago'}};
+const ORDER=[1,2,3,4,5,6,7,8];
+const SHELVES=[{n:'Shelf 1 (top)',ids:[1,2,3]},{n:'Shelf 2',ids:[4,5,6,7,8]}];
+const LEVELS=['Full','Over half','Under half','Low','Out'];
+const OPTS={
+ a:{name:'A · Guided card',tag:'One item at a time. Big type, big buttons.',
+   best:'New volunteers, one-handed phone use, anyone who just wants to be told what is next.',
+   watch:'You never see the whole shelf, and fixing an earlier item takes a Back tap or two.'},
+ b:{name:'B · Shelf checklist',tag:'The whole shelf as a list. Tap a row, type, Enter.',
+   best:'Regular counters, desktop and tablet, and anyone who wants to scan what is left before starting.',
+   watch:'Denser: more small targets on a phone, and less hand-holding for first-timers.'},
+ c:{name:'C · Rack map',tag:'The rack drawn as it looks in the room. Tap an item on its shelf.',
+   best:'Learning where things live, and locations with real racks and shelves.',
+   watch:'Only as good as the shelf setup (that is the bulk-placement job), and thin for locations with no racks.'}};
+const mk=()=>({c:{},cur:1,conf:null,num:{},undo:null,open:false,err:'',touched:false});
+const S={a:mk(),b:mk(),c:mk()};
+const lastTxt=it=>it.m==='level'?`${it.lastL} · ${it.when}`:`${it.last} ${it.u} · ${it.when}`;
+const valTxt=(it,v)=>v.skip?'Skipped':v.l?v.l:v.v===0&&it.q?'None':v.min?`More than ${v.v} ${it.u}`:`${v.v} ${it.u}`;
+const modeOf=(st,id)=>{const it=ITEMS[id];return it.m==='level'?(st.num[id]?'key':'lvl'):(it.q&&!st.num[id]?'qb':'key')};
+const isBad=v=>v&&(v.l==='Low'||v.l==='Out');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function commit(o,id,val){const st=S[o];st.undo={id,prev:st.c[id],msg:`Saved ${ITEMS[id].s}: ${valTxt(ITEMS[id],val)}`};st.c[id]=val;st.conf=null;st.err='';
+ st.cur=ORDER[ORDER.indexOf(id)+1]??null;if(st.cur===null)st.open=false;st.touched=true;renderQI(o)}
+function trySave(o,id,raw){const st=S[o],it=ITEMS[id];raw=(raw||'').trim();st.touched=true;
+ if(raw===''){st.err='Type a number to save.';return renderQI(o)}
+ const v=Number(raw);
+ if(!isFinite(v)||v<0){st.err='Numbers only, please.';return renderQI(o)}
+ if(it.m!=='decimal'&&!Number.isInteger(v)){st.err='This item is counted in whole numbers.';return renderQI(o)}
+ if(it.last!=null&&(v===0||v>=it.last*5)&&!(st.conf&&st.conf.id===id&&st.conf.v===v)){st.conf={id,v};st.err='';return renderQI(o)}
+ commit(o,id,{v})}
+function go(o,id){const st=S[o];st.cur=id;st.conf=null;st.err='';st.open=true;st.touched=true;renderQI(o)}
+function undo(o){const st=S[o],u=st.undo;if(!u)return;if(u.prev)st.c[u.id]=u.prev;else delete st.c[u.id];st.cur=u.id;st.undo=null;st.open=true;renderQI(o)}
+const toast=o=>S[o].undo?`<div class="toast"><span>${esc(S[o].undo.msg)}</span><button data-act="undo" data-o="${o}">Undo</button></div>`:'';
+const askHTML=(o,id)=>{const st=S[o];if(!st.conf||st.conf.id!==id)return'';const it=ITEMS[id];
+ return `<div class="ask"><span>That is ${st.conf.v}. Last time it was ${it.last}. Is that right?</span><div><button class="btn sm" data-act="fix" data-o="${o}">Fix it</button><button class="btn sm p" data-act="yes" data-o="${o}">Yes, save</button></div></div>`};
+function entry(o,id){const st=S[o],it=ITEMS[id],mode=modeOf(st,id);let h='';
+ if(mode==='key'){h+=`<label for="in-${o}" class="mu">Count in ${it.u}${it.m==='decimal'?' (halves are fine)':''}</label>
+  <input class="num" id="in-${o}" data-in="${o}" data-id="${id}" inputmode="${it.m==='decimal'?'decimal':'numeric'}" pattern="${it.m==='decimal'?'[0-9.]*':'[0-9]*'}" autocomplete="off" placeholder="0" aria-describedby="e-${o}">`;
+  if(st.err)h+=`<div class="err" id="e-${o}" role="alert">${st.err}</div>`;h+=askHTML(o,id);
+  if(it.m==='level'||it.q)h+=`<button class="link" data-act="lvl" data-o="${o}">${it.q?'Use the number buttons instead':'Use the fullness buttons instead'}</button>`}
+ else if(mode==='qb'){const nums=Array.from({length:it.q},(_,i)=>i+1);
+  h+=`<div class="mu">How many ${it.u}?</div><div class="qb" role="group" aria-label="Count in ${it.u}"><button class="wide" data-act="qb" data-o="${o}" data-id="${id}" data-v="0">None</button><button class="wide" data-act="qbmore" data-o="${o}" data-id="${id}" data-v="${it.q}">More than ${it.q}</button>${nums.map(n=>`<button data-act="qb" data-o="${o}" data-id="${id}" data-v="${n}">${n}</button>`).join('')}</div>
+  <button class="link" data-act="num" data-o="${o}">Enter a number instead</button>`}
+ else{h+=`<div class="lv" role="group" aria-label="How full is it?">${['Over half','Under half','Low','Out'].map(l=>`<button data-act="level" data-o="${o}" data-id="${id}" data-l="${l}" class="${l==='Low'||l==='Out'?'bad':''}">${l}</button>`).join('')}</div>
+  <button class="link" data-act="full" data-o="${o}" data-id="${id}">Just opened a new case: Full</button>
+  <button class="link" data-act="num" data-o="${o}">Enter a number instead</button>`}
+ return h}
+function summary(o){const st=S[o];const counted=ORDER.filter(i=>st.c[i]&&!st.c[i].skip),skipped=ORDER.filter(i=>st.c[i]&&st.c[i].skip),low=ORDER.filter(i=>isBad(st.c[i]));
+ return `<div class="sum"><h3>Cafe Pantry is done</h3><div>${counted.length} counted${skipped.length?`, ${skipped.length} skipped`:''}.</div>
+ ${low.length?`<div><b>Now on the shopping list</b><ul>${low.map(i=>`<li>${ITEMS[i].n}</li>`).join('')}</ul></div>`:''}
+ <div class="line" style="display:flex;gap:8px;flex-wrap:wrap">${st.undo?`<button class="btn" data-act="undo" data-o="${o}">Undo last</button>`:''}<button class="btn p" data-act="reset" data-o="${o}">Start over</button></div></div>`}
+function rA(){const st=S.a,id=st.cur,n=ORDER.filter(i=>st.c[i]).length;
+ const head=`<div class="ahead"><span class="where">Rack 2 · ${id?SHELVES.find(s=>s.ids.includes(id)).n:'All shelves'}</span><span class="loc">Cafe Pantry</span><div class="prog"><i style="width:${n/ORDER.length*100}%"></i></div><span class="ptxt">${n} of ${ORDER.length} counted</span></div>`;
+ if(id===null)return toast('a')+head+`<div class="scroll">${summary('a')}</div>`;
+ const it=ITEMS[id],isLv=modeOf(st,id)!=='key';
+ return toast('a')+head+`<div class="card"><h3>${it.n}</h3><div class="mu">Last count: ${lastTxt(it)}</div>${entry('a',id)}</div>
+ <div class="act"><button class="btn" data-act="back" data-o="a" ${id===1?'disabled':''}>Back</button><button class="btn" data-act="skip" data-o="a">Skip</button>${isLv?'<span></span>':`<button class="btn p" data-act="save" data-o="a">Save and next</button>`}</div>`}
+function rB(){const st=S.b,n=ORDER.filter(i=>st.c[i]).length;
+ let h=toast('b')+`<div class="bhead"><h3>Cafe Pantry · Rack 2</h3><div class="mu" style="font-size:13px;margin-top:2px">${n} of ${ORDER.length} counted · tap a row to count</div><div class="prog"><i style="width:${n/ORDER.length*100}%"></i></div></div><div class="scroll">`;
+ for(const sh of SHELVES){h+=`<div class="grp">${sh.n}</div>`;for(const id of sh.ids){const it=ITEMS[id],v=st.c[id],cur=st.cur===id;
+  const right=v?`<span class="chip ${v.skip?'':isBad(v)?'bad':'ok'}">${valTxt(it,v)}</span>`:`<small>last ${it.m==='level'?it.lastL:it.last}</small>`;
+  h+=`<div class="row ${cur?'cur':''}"><button class="hd" data-act="pick" data-o="b" data-id="${id}" aria-expanded="${cur}"><b>${it.n}</b>${right}<small>${it.u} · ${lastTxt(it)}</small><span></span></button>`;
+  if(cur){h+=`<div class="ex">${modeOf(st,id)!=='key'?entry('b',id):`<div class="line"><div style="flex:1;display:flex;flex-direction:column;gap:6px">${entry('b',id)}</div></div><div class="line"><button class="btn sm" data-act="skip" data-o="b">Skip</button><button class="btn sm p" data-act="save" data-o="b" style="flex:1">Save and next</button></div>`}${modeOf(st,id)!=='key'?`<div class="line"><button class="btn sm" data-act="skip" data-o="b">Skip</button></div>`:''}</div>`}
+  h+=`</div>`}}
+ h+=st.cur===null?`<div class="banner">All counted.${ORDER.some(i=>isBad(st.c[i]))?' Cream cheese is Low and is now on the shopping list.':''} <button class="link" data-act="reset" data-o="b">Start over</button></div>`:'';
+ return h+'</div>'}
+function rC(){const st=S.c,n=ORDER.filter(i=>st.c[i]).length;
+ let h=toast('c')+`<div class="chead"><h3>Cafe Pantry</h3><p>${n} of ${ORDER.length} counted · tap an item</p></div><div class="scroll"><div class="rack"><b>Rack 2</b>`;
+ for(const sh of SHELVES){h+=`<div class="shelf"><small>${sh.n}</small><div class="tiles">`;
+  for(const id of sh.ids){const it=ITEMS[id],v=st.c[id];h+=`<button class="tile ${v&&!v.skip?(isBad(v)?'bad':'done'):''} ${st.cur===id&&st.open?'cur':''}" data-act="pick" data-o="c" data-id="${id}">${it.s}<small>${v?valTxt(it,v):'last '+(it.m==='level'?it.lastL:it.last)}</small></button>`}
+  h+=`</div></div>`}
+ h+=`</div>${st.cur===null?`<div class="sum"><h3>Rack 2 is done</h3><button class="btn p" data-act="reset" data-o="c">Start over</button></div>`:''}<div style="height:${st.open?330:16}px"></div></div>`;
+ if(st.open&&st.cur){const id=st.cur,it=ITEMS[id],sh=SHELVES.find(s=>s.ids.includes(id)),isLv=modeOf(st,id)!=='key';
+  h+=`<div class="sheet"><div class="top"><div><div class="mu" style="font-size:13px">${sh.n} · item ${sh.ids.indexOf(id)+1} of ${sh.ids.length}</div><h3>${it.n}</h3><div class="mu" style="font-size:14px">Last: ${lastTxt(it)}</div></div><button class="link" data-act="close" data-o="c">Close</button></div>${entry('c',id)}
+  <div class="row2"><button class="btn sm" data-act="skip" data-o="c">Skip</button>${isLv?'':`<button class="btn sm p" data-act="save" data-o="c">Save and next</button>`}</div></div>`}
+ return h}
+const R={a:rA,b:rB,c:rC};
+function renderQI(o){const el=$('#qi-'+o);const keep=el.querySelector('.scroll,.card');const top=keep?keep.scrollTop:0;el.innerHTML=R[o]();
+ const k=el.querySelector('.scroll,.card');if(k)k.scrollTop=top;
+ if(S[o].touched){const inp=el.querySelector('input.num');if(inp)inp.focus({preventScroll:true});const cur=el.querySelector('.row.cur');if(cur&&o==='b')cur.scrollIntoView({block:'nearest'})}}
+
+/* ---------- shopping list ---------- */
+const VEND=[['Fred Meyer','in store'],['Safeway','in store'],['Costco.com','online'],['Chef Store','in store']];
+const NEED=[
+ {id:1,n:'Coke bottles',q:'18 bottles',v:['Costco.com','Fred Meyer','Safeway'],pref:'Costco.com'},
+ {id:2,n:'Whole milk',q:'6 gallons',v:['Fred Meyer','Safeway'],pref:'Fred Meyer'},
+ {id:3,n:'Oat milk',q:'12 cartons',v:['Costco.com','Fred Meyer'],pref:'Costco.com'},
+ {id:4,n:'Cream cheese packets',q:'Low · buy 1 case',v:['Chef Store','Costco.com'],pref:'Chef Store'},
+ {id:5,n:'12 oz paper cups',q:'20 sleeves',v:['Chef Store'],pref:'Chef Store'},
+ {id:6,n:'Vanilla syrup',q:'4 bottles',v:['Fred Meyer','Costco.com','Chef Store'],pref:'Costco.com'},
+ {id:7,n:'Napkins',q:'8 packs',v:['Safeway','Costco.com'],pref:'Safeway'}];
+const SL={a:{v:'Fred Meyer',b:new Set(),last:null},b:{v:'Fred Meyer',b:new Set(),last:null},c:{v:'Fred Meyer',b:new Set(),last:null}};
+function renderSL(o){const s=SL[o];const cnt=v=>NEED.filter(n=>n.v.includes(v)&&!s.b.has(n.id)).length;
+ const items=NEED.filter(n=>n.v.includes(s.v)&&!s.b.has(n.id)).sort((x,y)=>(y.pref===s.v)-(x.pref===s.v));
+ $('#sl-'+o).innerHTML=`<div class="slh"><h3>Shopping list</h3><p>${VEND.find(x=>x[0]===s.v)[1]==='online'?'Order online':'Standing in'} ${s.v}: everything you could get here</p></div>
+ <div class="vt" role="group" aria-label="Vendor">${VEND.map(([v])=>`<button data-act="vend" data-o="${o}" data-v="${v}" aria-pressed="${v===s.v}">${v}<em>${cnt(v)}</em></button>`).join('')}</div>
+ ${s.last?`<div class="strip"><span>Bought ${esc(s.last.n)}. It is off every list.</span><button data-act="unbuy" data-o="${o}">Undo</button></div>`:''}
+ <div class="scroll" style="padding-top:4px">${items.length?items.map(n=>`<button class="si" data-act="buy" data-o="${o}" data-id="${n.id}" role="checkbox" aria-checked="false"><span class="cb"></span><b>${n.n}${n.pref===s.v?'<span class="pref">Preferred here</span>':''}</b><span class="q">${n.q}</span><small>${n.v.length>1?'Also at: '+n.v.filter(x=>x!==s.v).join(', '):'Only sold here'}</small></button>`).join(''):`<div class="empty"><b>Nothing left to buy at ${s.v}.</b><br>Items bought elsewhere are already crossed off.</div>`}</div>`}
+
+/* ---------- admin placement ---------- */
+let AD=null;const ADS={f:'all',q:'',sel:new Set(),tgt:{loc:'Cafe Pantry',rack:'Rack 2',shelf:'Shelf 1 (top)'},note:null,snap:null};
+function adInit(){AD=[
+ {id:1,n:'Coffee beans, house blend',p:[{loc:'Cafe Pantry',sh:'Rack 2 · Shelf 1 (top)'}],v:'Costco.com',par:6,qi:1},
+ {id:2,n:'Oat milk',p:[{loc:'Cafe Pantry',sh:''}],v:'Costco.com, Fred Meyer',par:12,qi:1},
+ {id:3,n:'Cream cheese packets',p:[{loc:'Cafe Pantry',sh:'Rack 2 · Shelf 1 (top)'}],v:'Chef Store, Costco.com',par:'Level',qi:1},
+ {id:4,n:'Raw sugar packets',p:[{loc:'Cafe Pantry',sh:''}],v:'Costco.com',par:5,qi:1},
+ {id:5,n:'12 oz paper cups',p:[{loc:'Cafe Pantry',sh:''}],v:'Chef Store',par:20,qi:1},
+ {id:6,n:'12 oz cup lids',p:[{loc:'Cafe Pantry',sh:''}],v:'Chef Store',par:20,qi:1},
+ {id:7,n:'Coke bottles',p:[{loc:'Beverage Case',sh:'Shelf 2'},{loc:'Backstock Closet',sh:''}],v:'Costco.com, Fred Meyer, Safeway',par:48,qi:1},
+ {id:8,n:'Whole milk',p:[{loc:'Beverage Case',sh:''}],v:'Fred Meyer, Safeway',par:6,qi:1},
+ {id:9,n:'Napkins',p:[{loc:'Cafe Counter',sh:''}],v:'Safeway, Costco.com',par:8,qi:0}]}
+const unplaced=r=>r.p.some(p=>!p.sh);
+function adRows(){return AD.filter(r=>(ADS.f==='all'||(ADS.f==='un'&&unplaced(r))||(ADS.f!=='all'&&ADS.f!=='un'&&r.p.some(p=>p.loc===ADS.f)))&&r.n.toLowerCase().includes(ADS.q.toLowerCase()))}
+function mountAdmin(o){$('#adm-'+o).innerHTML=`<div class="adm"><div class="tb"><input type="search" id="q-${o}" data-q placeholder="Search items" aria-label="Search items"><div class="chips" id="ch-${o}"></div></div><div id="bar-${o}"></div><div class="tw"><table><thead><tr><th><input type="checkbox" data-act="all" data-o="${o}" id="all-${o}" aria-label="Select all in this view"></th><th>Item</th><th>Where it is</th><th>Vendors</th><th>Par</th><th>Quick Inventory</th></tr></thead><tbody id="tb-${o}"></tbody></table></div><div id="at-${o}"></div></div>`}
+function renderAdmin(){const rows=adRows();const un=AD.filter(unplaced).length;
+ for(const o of ['a','b','c']){
+  $('#ch-'+o).innerHTML=[['all','All items'],['un',`Unplaced (${un})`],['Cafe Pantry','Cafe Pantry'],['Beverage Case','Beverage Case']].map(([k,l])=>`<button data-act="filt" data-f="${k}" aria-pressed="${ADS.f===k}">${l}</button>`).join('');
+  const n=ADS.sel.size,t=ADS.tgt;
+  $('#bar-'+o).innerHTML=n?`<div class="bar"><b>${n} selected</b><select data-t="loc" aria-label="Location">${['Cafe Pantry','Beverage Case','Cafe Counter','Backstock Closet'].map(x=>`<option ${t.loc===x?'selected':''}>${x}</option>`).join('')}</select><select data-t="rack" aria-label="Rack">${['Rack 1','Rack 2','No rack'].map(x=>`<option ${t.rack===x?'selected':''}>${x}</option>`).join('')}</select><select data-t="shelf" aria-label="Shelf">${['Shelf 1 (top)','Shelf 2','Shelf 3'].map(x=>`<option ${t.shelf===x?'selected':''}>${x}</option>`).join('')}</select><button class="btn sm p" data-act="addto">Add to this shelf</button><button class="btn sm" data-act="moveto">Move here</button></div>`:`<div class="bar mu">Tick items to place them together. Tick the top box to select everything in this view.</div>`;
+  $('#tb-'+o).innerHTML=rows.map(r=>`<tr class="${ADS.sel.has(r.id)?'sel':''}"><td><input type="checkbox" data-act="sel" data-id="${r.id}" ${ADS.sel.has(r.id)?'checked':''} aria-label="Select ${esc(r.n)}"></td><td><b>${r.n}</b></td><td>${r.p.map(p=>`<div>${p.loc} · ${p.sh?p.sh:'<span class="un">Unplaced</span>'}</div>`).join('')}</td><td>${r.v}</td><td>${r.par}</td><td>${r.qi?'Included':'Not routine'}</td></tr>`).join('')||`<tr><td colspan="6" class="mu" style="padding:20px">No items match.</td></tr>`;
+  const all=$('#all-'+o);all.checked=rows.length>0&&rows.every(r=>ADS.sel.has(r.id));
+  $('#at-'+o).innerHTML=ADS.note?`<div class="atoast"><span>${ADS.note}</span><button data-act="adundo">Undo</button></div>`:''}}
+function place(kind){const t=ADS.tgt,sh=(t.rack==='No rack'?'':t.rack+' · ')+t.shelf;ADS.snap=JSON.stringify(AD);let a=0,u=0,m=0;
+ for(const r of AD)if(ADS.sel.has(r.id)){const ex=r.p.find(p=>p.loc===t.loc);
+  if(kind==='add'){if(ex){ex.sh=sh;u++}else{r.p.push({loc:t.loc,sh});a++}}else{r.p=[{loc:t.loc,sh}];m++}}
+ const parts=[];if(u)parts.push(`${u} moved to the shelf`);if(a)parts.push(`${a} added`);if(m)parts.push(`${m} moved here`);
+ ADS.note=`${ADS.sel.size} items on ${t.loc} · ${sh}: ${parts.join(', ')}.`;ADS.sel=new Set();renderAdmin()}
+
+/* ---------- build ---------- */
+function build(){
+ $('#tabs').innerHTML=Object.entries(OPTS).map(([k,v])=>`<button role="tab" data-act="tab" data-k="${k}" id="tab-${k}" aria-controls="p-${k}"><b>${v.name}</b><span>${v.tag}</span></button>`).join('');
+ $('#panels').innerHTML=Object.entries(OPTS).map(([k,v])=>`<section class="o o-${k}" role="tabpanel" id="p-${k}" aria-labelledby="tab-${k}" hidden>
+  <div class="pitch"><div><h2>Best for</h2><p>${v.best}</p></div><div><h2>Watch out for</h2><p>${v.watch}</p></div></div>
+  <div class="frames">
+   <div class="fr"><h3>Volunteer: Quick Inventory<button class="reset" data-act="reset" data-o="${k}">Reset demo</button></h3><div class="phone" id="qi-${k}"></div></div>
+   <div class="fr"><h3>Kristyn: shopping list by vendor</h3><div class="phone" id="sl-${k}"></div></div>
+   <div class="fr admin-fr"><h3>Admin: place items on shelves in bulk</h3><div id="adm-${k}"></div></div>
+  </div></section>`).join('');
+ adInit();for(const k of Object.keys(OPTS)){mountAdmin(k);renderQI(k);renderSL(k)}renderAdmin();pick('a')}
+function pick(k){for(const x of Object.keys(OPTS)){$('#p-'+x).hidden=x!==k;$('#tab-'+x).setAttribute('aria-selected',x===k)}}
+
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,o=t.dataset.o,id=+t.dataset.id;
+ if(a==='tab')pick(t.dataset.k);
+ else if(a==='save')trySave(o,S[o].cur,($('#in-'+o)||{}).value);
+ else if(a==='skip'){const st=S[o];st.undo={id:st.cur,prev:st.c[st.cur],msg:`Skipped ${ITEMS[st.cur].s}`};st.c[st.cur]={skip:1};st.cur=ORDER[ORDER.indexOf(st.cur)+1]??null;if(st.cur===null)st.open=false;st.conf=null;st.err='';st.touched=true;renderQI(o)}
+ else if(a==='back'){const st=S[o];const i=ORDER.indexOf(st.cur);const p=ORDER[(i<0?ORDER.length:i)-1];if(p){st.cur=p;st.conf=null;st.err='';st.touched=true;renderQI(o)}}
+ else if(a==='pick')go(o,id);
+ else if(a==='close'){S[o].open=false;renderQI(o)}
+ else if(a==='level')commit(o,id,{l:t.dataset.l});
+ else if(a==='full')commit(o,id,{l:'Full'});
+ else if(a==='qb')commit(o,id,{v:+t.dataset.v});
+ else if(a==='qbmore')commit(o,id,{v:+t.dataset.v,min:1});
+ else if(a==='num'){S[o].num[S[o].cur]=true;S[o].touched=true;renderQI(o)}
+ else if(a==='lvl'){S[o].num[S[o].cur]=false;renderQI(o)}
+ else if(a==='yes'){const c=S[o].conf;if(c)commit(o,c.id,{v:c.v})}
+ else if(a==='fix'){S[o].conf=null;renderQI(o);const i=$('#in-'+o);if(i){i.select()}}
+ else if(a==='undo')undo(o);
+ else if(a==='reset'){S[o]=mk();SL[o]={v:'Fred Meyer',b:new Set(),last:null};renderQI(o);renderSL(o)}
+ else if(a==='vend'){SL[o].v=t.dataset.v;renderSL(o)}
+ else if(a==='buy'){SL[o].b.add(id);SL[o].last=NEED.find(n=>n.id===id);renderSL(o)}
+ else if(a==='unbuy'){const s=SL[o];if(s.last){s.b.delete(s.last.id);s.last=null;renderSL(o)}}
+ else if(a==='filt'){ADS.f=t.dataset.f;ADS.sel=new Set();renderAdmin()}
+ else if(a==='sel'){t.checked?ADS.sel.add(id):ADS.sel.delete(id);renderAdmin()}
+ else if(a==='all'){const rs=adRows();rs.forEach(r=>t.checked?ADS.sel.add(r.id):ADS.sel.delete(r.id));renderAdmin()}
+ else if(a==='addto')place('add');
+ else if(a==='moveto')place('move');
+ else if(a==='adundo'){AD=JSON.parse(ADS.snap);ADS.note=null;renderAdmin()}});
+document.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('input[data-in]');if(i&&e.key==='Enter'){e.preventDefault();trySave(i.dataset.in,+i.dataset.id,i.value)}});
+document.addEventListener('input',e=>{if(e.target.matches('[data-q]')){ADS.q=e.target.value;for(const x of ['a','b','c']){const q=$('#q-'+x);if(q&&q!==e.target)q.value=ADS.q}renderAdmin()}});
+document.addEventListener('change',e=>{const s=e.target.closest('select[data-t]');if(s){ADS.tgt[s.dataset.t]=s.value;renderAdmin()}});
+build();
+</script>

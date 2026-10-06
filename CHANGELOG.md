@@ -17,5 +17,6 @@ Category tags: `UX · Frontend · Backend · Database · API · Integrations · 
 - [Infra] Hosting decision: Cloudflare at `inventory.jammin.cafe` (ADR-0002); scoped API-token setup documented; `.gitignore` excludes secrets.
 - [Docs] Accepted ADR-0003 (stack: Worker + Hono + React + D1) and ADR-0004 (PIN login); auth design doc; first lexicon terms.
 - [Infra] App scaffolded (Worker + Hono + React/Vite + D1, mobile-first PWA shell) and first deployed to `inventory.jammin.cafe`; `/api/health` checks the D1 binding. Build stamp `2610001`.
+- [UX] Design direction chosen: option A (guided card) for volunteers, with per-item one-tap number buttons (`quick_max`) and fullness buttons; layouts prototype published as a private artifact.
 
 > The first software build will be tagged **`v0.1.0.0`** when application code lands — declared by the user.
