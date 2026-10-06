@@ -10,7 +10,7 @@ The user wants people scheduled for inventory at a specific time, with alerts an
 - Add `user.email` (done) and scheduling tables (`inventory_assignment`, `notification`, `login_link`).
 - Deliver through a **notification queue** processed by a **Cron Trigger every 5 minutes**; claiming is atomic and notifications are unique, so retries are safe.
 - The emailed link is a **two-step, scoped, short-lived** credential: landing page first (so scanners don't consume it), then a POST that creates an **assignment-scoped session** limited to `inventory.count` for that assignment, ending shortly after the window. Tokens are random, stored hashed, revoked on cancel/deactivate/email change.
-- Email goes through a transactional provider chosen separately (candidates: Resend, Cloudflare email sending, Microsoft 365).
+- Email goes through a transactional provider chosen separately (Resend free plan recommended; Cloudflare Email Service if the account moves to Workers Paid; SMTP2GO and Microsoft 365 considered; comparison in `scheduling-and-notifications.md`).
 
 ## Consequences
 - (+) Volunteers tap one link and are counting; fewer PIN entries; the PIN never travels by email.

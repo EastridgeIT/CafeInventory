@@ -40,12 +40,21 @@ A link that logs someone in is a password in an email. These rules keep it from 
 - **Honest blast radius:** anyone who can read that mailbox or receives a forwarded email can record counts as that person until the window ends. Counts are attributed, undoable (Reset), and limited to the one scope. That's much smaller than exposing a PIN, which is also the person's Toast PIN.
 - Redeem attempts are throttled per IP like sign-in; a bad token returns one generic "This link has expired or was already used. Ask the Cafe Manager to resend it."
 
-## Email delivery (OPEN: provider)
-Needs a sending service and DNS records for the sending domain. Options, to confirm before building:
-- **Resend** (HTTP API; free tier is about 3,000 emails a month and 100 a day; add DKIM/SPF records for `jammin.cafe` in Cloudflare DNS). My lean: simple, reliable, easy to test. API key as the Worker secret `EMAIL_API_KEY`.
-- **Cloudflare's own email sending**, if it's available on this account (I'd check current availability before recommending it, since it would keep everything in one place).
-- **Microsoft 365 / existing mailbox** via SMTP/Graph: possible, but needs an app registration and is heavier from a Worker.
-Whichever: sender `Cafe Inventory <inventory@jammin.cafe>`, reply-to the Cafe Manager, plain-text plus HTML, a big **Start counting** button and a visible fallback URL, no PINs ever in an email. If no provider is configured the system still schedules and shows in-app alerts; email is skipped and logged as `failed: not configured`.
+## Email delivery (OPEN: provider; researched 2026-10-06)
+Needs a sending service and DNS records (SPF/DKIM) for the sending domain. Expected volume is small: a few hundred emails a month (about 20 people, a handful of emails each), so every free tier below is enough. Figures are from each vendor's pricing page or the sources noted; re-check at signup.
+
+| | Cloudflare Email Service | Resend | SMTP2GO |
+|---|---|---|---|
+| Free plan | **Sending to arbitrary recipients is not available on Workers Free.** Free on all plans only to **destination addresses verified in your own Cloudflare account** (each recipient must verify) | 3,000 emails/month, **100/day**, 3 domains, 30-day logs | 1,000 emails/month, about 200/day, 25/hour until a domain is verified, 5 verified senders, 5 days of history |
+| Paid | **Workers Paid, $5/month**: 3,000 emails/month included, then $0.35 per 1,000 | Pro $20/month: 50,000/month, no daily cap, 10 domains | Paid tiers from about $10/month |
+| Integration from the Worker | Native binding, **no API key to store**, same dashboard and DNS | HTTPS API with one secret (`EMAIL_API_KEY`) | Has an HTTPS API; its main strength is SMTP relay, which a Worker can't use easily |
+| Notes | Rejected or suppressed sends don't count against the quota; delivery quota is per account per billing cycle | Simple, widely used; the daily cap matters only for bulk sends | 200/day is a higher daily cap than Resend's 100; lower monthly cap |
+
+Sources: [Cloudflare Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/), [Resend pricing](https://resend.com/pricing.md), SMTP2GO's plan pages (via search; confirm at signup).
+
+**Recommendation:** use **Resend on its free plan** now. If we move to **Workers Paid ($5/month)** anyway (it also lifts the free plan's 10 ms CPU limit that caps PIN hashing strength, and helps a future Toast sync), switch to **Cloudflare Email Service**: nothing else to sign up for, no key to rotate, 3,000 emails included. SMTP2GO has no advantage for this app. Either way, send mail through one small `sendEmail()` adapter so changing provider is a one-file change.
+
+Whichever provider: sender `Cafe Inventory <inventory@jammin.cafe>`, reply-to the Cafe Manager, plain-text plus HTML, a big **Start counting** button and a visible fallback URL, no PINs ever in an email. If no provider is configured the system still schedules and shows in-app alerts; email is skipped and logged as `failed: not configured`.
 
 ## Time zones
 Store UTC. Show and enter **America/Los_Angeles**. Use `Intl` for conversion and test across the March and November DST changes (a 4:00 PM entry must stay 4:00 PM local). Reminders at "9:00 AM the day before" mean local time.

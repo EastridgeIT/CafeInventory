@@ -14,3 +14,10 @@ Prototype of record: `design/layout-options.html` (also a private artifact). Dec
 - **Mobile first:** single column and large touch targets by default (minimum 44 px, buttons 46 to 60 px); wider breakpoints (about 900 px) add columns and tables. Admin screens are desktop-first but must work on a phone.
 - **Themes:** light and dark, following the system setting, defined as color tokens.
 - **Count card rules** (buttons, "Last update", Reset, date format) live in `stock-counting.md`.
+
+## Main menu (user, 2026-10-06; built: `src/nav.ts`, `src/Nav.tsx`)
+- **Phone: a tab bar fixed across the bottom** (icon over label, at least 56 px tall, safe-area padding for the home indicator; content scrolls clear of it). **Desktop (900 px and wider): a side menu** on the left. Resizing swaps between them live.
+- **Items by permission** (roles stack, so the menu is the union): Home (everyone) · Count (`inventory.count`) · Shop (`shopping.use`) · Check in (`inventory.checkin`) · Rebalance (`inventory.rebalance`) · Admin (any admin permission). Direct URLs to a section the user can't use go to Home; the server enforces separately.
+- **Five slots on a phone.** With more than five items the fifth slot becomes **More**, a bottom sheet with the rest (Escape or the scrim closes it). The current item is marked (`aria-current="page"`); Admin sub-pages such as Users keep Admin (or More) marked. Sign out stays in the header.
+- Adding a screen means adding one entry to `NAV` in `src/nav.ts` (with the permissions that see it); the bar, More sheet, side menu and tests follow from that list.
+

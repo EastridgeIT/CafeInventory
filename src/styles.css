@@ -46,6 +46,8 @@ a { color: var(--brand); }
 .error { color: var(--warn); font-weight: 600; }
 .boot { text-align: center; margin-top: 30vh; }
 
+.app { max-width: 1100px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom)); }
+.layout { display: block; }
 .shell { max-width: 1000px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 32px; }
 .shell.narrow { max-width: 460px; }
 .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text); font-weight: 800; }
@@ -96,7 +98,31 @@ label.check { flex-direction: row !important; align-items: flex-start; gap: 12px
 .check input { width: 24px; min-height: 24px; height: 24px; margin-top: 2px; accent-color: var(--brand); flex: none; }
 .check span { display: flex; flex-direction: column; }
 
+/* Main menu: bottom tab bar on phones, side menu on desktop */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+  background: var(--surface); border-top: 1px solid var(--line); padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); gap: 4px;
+}
+.tab {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 56px; min-width: 0;
+  color: var(--muted); text-decoration: none; font: 700 0.72rem/1.1 var(--font-ui); border-radius: 12px; background: none; border: 0; cursor: pointer;
+}
+.tab svg { width: 26px; height: 26px; }
+.tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tab[aria-current="page"] { color: var(--brand); background: var(--soft); }
+.rail ul, .sheet ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.railink { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px; border-radius: 12px; color: var(--text); text-decoration: none; font-weight: 700; }
+.railink svg { width: 24px; height: 24px; flex: none; }
+.railink:hover { background: var(--soft); }
+.railink[aria-current="page"] { background: var(--soft); color: var(--brand); }
+.scrim { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, 0.4); display: flex; align-items: flex-end; }
+.sheet { width: 100%; background: var(--surface); border-radius: 24px 24px 0 0; padding: 14px 14px calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+.sheet .railink { min-height: 56px; font-size: 1.05rem; }
+
 @media (min-width: 900px) {
+  .app { padding-bottom: 32px; }
+  .layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 28px; align-items: start; }
+  .rail { position: sticky; top: 16px; }
   body { font-size: 16px; }
   .shell { padding: 32px; }
   .cards { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
