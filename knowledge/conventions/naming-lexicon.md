@@ -28,6 +28,8 @@ updated: 2026-10-06
 | An item's approved vendor | **Item vendor** (`item_vendor`) | Ranked by `preference`. Never interchange with Item location (where stock sits vs. where it's bought). |
 | Items that need replacing, viewed by vendor | **Shopping list** (`shopping_list`) | Derived, not stored. |
 | A recorded buy/order of an item | **Purchase** (`purchase`) | Append-only. |
+| How an item is measured: by number or by fullness | **Count mode** (`count_mode`: `quantity` \| `level`) | |
+| A fullness reading (Full, Over half, Under half, Low, Out) | **Level** (`level`) | Used by level-mode items. Never summed. Avoid "gauge", "status". |
 | A signed-in browser | **Session** (`session`) | |
 | Link to the Toast POS employee | **Toast employee ref** (`toast_employee_ref`) | An identifier only, never a Toast PIN. |
 
