@@ -1,7 +1,7 @@
 ---
 status: active
 read-when: Naming anything in code, database, API, or UI.
-related: []
+related: [../architecture/auth-and-users.md]
 updated: 2026-10-06
 ---
 
@@ -13,7 +13,13 @@ updated: 2026-10-06
 
 | Concept | Default label (`key`) | Notes / avoid |
 |---|---|---|
-| _<concept>_ | **_<Label>_** (`_key_`) | _<synonyms to avoid; disambiguation notes>_ |
+| A person who can sign in | **User** (`user`) | Avoid "account", "member", "staff". Role is an attribute, not a separate entity. |
+| Role: logs stock activity | **Volunteer** (`volunteer`) | |
+| Role: owns procurement | **Manager** (`manager`) | UI label "Cafe Manager". |
+| Role: manages users & settings | **Admin** (`admin`) | |
+| Numeric sign-in secret (4–8 digits) | **PIN** (`pin`) | Never "password" or "passcode". **Never interchange with a Toast PIN.** |
+| A signed-in browser | **Session** (`session`) | |
+| Link to the Toast POS employee | **Toast employee ref** (`toast_employee_ref`) | An identifier only, never a Toast PIN. |
 
 > Fill this table as the domain model solidifies. Terms that are easy to conflate should carry an explicit "never interchange" note.
 

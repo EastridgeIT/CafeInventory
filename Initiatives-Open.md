@@ -18,3 +18,24 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Host at `inventory.jammin.cafe` on Cloudflare; set up a scoped API token for `wrangler` deploys.
 - **Fleshing-out notes:** Token stored per-project via `direnv` `.envrc` (gitignored). Token created & verified 2026-10-06 (scoped to the jammin.cafe zone only). Remaining: choose runtime/storage with the stack ADR, first deploy + custom domain. Consider Cloudflare Access (email OTP) for volunteer login.
 - **Related:** `knowledge/decisions/0002-host-on-cloudflare.md`, `knowledge/architecture/hosting-and-deployment.md`
+
+### INIT-0002 — Par-level reorder list
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Cafe Manager procurement: turns volunteer counts into "what to order"
+- **Idea:** Each item has a par level; the app produces a reorder list (count vs. par), grouped by supplier, that can be sent or printed.
+- **Fleshing-out notes:** Only as good as how often counts are done, so pair it with "count due" nudges.
+- **Related:** —
+
+### INIT-0003 — Offline stock entry
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Volunteers in stockrooms or walk-ins with poor signal
+- **Idea:** The PWA queues counts and deliveries while offline and syncs when back online.
+- **Fleshing-out notes:** A reason ADR-0003 chose an SPA. Needs conflict rules (last-write vs. sum) and must keep the signed-in user on each record.
+- **Related:** `knowledge/decisions/0003-stack.md`
+
+### INIT-0004 — Toast POS integration
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Cafe Manager: estimated stock from actual sales, without anyone counting
+- **Idea:** Pull sales from the Toast API and map menu items to recipes/ingredients so stock goes down automatically; counts become corrections.
+- **Fleshing-out notes:** Toast API access requires partner/integration approval, so check that first. `toast_employee_ref` on users (ADR-0004) prepares the ground.
+- **Related:** `knowledge/decisions/0004-pin-login.md`
