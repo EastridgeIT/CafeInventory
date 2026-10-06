@@ -18,6 +18,12 @@ updated: 2026-10-06
 | Role: owns procurement | **Manager** (`manager`) | UI label "Cafe Manager". |
 | Role: manages users & settings | **Admin** (`admin`) | |
 | Numeric sign-in secret (4–8 digits) | **PIN** (`pin`) | Never "password" or "passcode". **Never interchange with a Toast PIN.** |
+| A thing the cafe stocks | **Item** (`item`) | Avoid "product", "SKU", "ingredient". |
+| A physical place stock is kept | **Location** (`location`) | e.g. Beverage Case, Cafe Counter, Cafe Pantry. Avoid "shelf", "area". |
+| An item's presence in a location | **Item location** (`item_location`) | The answer to "Where will I find this?". Never interchange with Location. |
+| A recorded quantity of one item in one location at one time | **Stock count** (`stock_count`) | Append-only. Avoid "inventory record", "entry". |
+| Total of an item across locations | **Current stock** (`current_stock`) | Derived from latest counts; never stored. |
+| The volunteers' primary counting screen | **Quick Inventory** (`quick_inventory`) | |
 | A signed-in browser | **Session** (`session`) | |
 | Link to the Toast POS employee | **Toast employee ref** (`toast_employee_ref`) | An identifier only, never a Toast PIN. |
 
