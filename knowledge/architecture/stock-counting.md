@@ -72,8 +72,8 @@ Entering racks and shelves item by item would be the biggest setup chore, so the
 - Measurement method is per item; default whole numbers.
 - Kristyn (Cafe Manager) and admins create items, locations, racks, shelves.
 - Reorder is judged on the **total across locations**.
-- Prices: **later**, not v1. Pack sizes: **to be designed** (INIT-0006).
+- Prices: **later**, not v1. Pack sizes: **deferred** (INIT-0006); shopping lists show counting units and the shopper converts by hand.
 - Whether level items appear on every pass, and whether they may span several locations: **decide when needed** (no schema impact either way).
 
 ## Open questions
-- Pack sizes (INIT-0006): buying unit vs. counting unit. Not in v1 tables; keep `item_vendor` open to extension.
+- None blocking v1. (Pack sizes, INIT-0006, are deferred; `item_vendor` can be extended later.)
