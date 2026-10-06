@@ -52,6 +52,11 @@ npm test                                  # Vitest in the Workers runtime
 ```
 After changing `wrangler.jsonc` bindings, run `npm run cf-typegen`. Keep `compatibility_date` no newer than the bundled workerd supports, or `npm test` fails to start (hit on 2026-10-06 with 2026-09-15; 2026-08-22 works).
 
+### Secrets and first admin
+- `PIN_PEPPER`: generated locally into `.dev.vars` (gitignored, `chmod 600`) and uploaded with `sed -n 's/^PIN_PEPPER=//p' .dev.vars | direnv exec . npx wrangler secret put PIN_PEPPER`. **Keep a copy in the password manager**: Cloudflare will not show a secret again, and losing it means every PIN must be reset. Rotating it also invalidates every PIN.
+- Production migrations applied 2026-10-06 (`0001`, `0002`). Apply later ones with `npm run db:migrate:remote`.
+- **First admin:** `direnv exec . npm run seed:admin -- --remote` in an interactive terminal. It prompts for a name and a hidden PIN, and sends only a salted hash. It does nothing if an admin already exists.
+
 ### Rotation
 
 Revoke in the Cloudflare dashboard (My Profile → API Tokens), create a replacement with the same permissions, re-run the `.envrc` write step. Never paste the token into a chat session.

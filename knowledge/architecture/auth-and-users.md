@@ -26,6 +26,11 @@ Why: ADR-0004. This file is the current design.
 
 `session`: `id`, `user_id`, `token_hash` (SHA-256), `created_at`, `expires_at` (+12 h), `last_seen_at`.
 
+## Implementation status (2026-10-06)
+Built and deployed: migrations `0001`/`0002`, `worker/crypto.ts`, `worker/auth.ts` (login, logout, `/api/me`, session middleware, role guard, per-user lockout, per-IP throttle of 30 attempts per 10 min), `worker/users.ts` (admin-only user management), `scripts/seed-admin.ts`. Covered by `test/auth.test.ts`, `schema.test.ts`, `seed.test.ts`, `crypto.test.ts`. State-changing requests must be `application/json` (CSRF defence together with `SameSite=Lax`).
+Not built yet: sign-in screen, admin screens, and everything in `stock-counting.md`.
+Notes: PBKDF2 iterations are 10,000 (free-plan CPU limit); the pepper is `HMAC-SHA256(pepper, "<userId>:<pin>")` before PBKDF2, so a PIN hash is bound to its user. The last active admin cannot be disabled or demoted. Changing a role, resetting a PIN, or deactivating ends that user's sessions.
+
 ## Flows
 - **Sign in:** `GET /api/login/users` (active display names only) → `POST /api/login {user_id, pin}` → sets cookie. Wrong PIN: generic error, increment the counter. All failure paths take the same time (constant-time compare, a dummy hash for unknown/locked users).
 - **Every request:** cookie → hash → `session` lookup → attach the user and role. `/api/*` requires a session except the login routes.

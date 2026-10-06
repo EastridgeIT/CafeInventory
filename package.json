@@ -12,11 +12,13 @@
     "test": "vitest run",
     "cf-typegen": "wrangler types worker/worker-configuration.d.ts",
     "db:migrate:local": "wrangler d1 migrations apply cafe-inventory --local",
-    "db:migrate:remote": "wrangler d1 migrations apply cafe-inventory --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply cafe-inventory --remote",
+    "seed:admin": "node scripts/seed-admin.ts"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.62.5",
     "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",

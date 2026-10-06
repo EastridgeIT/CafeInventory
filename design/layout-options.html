@@ -1,6 +1,6 @@
 <title>Cafe Inventory Layouts</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=Fredoka:wght@500;600&family=Nunito+Sans:wght@400;700;800&family=Lexend:wght@400;600;800&family=Figtree:wght@400;600;800&family=Nunito:wght@400;700;800&family=Source+Sans+3:wght@400;600;800&family=DM+Sans:wght@400;600;800&family=Public+Sans:wght@400;600;800&family=Rubik:wght@400;600;800&family=Manrope:wght@400;600;800&display=swap">
 <style>
 /* Layout: sticky option tabs; each option = pitch + three working frames (phone count screen, phone shopping list, desktop admin). */
 /* Tokens: page chrome on :root; each option scopes its own set (.o-a guided, .o-b checklist, .o-c rack map). */
@@ -9,9 +9,9 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pbg:#101315;--pink:#E9EEF1;--pmu:#9AA7B1;--pln:#2A3238;--psf:#181D20;--pac:#7FA6FF;color-scheme:dark}}
 :root[data-theme="dark"]{--pbg:#101315;--pink:#E9EEF1;--pmu:#9AA7B1;--pln:#2A3238;--psf:#181D20;--pac:#7FA6FF;color-scheme:dark}
 
-.o-a{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--fd:'Bricolage Grotesque','Atkinson Hyperlegible',system-ui,sans-serif;--fb:'Atkinson Hyperlegible',system-ui,sans-serif}
-.o-b{--bg:#F6F4F8;--sf:#FFFFFF;--ink:#231B2B;--mu:#6B5F75;--ln:#E0DAE6;--ac:#6A2C8F;--aci:#FFFFFF;--gd:#1F7A55;--wn:#B3361E;--so:#EFE6F6;--r:8px;--fd:'IBM Plex Sans',system-ui,sans-serif;--fb:'IBM Plex Sans',system-ui,sans-serif}
-.o-c{--bg:#E7EEE4;--sf:#F8FAF5;--ink:#1F2B20;--mu:#55655A;--ln:#CAD7C6;--ac:#B8620B;--aci:#FFFFFF;--gd:#2F7A3B;--wn:#B3361E;--so:#F3E1C8;--r:22px;--fd:'Fredoka','Nunito Sans',system-ui,sans-serif;--fb:'Nunito Sans',system-ui,sans-serif}
+.o-a{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--fd:var(--ufd,'Bricolage Grotesque','Atkinson Hyperlegible',system-ui,sans-serif);--fb:var(--ufb,'Atkinson Hyperlegible',system-ui,sans-serif)}
+.o-b{--bg:#F6F4F8;--sf:#FFFFFF;--ink:#231B2B;--mu:#6B5F75;--ln:#E0DAE6;--ac:#6A2C8F;--aci:#FFFFFF;--gd:#1F7A55;--wn:#B3361E;--so:#EFE6F6;--r:8px;--fd:var(--ufd,'IBM Plex Sans',system-ui,sans-serif);--fb:var(--ufb,'IBM Plex Sans',system-ui,sans-serif)}
+.o-c{--bg:#E7EEE4;--sf:#F8FAF5;--ink:#1F2B20;--mu:#55655A;--ln:#CAD7C6;--ac:#B8620B;--aci:#FFFFFF;--gd:#2F7A3B;--wn:#B3361E;--so:#F3E1C8;--r:22px;--fd:var(--ufd,'Fredoka','Nunito Sans',system-ui,sans-serif);--fb:var(--ufb,'Nunito Sans',system-ui,sans-serif)}
 @media (prefers-color-scheme:dark){
 :root:not([data-theme="light"]) .o-a{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358}
 :root:not([data-theme="light"]) .o-b{--bg:#17121C;--sf:#211A28;--ink:#F0EAF5;--mu:#B0A4BC;--ln:#382E43;--ac:#C79BF0;--aci:#2A1040;--gd:#67D0A0;--wn:#FF9A82;--so:#33264A}
@@ -34,6 +34,11 @@ h1{font:800 clamp(1.7rem,4vw,2.4rem)/1.1 'Bricolage Grotesque','Atkinson Hyperle
 .pitch h2{font-size:1rem;margin:0 0 2px}.pitch p{margin:0;color:var(--pmu);font-size:.95rem}
 .frames{display:flex;flex-wrap:wrap;gap:28px 32px;align-items:flex-start}
 .fr{min-width:0;max-width:100%}.fr>h3{font-size:.95rem;margin:0 0 8px;color:var(--pmu);font-weight:700}
+.fonts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 18px}
+.fonts>span{font-size:.9rem;color:var(--pmu);margin-right:4px}
+.fonts button{cursor:pointer;font:inherit;font-size:.95rem;padding:7px 12px;border-radius:99px;border:2px solid var(--pln);background:var(--psf);color:var(--pink)}
+.fonts button[aria-pressed="true"]{border-color:var(--pac);font-weight:700}
+.fnote{font-size:.85rem;color:var(--pmu);margin:-8px 0 18px;max-width:70ch}
 .reset{all:unset;cursor:pointer;color:var(--pac);font-size:.85rem;margin-left:10px;text-decoration:underline}
 .admin-fr{flex:1 1 100%}
 
@@ -151,6 +156,8 @@ h1{font:800 clamp(1.7rem,4vw,2.4rem)/1.1 'Bricolage Grotesque','Atkinson Hyperle
 <div class="wrap">
   <h1>Cafe Inventory layouts</h1>
   <p class="lede">Three directions for how volunteers count, how Kristyn shops, and how admins place items on shelves. Every screen below is a working demo with sample cafe items. Counting uses one tap where it can: number buttons sized to each item (try the milk, cups and bottled water), fullness buttons for the cream cheese case, and a keypad only where needed. Option A is the chosen foundation; B and C are kept for reference.</p>
+  <div class="fonts" id="fonts" role="group" aria-label="Typeface"></div>
+  <p class="fnote" id="fnote"></p>
   <div class="cmp" role="tablist" aria-label="Design options" id="tabs"></div>
   <div id="panels"></div>
 </div>
@@ -319,11 +326,29 @@ function build(){
    <div class="fr"><h3>Kristyn: shopping list by vendor</h3><div class="phone" id="sl-${k}"></div></div>
    <div class="fr admin-fr"><h3>Admin: place items on shelves in bulk</h3><div id="adm-${k}"></div></div>
   </div></section>`).join('');
- adInit();for(const k of Object.keys(OPTS)){mountAdmin(k);renderQI(k);renderSL(k)}renderAdmin();pick('a')}
+ adInit();for(const k of Object.keys(OPTS)){mountAdmin(k);renderQI(k);renderSL(k)}renderAdmin();pick('a');let f=0;try{f=Number(localStorage.getItem('ci-font'))||0}catch(e){}applyFont(f<FONTS.length?f:0)}
+const FONTS=[
+ ['Option default',null,null,'Each option keeps the typeface it was designed with.'],
+ ['Atkinson Hyperlegible','Atkinson Hyperlegible','Atkinson Hyperlegible','Drawn for low-vision readers; every letter and digit is unmistakable. Strong fit for 6 vs 8 and 1 vs 7 on a quick count.'],
+ ['Lexend','Lexend','Lexend','Designed to ease reading speed; wide, even spacing. Friendly and very clear at large sizes.'],
+ ['Figtree','Figtree','Figtree','Clean and warm with open shapes. A calm all-rounder.'],
+ ['Public Sans','Public Sans','Public Sans','Neutral and sturdy, built for public-facing services. Reads well small.'],
+ ['Source Sans 3','Source Sans 3','Source Sans 3','Compact workhorse; fits more on a phone screen, good for the admin tables.'],
+ ['DM Sans','DM Sans','DM Sans','Geometric and modern with a friendly feel.'],
+ ['Nunito','Nunito','Nunito','Rounded terminals; soft and approachable.'],
+ ['Rubik','Rubik','Rubik','Slightly rounded and sturdy; stands out well on buttons.'],
+ ['Manrope','Manrope','Manrope','Contemporary with distinctive numerals; a little more designed.']];
+let fontIdx=0;
+function applyFont(i){fontIdx=i;const [,d,b,note]=FONTS[i],r=document.documentElement.style;
+ if(d){r.setProperty('--ufd',`'${d}',system-ui,sans-serif`);r.setProperty('--ufb',`'${b}',system-ui,sans-serif`)}else{r.removeProperty('--ufd');r.removeProperty('--ufb')}
+ $('#fonts').innerHTML='<span>Typeface:</span>'+FONTS.map((f,k)=>`<button data-act="font" data-i="${k}" aria-pressed="${k===i}" style="${f[1]?`font-family:'${f[1]}',system-ui,sans-serif`:''}">${f[0]}</button>`).join('');
+ $('#fnote').textContent=note+' The choice applies to all three options; in the real app it becomes a setting.';
+ try{localStorage.setItem('ci-font',String(i))}catch(e){}}
 function pick(k){for(const x of Object.keys(OPTS)){$('#p-'+x).hidden=x!==k;$('#tab-'+x).setAttribute('aria-selected',x===k)}}
 
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,o=t.dataset.o,id=+t.dataset.id;
  if(a==='tab')pick(t.dataset.k);
+ else if(a==='font')applyFont(+t.dataset.i);
  else if(a==='save')trySave(o,S[o].cur,($('#in-'+o)||{}).value);
  else if(a==='skip'){const st=S[o];st.undo={id:st.cur,prev:st.c[st.cur],msg:`Skipped ${ITEMS[st.cur].s}`};st.c[st.cur]={skip:1};st.cur=ORDER[ORDER.indexOf(st.cur)+1]??null;if(st.cur===null)st.open=false;st.conf=null;st.err='';st.touched=true;renderQI(o)}
  else if(a==='back'){const st=S[o];st.rc=null;const i=ORDER.indexOf(st.cur);const p=ORDER[(i<0?ORDER.length:i)-1];if(p){st.cur=p;st.conf=null;st.err='';st.touched=true;renderQI(o)}}
