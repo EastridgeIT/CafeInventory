@@ -44,7 +44,7 @@ Set per item at creation (Manager/Admin), changeable later; history keeps what w
 
 ## Quick buttons (user decision, 2026-10-06; layout: option A "Guided card")
 Fewer taps: instead of a keypad, a `whole` item shows **number buttons sized to that item**: `quick_max = 6` for milks, `12` for cups and lids, `24` for bottled beverages. Set per item by the Manager/Admin; `quick_max` blank means keypad.
-- Buttons: **None** (0), **1 … quick_max**, and **More than quick_max**. **None** and **More than** sit at the top, above the numbers, so they're never below the fold on a 24-button item. One tap saves and auto-advances (no Save button).
+- Buttons: **None** (0), **1 … quick_max**, and **More than quick_max**. **None** and **More than** sit **below** the numbers (user decision) in a row **pinned to the bottom of the card**, so on a 24-button item the numbers scroll above them and these two are never hidden. One tap saves and auto-advances (no Save button).
 - **"More than X"** stores `quantity = X` with `is_minimum = 1`. Displayed as "More than 6", counted as X in totals and **always treated as comfortably stocked** (see the rule below).
 - A small **"Enter a number instead"** link switches that one entry to the keypad (exact count, no `is_minimum`). The "Is that right?" typo guard applies to keypad entries only; a deliberate button tap is trusted, and Undo covers slips.
 - **Rule:** `quick_max` must be **≥ `par_level`**, enforced in the item form, so "More than X" can never hide a reorder. The form suggests `quick_max` from the par level (round up, cap 24).
