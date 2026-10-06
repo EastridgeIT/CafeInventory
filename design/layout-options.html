@@ -117,6 +117,7 @@ h1{font:800 clamp(1.7rem,4vw,2.4rem)/1.1 'Bricolage Grotesque','Atkinson Hyperle
 .vt button{flex:none;cursor:pointer;font:700 15px var(--fb);padding:9px 14px;border-radius:99px;border:2px solid var(--ln);background:var(--sf);color:var(--ink)}
 .vt button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
 .vt em{font-style:normal;opacity:.8;margin-left:6px}
+.vsel{padding:2px 16px 10px;display:flex;flex-direction:column;gap:4px}.vsel select{font:700 17px var(--fb);min-height:50px;border-radius:calc(var(--r) - 4px);border:2px solid var(--ln);background:var(--sf);color:var(--ink);padding:0 12px;width:100%}
 .si{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;align-items:center;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit;border:0;background:var(--sf)}
 .cb{width:30px;height:30px;border-radius:8px;border:2px solid var(--mu);display:grid;place-items:center;grid-row:1 / span 2}
 .si b{font-weight:700}.si .q{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}.si small{color:var(--mu);font-size:13px;grid-column:2 / span 2}
@@ -283,7 +284,7 @@ const SL={a:{v:'Fred Meyer',b:new Set(),last:null},b:{v:'Fred Meyer',b:new Set()
 function renderSL(o){const s=SL[o];const cnt=v=>NEED.filter(n=>n.v.includes(v)&&!s.b.has(n.id)).length;
  const items=NEED.filter(n=>n.v.includes(s.v)&&!s.b.has(n.id)).sort((x,y)=>(y.pref===s.v)-(x.pref===s.v));
  $('#sl-'+o).innerHTML=`<div class="slh"><h3>Shopping list</h3><p>${VEND.find(x=>x[0]===s.v)[1]==='online'?'Order online':'Standing in'} ${s.v}: everything you could get here</p></div>
- <div class="vt" role="group" aria-label="Vendor">${VEND.map(([v])=>`<button data-act="vend" data-o="${o}" data-v="${v}" aria-pressed="${v===s.v}">${v}<em>${cnt(v)}</em></button>`).join('')}</div>
+ <div class="vsel"><label class="mu" for="vs-${o}" style="font-size:13px;font-weight:700">Store</label><select id="vs-${o}" data-f="svend" data-o="${o}" aria-label="Store">${VEND.map(([v])=>`<option value="${v}" ${v===s.v?'selected':''}>${v} (${cnt(v)})</option>`).join('')}</select></div>
  ${s.last?`<div class="strip"><span>Bought ${esc(s.last.n)}. It is off every list.</span><button data-act="unbuy" data-o="${o}">Undo</button></div>`:''}
  <div class="scroll" style="padding-top:4px">${items.length?items.map(n=>`<button class="si" data-act="buy" data-o="${o}" data-id="${n.id}" role="checkbox" aria-checked="false"><span class="cb"></span><b>${n.n}${n.pref===s.v?'<span class="pref">Preferred here</span>':''}</b><span class="q">${n.q}</span><small>${n.v.length>1?'Also at: '+n.v.filter(x=>x!==s.v).join(', '):'Only sold here'}</small></button>`).join(''):`<div class="empty"><b>Nothing left to buy at ${s.v}.</b><br>Items bought elsewhere are already crossed off.</div>`}</div>`}
 
@@ -378,6 +379,6 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
  else if(a==='adundo'){AD=JSON.parse(ADS.snap);ADS.note=null;renderAdmin()}});
 document.addEventListener('keydown',e=>{const i=e.target.closest&&e.target.closest('input[data-in]');if(i&&e.key==='Enter'){e.preventDefault();trySave(i.dataset.in,+i.dataset.id,i.value)}});
 document.addEventListener('input',e=>{if(e.target.matches('[data-q]')){ADS.q=e.target.value;for(const x of ['a','b','c']){const q=$('#q-'+x);if(q&&q!==e.target)q.value=ADS.q}renderAdmin()}});
-document.addEventListener('change',e=>{const s=e.target.closest('select[data-t]');if(s){ADS.tgt[s.dataset.t]=s.value;renderAdmin()}});
+document.addEventListener('change',e=>{const sv=e.target.closest('select[data-f="svend"]');if(sv){SL[sv.dataset.o].v=sv.value;renderSL(sv.dataset.o);return}const s=e.target.closest('select[data-t]');if(s){ADS.tgt[s.dataset.t]=s.value;renderAdmin()}});
 build();
 </script>

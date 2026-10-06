@@ -194,6 +194,46 @@ describe("admin: user management", () => {
   });
 });
 
+describe("admin: email addresses", () => {
+  async function admin() {
+    return signIn(await addUser({ roles: ["admin"], name: "Boss" }));
+  }
+  const make = (cookie: string, name: string, email?: string | null) =>
+    call("/api/admin/users", { method: "POST", cookie, body: { display_name: name, roles: ["general"], pin: "1234", ...(email === undefined ? {} : { email }) } });
+
+  it("stores a normalized email and returns it to admins only", async () => {
+    const { cookie } = await admin();
+    const res = await make(cookie, "Maria", "  Maria@Example.COM ".trim());
+    expect(res.status).toBe(201);
+    expect(((await res.json()) as { user: { email: string } }).user.email).toBe("maria@example.com");
+    // never in the public sign-in picker
+    expect(await (await call("/api/login/users")).text()).not.toMatch(/example\.com|email/);
+  });
+
+  it("allows no email, treats empty as none, and rejects malformed or duplicate addresses", async () => {
+    const { cookie } = await admin();
+    expect((await make(cookie, "A")).status).toBe(201);
+    expect((await make(cookie, "B", "")).status).toBe(201);
+    expect((await make(cookie, "C", "not-an-email")).status).toBe(400);
+    expect((await make(cookie, "D", "dup@example.com")).status).toBe(201);
+    const dup = await make(cookie, "E", "DUP@example.com");
+    expect(dup.status).toBe(409);
+    expect(((await dup.json()) as { error: string }).error).toBe("email_taken");
+  });
+
+  it("can change and clear an email, and distinguishes a taken name from a taken email", async () => {
+    const { cookie } = await admin();
+    const u = (await (await make(cookie, "Pat", "pat@example.com")).json()) as { user: { id: string } };
+    await make(cookie, "Sam", "sam@example.com");
+    const patch = (body: object) => call(`/api/admin/users/${u.user.id}`, { method: "PATCH", cookie, body });
+    expect((await patch({ email: "pat2@example.com" })).status).toBe(200);
+    expect(((await (await patch({ email: "sam@example.com" })).json()) as { error: string }).error).toBe("email_taken");
+    expect(((await (await patch({ display_name: "Sam" })).json()) as { error: string }).error).toBe("name_taken");
+    const cleared = (await (await patch({ email: null })).json()) as { user: { email: string | null } };
+    expect(cleared.user.email).toBeNull();
+  });
+});
+
 describe("roles and permissions on sessions", () => {
   it("returns roles and the union of their permissions on sign in and /me", async () => {
     const u = await addUser({ roles: ["general", "shopper"] });

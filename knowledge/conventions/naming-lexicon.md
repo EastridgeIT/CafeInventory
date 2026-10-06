@@ -37,6 +37,9 @@ updated: 2026-10-06
 | How an item is measured | **Measurement method** (`measurement_method`: `whole` \| `decimal` \| `level`) | Avoid "count mode", "unit type". |
 | Largest number shown as a one-tap button for an item | **Quick max** (`quick_max`) | Must be ≥ par level. Avoid "button limit", "max count". |
 | Removing a mistaken count so it never counted | **Void** / UI label **Reset this count** (`voided_at`) | Never "delete" or "revert". Voided rows are excluded from every calculation. |
+| A person scheduled to count at a time | **Inventory assignment** (`inventory_assignment`) | UI: "scheduled inventory". Avoid "shift", "task". |
+| A queued email or alert | **Notification** (`notification`) | `channel` = email or in_app. |
+| The emailed one-tap sign-in | **Count link** (`login_link`) | Scoped to one assignment. Avoid "magic link" in the UI. |
 | A rack within a location | **Rack** (`rack`) | Optional. |
 | A shelf, top to bottom | **Shelf** (`shelf`) | Belongs to a location, optionally a rack. Avoid "row", "tier". |
 | A fullness reading (Full, Over half, Under half, Low, Out) | **Level** (`level`) | Used by level-mode items. Never summed. Avoid "gauge", "status". |

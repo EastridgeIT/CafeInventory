@@ -67,3 +67,23 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Highlight the likely answer on the number buttons (last count, or last count minus typical use); half-step buttons (½, 1, 1½) for `decimal` items; a "usually used per week" nudge.
 - **Fleshing-out notes:** Needs real count history first. Don't pre-select a value; an auto-filled guess invites wrong counts.
 - **Related:** `knowledge/architecture/stock-counting.md`
+
+### INIT-0009 — Scheduled inventory with alerts and one-tap emailed links
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Cafe Manager: counts get done on time by named people; volunteers get a reminder that takes them straight to counting
+- **Idea:** Email addresses on users; an admin schedules a person for an inventory (location or all) at a specific time; the system sends email and in-app alerts, and the email carries a safe one-tap link into Quick Inventory.
+- **Fleshing-out notes:** `knowledge/architecture/scheduling-and-notifications.md` and `knowledge/decisions/0006-scheduled-counts-and-magic-links.md` (Proposed). Open: email provider, link lifetime, reminder timing, who is told when a count is missed.
+- **Related:** INIT-0010, INIT-0011
+
+### INIT-0010 — Recurring schedules
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Cafe Manager: "Maria counts the pantry every Tuesday at 4 PM" set once
+- **Idea:** Weekly/biweekly repeats on a schedule entry, with skip-this-week.
+- **Related:** INIT-0009
+
+### INIT-0011 — Push and text-message alerts
+- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Serves:** Volunteers who don't watch email
+- **Idea:** Web Push to the installed app (home-screen PWA) and optionally SMS, using the same notification queue as email.
+- **Fleshing-out notes:** SMS needs a provider and per-person consent; push needs the app installed. Both reuse `notification` rows with a `channel`.
+- **Related:** INIT-0009

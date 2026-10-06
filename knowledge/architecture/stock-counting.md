@@ -49,9 +49,18 @@ Roles stack; abilities are the union. Anyone signed in can read stock levels and
 
 ## Shopping lists (derived, not stored)
 - An item **needs replacing** when `current_stock < par_level`, where `current_stock` already includes Undelivered (so a purchase removes the need at once). Suggested quantity = `par_level − current_stock`. Volunteers can also tap **"We're out / low"** on any item to force it onto the list.
+- **Store filter is a dropdown, not pills** (user, 2026-10-06): a native select at the top of the list showing each store with its item count ("Fred Meyer (2)"); scales to many stores and works well one-handed. The last store chosen is remembered per device.
 - **View by vendor:** shows every needing item that has that vendor in `item_vendor`, so standing in Fred Meyer shows *everything she could get there*. An item appears under each of its vendors and is marked "also at: Costco.com, Safeway"; preferred-vendor items sort first.
 - **Buying:** entering the quantity bought creates a `purchase` and the Undelivered movement; the need drops (or disappears) in **all** vendor views at once, so nobody buys it twice. Check-in later moves it to shelves.
 - Vendor view is a first-class screen: a vendor picker at the top (one tap), big check boxes, works on a phone in a store aisle.
+
+### Adding by hand: more quantity, catalog items, new items (user, 2026-10-06; prototype `design/stock-flows.html`)
+- **More of what is listed:** on an item's card, "Need more than 27? Add to the list" (+1, +2, +6, +12, or any number). The list quantity becomes the automatic shortfall **plus** what was added by hand, shown as "Need 33 · 6 added by hand". The big **"Bought 33"** button follows.
+- **"+" in the header:** opens a **catalog picker** (search, each row shows stock and "On the list"). Tap an item, then one tap on a quantity (1, 2, 3, 4, 5, 6, 12, 24) or type another number. An item that isn't under par appears as "Want 3".
+- **Vendor tie:** an item added by hand shows on the vendor tab it was added from (even if it isn't normally bought there), and buying it records that vendor. It does not add that vendor to the item permanently.
+- **New item on the spot:** "+" > **New item**: name, "counted in" unit, how many to buy. Live **duplicate hints** ("Already in the catalog? Oat milk") appear as the name is typed. It creates a **draft** item (`item.needs_review = 1`): usable on the list, purchasable, checkable-in, but **not in Quick Inventory** until an Admin completes setup (where it lives, par level, vendors, measurement). Admin Items has a "Needs setup" filter. Requires `shopping.new_item` (Shopper role).
+- **Data:** `shopping_request` (append-only, voidable): `id`, `item_id`, `vendor_id` (nullable: the tab it was added from), `quantity` (> 0), `by_user`, `requested_at`, `closed_by_purchase_id`, void columns. **Open** requests add to the item's list quantity; **recording any purchase of that item closes all its open requests** (a partial buy does not keep an old manual remainder; the automatic shortfall still carries what is truly short). Undoing the purchase reopens them; undoing an add voids it, and undoing a new-item creation also removes the draft item if nothing else uses it.
+- `list_quantity(item) = max(0, par − current_stock) + Σ open requests`.
 
 ## Measurement methods
 Set per item at creation (Manager/Admin), changeable later; history keeps what was recorded.

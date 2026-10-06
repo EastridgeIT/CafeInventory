@@ -19,6 +19,7 @@ Why: ADR-0004. This file is the current design.
 | _(roles)_ | stored in `user_role`, not on this table (see below) |
 | `pin_hash`, `pin_salt` | PBKDF2-SHA256 over (PIN + `PIN_PEPPER`), base64 |
 | `pin_iterations` | stored per user so it can be raised later without forcing a reset |
+| `email` | optional, unique (case-insensitive), admin-only visibility, normalized lower-case; never in the sign-in picker (migration 0004) |
 | `toast_employee_ref` | optional; **never the Toast PIN** |
 | `active` | 0/1; inactive users can't sign in, and sessions are revoked |
 | `failed_attempts`, `locked_until` | lockout after 5 failures, for 15 min |

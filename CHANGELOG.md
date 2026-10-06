@@ -22,6 +22,8 @@ Category tags: `UX · Frontend · Backend · Database · API · Integrations · 
 - [Frontend] Sign-in screen (name picker + PIN), app shell with sign out, Admin > Users screen (add, edit, set PIN, deactivate); [UX] app icon and theme color moved to the chosen blue. First admin created in production. Build stamp `2610003`.
 - [Docs] Design: buy by quantity, Undelivered location, Check in and Rebalance flows, stock-movement ledger, derived balances (prototype `design/stock-flows.html`). Stock-movement schema pending as a later migration.
 - [Backend] Stackable cumulative roles (General, Shopper, Admin) replace the single role; permission-based checks; [Database] migration 0003; [Frontend] role checkboxes in Admin > Users and permission-driven home cards. ADR-0005. 42 tests. Build stamp `2610004`.
+- [Backend] Email address per user (migration 0004, Admin > Users); [Docs] design for shopping-list additions (more quantity, catalog picker, new item on the spot) and for scheduled inventories with alerts, emails and a scoped emailed link (ADR-0006, proposed). Build stamp `2610005`.
+- [UX] Shopping list store filter is a dropdown (with item counts) instead of pills.
 - [UX] Typeface chosen: Public Sans (self-hosted).
 - [UX] Layout prototype gains a typeface switcher (nine fonts).
 - [Docs] Design: per-item "Reset this count" (void, excluded from all calculations; Admin-only audit trace).

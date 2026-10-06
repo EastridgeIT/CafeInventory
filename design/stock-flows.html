@@ -42,6 +42,14 @@ input.big{font-size:36px;font-weight:800;text-align:center;min-height:72px}
 .toast button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
 .link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:15px}
 .empty{padding:28px 16px;text-align:center;color:var(--mu)}
+.plus{width:48px;height:48px;border-radius:99px;border:0;background:var(--ac);color:var(--aci);font:700 30px/1 var(--f);cursor:pointer;flex:none}
+.plus:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.hrow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.vsel{padding:2px 16px 10px}.vsel select{font-weight:700;font-size:17px;min-height:50px}
+.qg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.qg button{min-height:46px;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:700 17px var(--f);cursor:pointer}
+.tag{display:inline-block;font-size:11px;font-weight:700;color:var(--wn);border:1px solid var(--wn);border-radius:99px;padding:0 7px;margin-left:6px}
+.by{display:inline-block;font-size:12px;font-weight:700;color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:0 7px;margin-left:6px}
+.sug{display:flex;flex-direction:column;gap:6px}.sug button{all:unset;cursor:pointer;background:var(--so);border-radius:10px;padding:8px 12px;font-weight:600}
 .mv{background:var(--so);border-radius:12px;padding:10px 12px;font-weight:600}
 .ledger{margin-top:32px}.ledger h2{font-size:1.2rem;margin:0 0 4px}.ledger>p{color:var(--mu);margin:0 0 12px;max-width:70ch}
 .tw{overflow-x:auto;background:var(--sf);border-radius:var(--r);border:1px solid var(--ln)}
@@ -84,30 +92,62 @@ const ITEMS={
  coke:{n:'Coke bottles',u:'bottles',par:48,vend:['Costco.com','Fred Meyer','Safeway'],pref:'Costco.com',locs:['Beverage Case','Pantry'],back:'Pantry'},
  oat:{n:'Oat milk',u:'cartons',par:12,vend:['Costco.com','Fred Meyer'],pref:'Costco.com',locs:['Cafe Counter','Pantry'],back:'Pantry'},
  cups:{n:'12 oz paper cups',u:'sleeves',par:20,vend:['Chef Store','Costco.com'],pref:'Chef Store',locs:['Cafe Counter','Pantry'],back:'Pantry'}};
-const bal={coke:{'Beverage Case':5,Pantry:16,Undelivered:0},oat:{'Cafe Counter':2,Pantry:3,Undelivered:0},cups:{'Cafe Counter':6,Pantry:4,Undelivered:0}};
+ITEMS.napkins={n:'Napkins',u:'packs',par:8,vend:['Safeway','Costco.com'],pref:'Safeway',locs:['Cafe Counter','Pantry'],back:'Pantry'};
+ITEMS.milk={n:'Whole milk',u:'gallons',par:6,vend:['Fred Meyer','Safeway'],pref:'Fred Meyer',locs:['Beverage Case'],back:'Beverage Case'};
+ITEMS.syrup={n:'Vanilla syrup',u:'bottles',par:4,vend:['Costco.com','Fred Meyer','Chef Store'],pref:'Costco.com',locs:['Cafe Counter','Pantry'],back:'Pantry'};
+const bal={napkins:{'Cafe Counter':3,Pantry:6,Undelivered:0},milk:{'Beverage Case':6,Undelivered:0},syrup:{'Cafe Counter':2,Pantry:3,Undelivered:0},coke:{'Beverage Case':5,Pantry:16,Undelivered:0},oat:{'Cafe Counter':2,Pantry:3,Undelivered:0},cups:{'Cafe Counter':6,Pantry:4,Undelivered:0}};
 const VENDORS=['Costco.com','Fred Meyer','Safeway','Chef Store'];
-const log=[];let seq=0;let flash=null;
-const S={shop:{v:'Costco.com',sel:null,err:'',msg:null},ci:{sel:null,alloc:{},msg:null},rb:{item:'coke',loc:'Beverage Case',newq:'',from:'Pantry',msg:null}};
+const log=[];let seq=0;let flash=null;let reqs=[],rseq=0,nseq=0;
+const S={shop:{v:'Costco.com',sel:null,err:'',msg:null,mode:null,q:'',addK:null,nn:'',nu:'each',nq:'1'},ci:{sel:null,alloc:{},msg:null},rb:{item:'coke',loc:'Beverage Case',newq:'',from:'Pantry',msg:null}};
 const total=k=>Object.values(bal[k]).reduce((a,b)=>a+b,0);
 const need=k=>Math.max(0,ITEMS[k].par-total(k));
+const extra=k=>reqs.filter(r=>r.k===k&&r.open).reduce((a,r)=>a+r.q,0);
+const wanted=k=>need(k)+extra(k);
+const onList=(k,v)=>(ITEMS[k].vend.includes(v)&&wanted(k)>0)||reqs.some(r=>r.k===k&&r.open&&r.v===v);
+const locsOf=k=>ITEMS[k].locs.length?ITEMS[k].locs:['Cafe Counter','Beverage Case','Pantry'];
+const backOf=k=>ITEMS[k].back||'Pantry';
 const get=(k,l)=>bal[k][l]??0;
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function move(kind,k,legs,text){ // legs: [[place, delta]]
- const id=++seq;for(const [p,d] of legs)bal[k][p]=get(k,p)+d;log.unshift({id,kind,k,legs,text,undone:false});flash=k;}
-function undo(id){const e=log.find(x=>x.id===id);if(!e||e.undone)return;e.undone=true;for(const [p,d] of e.legs)bal[e.k][p]=get(e.k,p)-d;flash=e.k;renderAll()}
+ const id=++seq;for(const [p,d] of legs)bal[k][p]=get(k,p)+d;const e={id,kind,k,legs,text,undone:false};log.unshift(e);flash=k;return e}
+function undo(id){const e=log.find(x=>x.id===id);if(!e||e.undone)return;e.undone=true;for(const [p,d] of e.legs)bal[e.k][p]=get(e.k,p)-d;
+ if(e.closed)for(const rid of e.closed){const r=reqs.find(x=>x.id===rid);if(r)r.open=true}
+ if(e.reqId){const r=reqs.find(x=>x.id===e.reqId);if(r)r.open=false}
+ if(e.newKey&&!reqs.some(r=>r.k===e.newKey&&r.open&&r.id!==e.reqId)){delete ITEMS[e.newKey];delete bal[e.newKey]}
+ flash=e.k;renderAll()}
 const toast=(o,m)=>m?`<div class="toast"><span>${esc(m.text)}</span>${m.id?`<button data-a="undo" data-id="${m.id}">Undo</button>`:''}</div>`:'';
 
 /* 1 Shopping list */
+function pickBtns(a,list){return `<div class="qg">${list.map(n=>`<button data-a="${a}" data-q="${n}">${n}</button>`).join('')}</div>`}
 function r1(){const s=S.shop;
- const items=Object.keys(ITEMS).filter(k=>ITEMS[k].vend.includes(s.v)&&need(k)>0).sort((a,b)=>(ITEMS[b].pref===s.v)-(ITEMS[a].pref===s.v));
- let h=`<div class="hd"><h3>Shopping list</h3><p>${s.v}: everything you could get here</p></div><div class="vt">${VENDORS.map(v=>`<button data-a="vend" data-v="${v}" aria-pressed="${v===s.v}">${v}</button>`).join('')}</div>${toast(1,s.msg)}<div class="sc">`;
- if(s.sel){const k=s.sel,n=need(k),it=ITEMS[k];
-  h+=`<div class="card"><h4>${it.n}</h4><div class="mu small">Need ${n} more · stock now ${total(k)} of ${it.par}${get(k,'Undelivered')?` (includes ${get(k,'Undelivered')} undelivered)`:''}</div>
-  <button class="btn p" data-a="buy" data-q="${n}">Bought ${n} ${it.u}</button>
+ const head=(t,p)=>`<div class="hd hrow"><div><h3>${t}</h3><p>${p}</p></div>${s.mode?'':'<button class="plus" data-a="plus" aria-label="Add to the list">+</button>'}</div>`;
+ if(s.mode==='picker'){const q=s.q.trim().toLowerCase();const ks=Object.keys(ITEMS).filter(k=>!q||ITEMS[k].n.toLowerCase().includes(q));
+  return head('Add to the list',`For ${s.v}`)+`<div class="sc"><div class="card"><button class="btn p" data-a="newitem">New item</button><label class="lab" for="ps">Find in the catalog</label><input id="ps" data-f="ps" placeholder="Search items" autocomplete="off" value="${esc(s.q)}"></div><div style="height:10px"></div>
+  ${ks.map(k=>`<button class="item" data-a="pickitem" data-k="${k}"><b>${esc(ITEMS[k].n)}${ITEMS[k].isNew?'<span class="tag">Needs setup</span>':''}${onList(k,s.v)||wanted(k)>0?'<span class="by">On the list</span>':''}</b><span class="q"></span><small>${total(k)} ${ITEMS[k].u} in stock${ITEMS[k].par?' of '+ITEMS[k].par:''}</small></button>`).join('')||'<div class="empty">No match. Try New item.</div>'}
+  <button class="btn" style="width:100%;margin-top:4px" data-a="cancel">Back to the list</button></div>`}
+ if(s.mode==='qty'){const k=s.addK,it=ITEMS[k];
+  return head('How many?',esc(it.n))+`<div class="sc"><div class="card"><div class="mu small">${total(k)} ${it.u} in stock${it.par?' (par '+it.par+')':''}${wanted(k)?` · ${wanted(k)} already on the list`:''}</div>${pickBtns('addq',[1,2,3,4,5,6,12,24])}
+  <label class="lab" for="aq">Or another number</label><div class="row"><input id="aq" class="big" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off"><button class="btn" data-a="addcustom">Add</button></div>
+  ${s.err?`<div class="err" role="alert">${s.err}</div>`:''}<button class="link" data-a="plus">Choose a different item</button></div></div>`}
+ if(s.mode==='new'){const nm=s.nn.trim().toLowerCase();const sim=nm.length>=2?Object.keys(ITEMS).filter(k=>ITEMS[k].n.toLowerCase().includes(nm)):[];
+  const qn=Number(s.nq);
+  return head('New item',`Added to the catalog and the ${s.v} list`)+`<div class="sc"><div class="card">
+  <label class="lab" for="nn">Name</label><input id="nn" data-f="nn" autocomplete="off" value="${esc(s.nn)}" placeholder="e.g. Chai concentrate">
+  ${sim.length?`<div class="sug"><span class="mu small">Already in the catalog? Tap to use it:</span>${sim.slice(0,3).map(k=>`<button data-a="pickitem" data-k="${k}">${esc(ITEMS[k].n)}</button>`).join('')}</div>`:''}
+  <label class="lab">Counted in<select data-f="nu">${['each','bottles','cartons','packs','boxes','bags','cases'].map(u=>`<option ${u===s.nu?'selected':''}>${u}</option>`).join('')}</select></label>
+  <label class="lab" for="nq">How many to buy</label><input id="nq2" data-f="nq" class="big" inputmode="numeric" pattern="[0-9]*" value="${esc(s.nq)}" autocomplete="off">
+  <div class="mu small">An admin finishes the setup later (where it lives, par level, vendors). It won't show up in Quick Inventory until then.</div>
+  <button class="btn p" data-a="createnew" ${!s.nn.trim()||!Number.isInteger(qn)||qn<=0?'disabled':''}>Add new item</button><button class="link" data-a="cancel">Cancel</button></div></div>`}
+ let h=head('Shopping list',`${s.v}: everything you could get here`)+`<div class="vsel"><label class="lab" for="vs">Store</label><select id="vs" data-f="vend">${VENDORS.map(v=>`<option value="${v}" ${v===s.v?'selected':''}>${v} (${Object.keys(ITEMS).filter(k=>onList(k,v)).length})</option>`).join('')}</select></div>${toast(1,s.msg)}<div class="sc">`;
+ const items=Object.keys(ITEMS).filter(k=>onList(k,s.v)).sort((a,b)=>(ITEMS[b].pref===s.v)-(ITEMS[a].pref===s.v));
+ if(s.sel){const k=s.sel,w=wanted(k),it=ITEMS[k],ex=extra(k);
+  h+=`<div class="card"><h4>${esc(it.n)}</h4><div class="mu small">${need(k)?`Need ${need(k)} to reach par`:'Added by hand'}${ex&&need(k)?` + ${ex} added`:''} · stock ${total(k)}${it.par?' of '+it.par:''}${get(k,'Undelivered')?` (includes ${get(k,'Undelivered')} undelivered)`:''}</div>
+  <button class="btn p" data-a="buy" data-q="${w}">Bought ${w} ${it.u}</button>
   <label class="lab" for="bq">Or a different number</label><div class="row"><input id="bq" class="big" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off"><button class="btn" data-a="buyq">Save</button></div>
-  ${s.err?`<div class="err" role="alert">${s.err}</div>`:''}<button class="link" data-a="cancel">Cancel</button></div>`;}
- else if(!items.length)h+=`<div class="empty"><b>Nothing left to buy at ${s.v}.</b><br>Anything bought is already counted as undelivered stock.</div>`;
- else h+=items.map(k=>{const it=ITEMS[k];return `<button class="item" data-a="pick" data-k="${k}"><b>${it.n}${it.pref===s.v?'<span class="pref">Preferred here</span>':''}</b><span class="q">Need ${need(k)}</span><small>${total(k)} of ${it.par} in stock${it.vend.length>1?' · also at '+it.vend.filter(x=>x!==s.v).join(', '):''}</small></button>`}).join('');
+  ${s.err?`<div class="err" role="alert">${s.err}</div>`:''}
+  <div class="lab">Need more than ${w}? Add to the list</div>${pickBtns('more',[1,2,6,12])}<button class="link" data-a="cancel">Cancel</button></div>`;}
+ else if(!items.length)h+=`<div class="empty"><b>Nothing left to buy at ${s.v}.</b><br>Tap + to add something.</div>`;
+ else h+=items.map(k=>{const it=ITEMS[k],ex=extra(k),w=wanted(k);return `<button class="item" data-a="pick" data-k="${k}"><b>${esc(it.n)}${it.pref===s.v?'<span class="pref">Preferred here</span>':''}${it.isNew?'<span class="tag">Needs setup</span>':''}</b><span class="q">${need(k)?'Need '+w:'Want '+w}</span><small>${total(k)}${it.par?' of '+it.par:''} in stock${ex&&need(k)?` · ${ex} added by hand`:ex?' · added by hand':''}${it.vend.length>1?' · also at '+it.vend.filter(x=>x!==s.v).join(', '):''}</small></button>`}).join('');
  return h+'</div>'}
 
 /* 2 Check in */
@@ -115,7 +155,7 @@ function r2(){const s=S.ci;const items=Object.keys(ITEMS).filter(k=>get(k,'Undel
  let h=`<div class="hd"><h3>Check in deliveries</h3><p>${items.length?'Tap an item to put it away':'Nothing waiting'}</p></div>${toast(2,s.msg)}<div class="sc">`;
  if(s.sel&&get(s.sel,'Undelivered')>0){const k=s.sel,it=ITEMS[k],u=get(k,'Undelivered');const placed=Object.values(s.alloc).reduce((a,b)=>a+(+b||0),0),left=u-placed;
   h+=`<div class="card"><h4>${it.n}</h4><div class="mu small">${u} ${it.u} undelivered. Where did it go?</div>
-  ${it.locs.map(l=>`<div class="alloc"><span>${l}${l===it.back?' <small class="mu">(backstock)</small>':''}</span><input data-loc="${l}" aria-label="${l} quantity" inputmode="numeric" pattern="[0-9]*" value="${s.alloc[l]??''}" placeholder="0"></div>`).join('')}
+  ${locsOf(s.sel).map(l=>`<div class="alloc"><span>${l}${l===backOf(s.sel)?' <small class="mu">(backstock)</small>':''}</span><input data-loc="${l}" aria-label="${l} quantity" inputmode="numeric" pattern="[0-9]*" value="${s.alloc[l]??''}" placeholder="0"></div>`).join('')}
   <div class="${left<0?'err':'mu'}">${left<0?`That is ${-left} more than were undelivered.`:left===0?'All placed.':`${left} will stay undelivered.`}</div>
   <button class="btn p" data-a="putaway" ${placed<=0||left<0?'disabled':''}>Put away ${placed>0?placed:''}</button>
   <div class="row"><button class="btn sm grow" data-a="cancel2">Back</button><button class="btn sm grow" data-a="notcoming">Not coming (clear ${u})</button></div></div>`;}
@@ -131,7 +171,7 @@ function r3(){const s=S.rb,it=ITEMS[s.item];
  if(nq!==null&&diff>0){bad=src<diff;line=`Moving ${diff} from ${s.from} (has ${src}) to ${s.loc}`+(bad?'. Not enough there. Count '+s.from+' first, or pick another place.':'');}
  else if(nq!==null&&diff<0){line=`Moving ${-diff} from ${s.loc} to ${s.from}`}
  let h=`<div class="hd"><h3>Rebalance</h3><p>Move stock between places. The total stays the same.</p></div>${toast(3,s.msg)}<div class="sc"><div class="card">
- <label class="lab">Item<select data-f="item">${Object.keys(ITEMS).map(k=>`<option value="${k}" ${k===s.item?'selected':''}>${ITEMS[k].n}</option>`).join('')}</select></label>
+ <label class="lab">Item<select data-f="item">${Object.keys(ITEMS).filter(k=>ITEMS[k].locs.length).map(k=>`<option value="${k}" ${k===s.item?'selected':''}>${ITEMS[k].n}</option>`).join('')}</select></label>
  <label class="lab">Set the quantity in<select data-f="loc">${it.locs.map(l=>`<option ${l===s.loc?'selected':''}>${l}</option>`).join('')}</select></label>
  <div class="mu small">${s.loc} now has ${cur} ${it.u}</div>
  <label class="lab" for="nq">New quantity</label><input id="nq" class="big" data-f="newq" inputmode="numeric" pattern="[0-9]*" placeholder="${cur}" value="${esc(s.newq)}" autocomplete="off">
@@ -141,19 +181,32 @@ function r3(){const s=S.rb,it=ITEMS[s.item];
  return h}
 
 function ledger(){let h=`<table><thead><tr><th>Item</th>${PLACES.map(p=>`<th>${p}</th>`).join('')}<th>Total</th><th>Par</th></tr></thead><tbody>`;
- for(const k of Object.keys(ITEMS)){h+=`<tr class="${flash===k?'flash':''}"><td><b>${ITEMS[k].n}</b></td>${PLACES.map(p=>`<td class="${p==='Undelivered'&&get(k,p)?'u':''}">${ITEMS[k].locs.includes(p)||p==='Undelivered'?get(k,p):'<span class="mu">·</span>'}</td>`).join('')}<td class="t">${total(k)}</td><td>${ITEMS[k].par}</td></tr>`}
+ for(const k of Object.keys(ITEMS)){h+=`<tr class="${flash===k?'flash':''}"><td><b>${esc(ITEMS[k].n)}</b>${ITEMS[k].isNew?'<span class="tag">Needs setup</span>':''}</td>${PLACES.map(p=>`<td class="${p==='Undelivered'&&get(k,p)?'u':''}">${ITEMS[k].locs.includes(p)||p==='Undelivered'||get(k,p)?get(k,p):'<span class="mu">·</span>'}</td>`).join('')}<td class="t">${total(k)}</td><td>${ITEMS[k].par}</td></tr>`}
  return h+'</tbody></table>'}
 function renderLog(){$('#log').innerHTML=log.slice(0,6).map(e=>`<li><span>${e.undone?'<s>':''}${esc(e.text)}${e.undone?'</s> (undone)':''}</span>${e.undone?'':`<button data-a="undo" data-id="${e.id}">Undo</button>`}</li>`).join('')}
 function renderAll(){$('#p1').innerHTML=r1();$('#p2').innerHTML=r2();$('#p3').innerHTML=r3();$('#ledger').innerHTML=ledger();renderLog()}
 
 document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,s=S;
- if(a==='vend'){s.shop.v=t.dataset.v;s.shop.sel=null;s.shop.err=''}
+ if(a==='vend'){s.shop.v=t.dataset.v;s.shop.sel=null;s.shop.err='';s.shop.mode=null}
  else if(a==='pick'){s.shop.sel=t.dataset.k;s.shop.err='';s.shop.msg=null}
- else if(a==='cancel'){s.shop.sel=null;s.shop.err=''}
+ else if(a==='cancel'){s.shop.sel=null;s.shop.err='';s.shop.mode=null}
  else if(a==='buy'||a==='buyq'){const k=s.shop.sel,q=a==='buy'?+t.dataset.q:Number(($('#bq')||{}).value);
   if(!Number.isInteger(q)||q<=0){s.shop.err='Enter a whole number of 1 or more.';renderAll();return}
-  move('purchase',k,[['Undelivered',q]],`Bought ${q} ${ITEMS[k].n} at ${s.shop.v}. Added to Undelivered.`);s.shop.msg={text:`Added ${q} ${ITEMS[k].n} to Undelivered.`,id:seq};s.shop.sel=null;s.shop.err=''}
- else if(a==='pick2'){s.ci.sel=t.dataset.k;const k=t.dataset.k;s.ci.alloc={[ITEMS[k].back]:get(k,'Undelivered')};s.ci.msg=null}
+  const e=move('purchase',k,[['Undelivered',q]],`Bought ${q} ${ITEMS[k].n} at ${s.shop.v}. Added to Undelivered.`);
+  const closed=reqs.filter(r=>r.k===k&&r.open);closed.forEach(r=>r.open=false);e.closed=closed.map(r=>r.id);
+  s.shop.msg={text:`Added ${q} ${ITEMS[k].n} to Undelivered.`,id:seq};s.shop.sel=null;s.shop.err=''}
+ else if(a==='more'||a==='addq'||a==='addcustom'){const k=a==='more'?s.shop.sel:s.shop.addK,q=a==='addcustom'?Number(($('#aq')||{}).value):+t.dataset.q;
+  if(!Number.isInteger(q)||q<=0){s.shop.err='Enter a whole number of 1 or more.';renderAll();return}
+  const r={id:++rseq,k,v:s.shop.v,q,open:true};reqs.push(r);const e={id:++seq,kind:'request',k,legs:[],text:`Added ${q} ${ITEMS[k].n} to the ${s.shop.v} list by hand.`,undone:false,reqId:r.id};log.unshift(e);flash=k;
+  s.shop.msg={text:`Added ${q} ${ITEMS[k].n} to the list.`,id:e.id};s.shop.mode=null;s.shop.err='';if(a==='more')s.shop.sel=k;else s.shop.sel=null}
+ else if(a==='plus'){s.shop.mode='picker';s.shop.sel=null;s.shop.q='';s.shop.err='';s.shop.msg=null}
+ else if(a==='pickitem'){s.shop.addK=t.dataset.k;s.shop.mode='qty';s.shop.err=''}
+ else if(a==='newitem'){s.shop.mode='new';s.shop.nn=s.shop.q||'';s.shop.nu='each';s.shop.nq='1'}
+ else if(a==='createnew'){const k='n'+(++nseq),q=Number(s.shop.nq),name=s.shop.nn.trim();
+  ITEMS[k]={n:name,u:s.shop.nu,par:0,vend:[s.shop.v],pref:s.shop.v,locs:[],back:null,isNew:true};bal[k]={Undelivered:0};
+  const r={id:++rseq,k,v:s.shop.v,q,open:true};reqs.push(r);const e={id:++seq,kind:'new_item',k,legs:[],text:`Created new item "${name}" (needs setup) and added ${q} to the ${s.shop.v} list.`,undone:false,reqId:r.id,newKey:k};log.unshift(e);flash=k;
+  s.shop.msg={text:`Added "${name}" to the catalog (needs setup) and ${q} to the list.`,id:e.id};s.shop.mode=null}
+ else if(a==='pick2'){s.ci.sel=t.dataset.k;const k=t.dataset.k;s.ci.alloc={[backOf(k)]:get(k,'Undelivered')};s.ci.msg=null}
  else if(a==='cancel2'){s.ci.sel=null}
  else if(a==='putaway'){const k=s.ci.sel,legs=[];let n=0;for(const [l,q] of Object.entries(s.ci.alloc)){const v=+q||0;if(v>0){legs.push([l,v]);n+=v}}
   move('check_in',k,[['Undelivered',-n],...legs],`Put away ${n} ${ITEMS[k].n}: ${legs.map(([l,v])=>v+' to '+l).join(', ')}.`);s.ci.msg={text:`Put away ${n} ${ITEMS[k].n}.`,id:seq};s.ci.sel=null}
@@ -165,8 +218,13 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
  renderAll()});
 document.addEventListener('input',e=>{const t=e.target;
  if(t.dataset.loc){S.ci.alloc[t.dataset.loc]=t.value.replace(/\D/g,'');const pos=t.selectionStart;renderAll();const n=document.querySelector(`[data-loc="${t.dataset.loc}"]`);if(n){n.focus();n.setSelectionRange(pos,pos)}}
+ else if(t.dataset.f==='ps'){S.shop.q=t.value;renderAll();const n=$('#ps');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
+ else if(t.dataset.f==='nn'){S.shop.nn=t.value;renderAll();const n=$('#nn');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
+ else if(t.dataset.f==='nq'){S.shop.nq=t.value.replace(/\D/g,'');renderAll();const n=$('#nq2');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
  else if(t.dataset.f==='newq'){S.rb.newq=t.value.replace(/\D/g,'');renderAll();const n=$('#nq');n.focus();n.setSelectionRange(n.value.length,n.value.length)}});
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset.f==='item'){S.rb.item=t.value;S.rb.loc=ITEMS[t.value].locs[0];S.rb.newq='';S.rb.from=ITEMS[t.value].back;S.rb.msg=null;renderAll()}
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.f==='vend'){S.shop.v=t.value;S.shop.sel=null;S.shop.err='';S.shop.mode=null;S.shop.msg=null;renderAll()}
+ else if(t.dataset.f==='nu'){S.shop.nu=t.value;renderAll()}
+ else if(t.dataset.f==='item'){S.rb.item=t.value;S.rb.loc=ITEMS[t.value].locs[0];S.rb.newq='';S.rb.from=ITEMS[t.value].back;S.rb.msg=null;renderAll()}
  else if(t.dataset.f==='loc'){S.rb.loc=t.value;S.rb.newq='';S.rb.msg=null;renderAll()}
  else if(t.dataset.f==='from'){S.rb.from=t.value.replace(/ \(\d+\)$/,'');renderAll()}});
 renderAll();

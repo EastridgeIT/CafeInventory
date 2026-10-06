@@ -13,8 +13,11 @@ userRoutes.use("*", requireAuth, requirePermission("admin.users"));
 const roles = z.array(z.enum(ROLES)).min(1).max(ROLES.length);
 const name = z.string().trim().min(1).max(60);
 const toast = z.string().trim().max(60).nullable().optional();
+// Empty string means "no email". Stored lower-case so the unique index is case-insensitive in practice.
+const email = z.union([z.literal("").transform(() => null), z.email().max(254).transform((e) => e.toLowerCase())]).nullable().optional();
+const taken = (e: unknown) => (String((e as Error)?.message).includes("user.email") || String((e as Error)?.message).includes("user_email_uq") ? "email_taken" : "name_taken");
 const PUBLIC =
-  "u.id, u.display_name, u.toast_employee_ref, u.active, u.created_at, u.updated_at, (SELECT group_concat(role) FROM user_role WHERE user_id = u.id) AS roles";
+  "u.id, u.display_name, u.email, u.toast_employee_ref, u.active, u.created_at, u.updated_at, (SELECT group_concat(role) FROM user_role WHERE user_id = u.id) AS roles";
 type Raw = { roles: string | null } & Record<string, unknown>;
 const shape = (r: Raw) => ({ ...r, roles: normalizeRoles((r.roles ?? "").split(",")) });
 const one = async (db: D1Database, id: string) => {
@@ -28,7 +31,7 @@ userRoutes.get("/", async (c) => {
 });
 
 userRoutes.post("/", async (c) => {
-  const p = z.object({ display_name: name, roles, pin: z.string().regex(PIN_PATTERN), toast_employee_ref: toast }).safeParse(await c.req.json().catch(() => null));
+  const p = z.object({ display_name: name, roles, pin: z.string().regex(PIN_PATTERN), toast_employee_ref: toast, email }).safeParse(await c.req.json().catch(() => null));
   if (!p.success) return c.json({ error: "invalid_request" }, 400);
   const id = ulid();
   const now = nowIso();
@@ -36,13 +39,13 @@ userRoutes.post("/", async (c) => {
   try {
     await c.env.DB.batch([
       c.env.DB.prepare(
-        `INSERT INTO user (id, display_name, pin_hash, pin_salt, pin_iterations, toast_employee_ref, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      ).bind(id, p.data.display_name, rec.pin_hash, rec.pin_salt, rec.pin_iterations, p.data.toast_employee_ref ?? null, now, now),
+        `INSERT INTO user (id, display_name, pin_hash, pin_salt, pin_iterations, toast_employee_ref, email, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(id, p.data.display_name, rec.pin_hash, rec.pin_salt, rec.pin_iterations, p.data.toast_employee_ref ?? null, p.data.email ?? null, now, now),
       ...normalizeRoles(p.data.roles).map((r) => c.env.DB.prepare("INSERT INTO user_role (user_id, role) VALUES (?, ?)").bind(id, r)),
     ]);
-  } catch {
-    return c.json({ error: "name_taken" }, 409);
+  } catch (e) {
+    return c.json({ error: taken(e) }, 409);
   }
   return c.json({ user: await one(c.env.DB, id) }, 201);
 });
@@ -55,7 +58,7 @@ async function lastActiveAdmin(c: { env: Env }, id: string) {
 
 userRoutes.patch("/:id", async (c) => {
   const id = c.req.param("id");
-  const p = z.object({ display_name: name.optional(), roles: roles.optional(), active: z.boolean().optional(), toast_employee_ref: toast }).safeParse(await c.req.json().catch(() => null));
+  const p = z.object({ display_name: name.optional(), roles: roles.optional(), active: z.boolean().optional(), toast_employee_ref: toast, email }).safeParse(await c.req.json().catch(() => null));
   if (!p.success) return c.json({ error: "invalid_request" }, 400);
   const cur = await c.env.DB.prepare("SELECT active, (SELECT group_concat(role) FROM user_role WHERE user_id = user.id) AS roles FROM user WHERE id = ?").bind(id).first<{ active: number; roles: string | null }>();
   if (!cur) return c.json({ error: "not_found" }, 404);
@@ -67,8 +70,9 @@ userRoutes.patch("/:id", async (c) => {
     await c.env.DB.batch([
       c.env.DB.prepare(
         `UPDATE user SET display_name = COALESCE(?, display_name), active = COALESCE(?, active),
-           toast_employee_ref = CASE WHEN ? THEN ? ELSE toast_employee_ref END, updated_at = ? WHERE id = ?`,
-      ).bind(p.data.display_name ?? null, p.data.active === undefined ? null : p.data.active ? 1 : 0, p.data.toast_employee_ref === undefined ? 0 : 1, p.data.toast_employee_ref ?? null, nowIso(), id),
+           toast_employee_ref = CASE WHEN ? THEN ? ELSE toast_employee_ref END,
+           email = CASE WHEN ? THEN ? ELSE email END, updated_at = ? WHERE id = ?`,
+      ).bind(p.data.display_name ?? null, p.data.active === undefined ? null : p.data.active ? 1 : 0, p.data.toast_employee_ref === undefined ? 0 : 1, p.data.toast_employee_ref ?? null, p.data.email === undefined ? 0 : 1, p.data.email ?? null, nowIso(), id),
       ...(newRoles
         ? [
             c.env.DB.prepare("DELETE FROM user_role WHERE user_id = ?").bind(id),
@@ -76,8 +80,8 @@ userRoutes.patch("/:id", async (c) => {
           ]
         : []),
     ]);
-  } catch {
-    return c.json({ error: "name_taken" }, 409);
+  } catch (e) {
+    return c.json({ error: taken(e) }, 409);
   }
   if (p.data.active === false) await revokeSessions(c.env.DB, id); // disabling a user ends their sessions at once
   if (newRoles && newRoles.join() !== curRoles.join()) await revokeSessions(c.env.DB, id); // re-authenticate with the new roles
