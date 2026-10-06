@@ -16,7 +16,9 @@ Source: user, 2026-10-06. Nothing is built yet.
 - (Clarified: not tied to a scheduled person or "lead". Anyone using the app that day.)
 
 ## Behavior
-- **Appears** on **Home**, which is the reminders screen ("No reminders due." when there are none; user, 2026-10-06), for every signed-in person when the reminder's time arrives on its day. Before its time it is hidden (Admins see it in the list).
+- **Home shows all of today's reminders, including ones not yet due** (user, 2026-10-06; "No reminders due." only when the day has none). Due-and-open reminders come first and are highlighted; reminders later today are listed below, dimmed, with their time ("Due 2:00 PM") and can't be checked until due; done ones follow with who and when. (Open: allow checking early? Default no.)
+- **One banner for everything open** (user, 2026-10-06): a **single, persistent banner on every screen** (not only Home), "3 reminders need attention", appears whenever at least one reminder is **past its time and not done**, links to Home, and disappears when all are done. One banner represents all of them; it can't be dismissed while any is open.
+- **Admin alert after one hour** (user, 2026-10-06): if a reminder isn't completed **within one hour of its time**, an alert goes to **Admins** (everyone with the Admin role): an in-app alert (shown in Admin and as a badge) and an email once email is configured. **Once per occurrence** (`notification` unique per reminder occurrence and recipient), not repeated, and it clears itself if the reminder is then completed. For a one-time reminder that carries over, it alerts once, when it first goes an hour overdue.
 - **One check completes it for everyone.** The first person to check wins (atomic update). Done reminders stay on Home for the rest of that day with "Done by Maria · 10:42 AM", then drop off.
 - **Clicking a checked box again removes the check** (user, 2026-10-06). Removing **your own** check is immediate. Removing **someone else's** first asks "Remove Maria's check? They marked this done at 10:42 AM." with **Keep it** / **Remove check** (user, 2026-10-06). **Anyone** using the app can do it, and every check and uncheck is kept in an **event log** (who, when, and whose check was removed), shown in Admin history, so a mistaken or disputed uncheck is visible. The reminder then shows as open again for everyone.
 - **Recurring** reminders appear only on their day (daily, selected weekdays; later every N weeks or a day of the month). If nobody checks one by the end of its day it becomes **Missed** (shown in admin history, not carried onto the next day).
@@ -35,7 +37,6 @@ Add (title, details, one-time date or weekdays, time, optional button), edit, pa
 ## Relation to scheduled inventories
 `scheduling-and-notifications.md` schedules a **named person** with email alerts. Reminders are for **the day's crew** and need no assignment. They can coexist: a recurring "Perform a Quick Inventory" reminder with a Quick Inventory button, plus a named assignment, is fine.
 
-## Open questions and suggestions
-1. Should a missed recurring reminder alert an Admin (email/in-app via the notification queue)? Default: shown in history only.
-2. Should Home show a banner or badge for open reminders while someone is mid-count? Default: a card at the top of Home, and a small badge on the app header.
-3. More recurrence later: every N weeks, first Monday, a day of the month.
+## Decisions and remaining questions
+Decided: all of today's reminders show on Home; one persistent banner for open past-due ones; Admin alert one hour after the time; clicking a checked box again removes the check (confirm only for someone else's check). Time zone Pacific with DST.
+Open: may a future reminder be checked early (default: no)? More recurrence later (every N weeks, a day of the month).

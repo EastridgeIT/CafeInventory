@@ -34,7 +34,8 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Related:** `knowledge/decisions/0003-stack.md`
 
 ### INIT-0004 — Toast POS integration
-- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Status:** Declined · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Declined:** user, 2026-10-06 ("We already have a scheduling system. Not needed.")
 - **Serves:** Cafe Manager: estimated stock from actual sales, without anyone counting
 - **Idea:** Pull sales from the Toast API and map menu items to recipes/ingredients so stock goes down automatically; counts become corrections.
 - **Fleshing-out notes:** Toast API access requires partner/integration approval, so check that first. `toast_employee_ref` on users (ADR-0004) prepares the ground.
@@ -62,7 +63,8 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Related:** INIT-0005, INIT-0006
 
 ### INIT-0008 — Smarter quick buttons
-- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Status:** Declined · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Declined:** user, 2026-10-06 ("We already have a scheduling system. Not needed.")
 - **Serves:** Volunteers: fewer taps, fewer scrolls
 - **Idea:** Highlight the likely answer on the number buttons (last count, or last count minus typical use); half-step buttons (½, 1, 1½) for `decimal` items; a "usually used per week" nudge.
 - **Fleshing-out notes:** Needs real count history first. Don't pre-select a value; an auto-filled guess invites wrong counts.
@@ -76,13 +78,15 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Related:** INIT-0010, INIT-0011
 
 ### INIT-0010 — Recurring schedules
-- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Status:** Declined · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Declined:** user, 2026-10-06 ("We already have a scheduling system. Not needed.")
 - **Serves:** Cafe Manager: "Maria counts the pantry every Tuesday at 4 PM" set once
 - **Idea:** Weekly/biweekly repeats on a schedule entry, with skip-this-week.
 - **Related:** INIT-0009
 
 ### INIT-0011 — Push and text-message alerts
-- **Status:** Captured · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Status:** Declined · **Source:** Suggested (not declined) · **Added:** 2026-10-06
+- **Declined:** user, 2026-10-06 ("We already have a scheduling system. Not needed.")
 - **Serves:** Volunteers who don't watch email
 - **Idea:** Web Push to the installed app (home-screen PWA) and optionally SMS, using the same notification queue as email.
 - **Fleshing-out notes:** SMS needs a provider and per-person consent; push needs the app installed. Both reuse `notification` rows with a `channel`.
@@ -107,4 +111,18 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Serves:** Admins arrange racks and shelves the way the room is, fast, so Quick Inventory walks in the right order
 - **Idea:** Horizontally scrolling shelves (scroll is the default), an intentional Rearrange mode with drag or tap-to-place, and press and hold for Move to within the same location.
 - **Fleshing-out notes:** `stock-counting.md` (Shelf map); prototype `design/shelf-map.html`. Touch drag by the handle needs a real-phone test.
+- **Related:** INIT-0005
+
+### INIT-0015 — Markouts and waste report
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Cafe Manager: know what is thrown out or given away, and why
+- **Idea:** Perishable items ask "Did we mark any out to avoid expiration?" when counted at 0; markouts recorded with quantity and reason; Admin report by item and week.
+- **Fleshing-out notes:** `stock-counting.md` (Markouts). Open: prompt only at 0?
+- **Related:** INIT-0007
+
+### INIT-0016 — Item import from the user's spreadsheet
+- **Status:** Captured · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Admin setup: load the real item list instead of typing it
+- **Idea:** Admin import of a CSV/spreadsheet: items, units, par levels, vendors, locations/shelves, measurement method, Quick Inventory flag.
+- **Fleshing-out notes:** The user will provide the file shortly. Plan: look at its columns first, then map them to the catalog and show a preview before saving.
 - **Related:** INIT-0005

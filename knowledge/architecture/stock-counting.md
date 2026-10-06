@@ -29,22 +29,39 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 - `item_vendor` — `item_id`, `vendor_id`, `preference` (rank: 1 = preferred), optional `vendor_url`/`vendor_sku` later. An item can have several vendors (Coke: Costco.com, Fred Meyer, Safeway).
 - `purchase` — **append-only**: `id`, `item_id`, `vendor_id`, `quantity`, `by_user`, `purchased_at` (+ void columns). One row each time someone records "I bought N" on the shopping list. (Replaces the earlier `status` ordered/bought idea: an online order and an in-store buy both land in Undelivered.)
 - `location.kind` (`normal` | `undelivered`): exactly one system location, **"Undelivered"**, holds purchased stock until it is checked in. It can't be renamed, deleted, shelved, or counted in Quick Inventory.
-- `stock_movement` — **append-only**, the ledger of stock that moves *between* counts: `id`, `item_id`, `location_id`, `delta` (signed, never 0), `kind` (`purchase` · `check_in` · `rebalance` · `cancel`), `group_id` (ties the legs of one action together), `purchase_id` (for purchases), `by_user`, `at`, and void columns. A transfer is two rows (−n at the source, +n at the destination) in one `group_id`; a purchase is one row (+n at Undelivered).
+- `stock_movement` — **append-only**, the ledger of stock that moves *between* counts: `id`, `item_id`, `location_id`, `delta` (signed, never 0), `kind` (`purchase` · `check_in` · `rebalance` · `cancel` · `found` · `markout`), `group_id` (ties the legs of one action together), `purchase_id` (for purchases), `reason` (required for `found`), `reviewed_at`/`reviewed_by` (Admin review of `found`), `by_user`, `at`, and void columns. A transfer is two rows (−n at the source, +n at the destination) in one `group_id`; a purchase is one row (+n at Undelivered).
 
 ## Balance per location (quantity items)
 `balance(item, location)` = the latest active count's quantity at that location (0 if never counted) **plus the sum of active movement deltas at that location after that count's time**. A count is the truth at its moment, so movements recorded *before* a count are absorbed by it. `current_stock(item)` = sum of balances over **all locations including Undelivered**, so a purchase immediately counts toward stock and the item stops showing as needed. Screens show "On hand 21 · plus 24 undelivered". "More than X" counts use X as the baseline (approximate). Balances are never stored, always derived (through `active_stock_count` and an `active_stock_movement` view). Level-measured items have no numeric balance: movements don't apply to them; checking one in sets its level to **Full** at the chosen location (a new case).
 
 ## Purchases, check-in, rebalance (user, 2026-10-06; prototype: `design/stock-flows.html`)
 1. **Buy (on the shopping list):** the check box becomes a **quantity**. Tap an item: the card offers one big button with the suggested amount ("Bought 27"), a keypad for a different number, and Save. This records a `purchase` (vendor = the vendor tab she is on) and a `+n` movement at Undelivered. Buying less than needed leaves the rest on the list automatically (the need is recomputed from stock including undelivered).
-2. **Check in deliveries (own screen):** lists items with stock in Undelivered. Tap one, split the delivered quantity across places ("8 here, 12 there"; rows default to the item's locations, prefilled with everything going to its default backstock), and **Put away**. Writes `−n` at Undelivered and `+n` at each destination (`check_in`). Anything not placed stays undelivered (partial deliveries). **"Not coming"** clears the remainder (`cancel`, `−n` at Undelivered) for short or cancelled orders.
-3. **Rebalance (own screen):** moves stock between places without changing the total. Pick the item, pick the place you are setting (default: its front/home location), type the new quantity. If it goes **up** (5 → 8) a **"Move from"** dropdown (default: the item's backstock location; also other locations and **Undelivered**) shows where the 3 come from; if it goes **down**, a **"Move to"** dropdown defaults to backstock. Saves a two-leg `rebalance`. If the source doesn't have enough, saving is blocked with the source's balance shown and a link to count it first (open question below).
-4. **Undo:** an immediate Undo (and Reset on the latest action) **voids the whole group**, the same pattern as counts. Who can void: whoever made it, plus Manager/Admin.
+2. **Check in deliveries (own screen; user, 2026-10-06):** every item with stock in Undelivered is listed with **three toggle buttons**: **Check In All** (everything goes to the item's backstock location; "Choose places" splits it, "8 here, 12 there"), **Still Undelivered** (the default; leave it), and **Partial Delivery** (enter how many arrived and where each went; the rest stays undelivered). One **Put away** button commits every item not left on Still Undelivered. It writes `−n` at Undelivered and `+n` at each destination (`check_in`). **"Not coming"** (inside Partial) clears the remainder (`cancel`) for short or cancelled orders. **Over-delivery** (more than was undelivered) is allowed but needs a **written explanation**; the extra is recorded as found stock (below) tied to that check-in.
+3. **Rebalance (own screen):** moves stock between places. **The total never changes, and you can't rebalance more than is present.**
+   - **Check in first.** If the item still has undelivered stock, Rebalance shows a banner ("24 are still undelivered. Check them in before rebalancing.") with a link to Check in for that item, and back.
+   - Pick the item, the place you are setting (default: its front/home location) and type the new quantity. An **increase** (5 → 8) draws from the item's **backstock location first**, then its other places in turn (a "Move from" line the volunteer can change); a **decrease** goes back to backstock ("Move to"). Saves a two-leg `rebalance`.
+   - **"Not enough in the source" alert**, with easy fixes. Backstock and every other place with stock are **combined**, so the volunteer is only asked about what is still short after all of them are used. The alert offers: **(a) Check in undelivered stock** (Undelivered is not a direct rebalance source: pulling from it happens through Check in, which records where it went; the link pre-fills the quantity still needed for this destination and returns to Rebalance); **(b) Pull the rest from another place** that has stock (a list of places with balances, repeatable until covered); **(c) Add anyway as found stock** (below). Nothing is saved until the move is fully covered.
+4. **Undo:** an immediate Undo (and Reset on the latest action) **voids the whole group**, the same pattern as counts. Who can void: whoever made it, plus Admin (`admin.void_any`).
 5. **Items need a backstock location:** `item_location.is_backstock` (0/1, at most one per item) marks the default source/destination.
 
+## Found stock (stock with no source; user, 2026-10-06)
+Something turns up that no delivery or move explains (a bottle that fell behind the case, more arrived than were bought). Any person with `inventory.count` can **add it independently from a check-in**: **Add anyway** from the Rebalance "Not enough in the source" alert, or **Add found stock** on an item card.
+- **Required:** quantity (> 0), place, and a written **explanation** (5 to 300 characters). No explanation, no save.
+- Writes a `stock_movement` of kind `found` (`+n` at the place, with `reason`, `by_user`, `at`). It is voidable like any movement.
+- **Flagged for Admin review**: found stock appears in the Admin review queue (alongside notes) until an Admin chooses Acknowledge. It never blocks the volunteer.
+- The extra from an over-delivery at Check in uses the same record.
+- A count is still the truth for a place: simply counting a place higher also raises it. "Found stock" exists for flows that otherwise keep the total constant (Rebalance, Check in) and for leaving a reason on the record.
+
+## Markouts (end-of-shift waste; user, 2026-10-06)
+Perishable items (bagels, muffins, burrito and bowl servings) thrown out or given away so they don't expire are recorded as **markouts**.
+- `item.ask_markout` (0/1, Admin-set). When a volunteer saves a count of **0** on such an item in Quick Inventory, the card asks **"Did we mark any out to avoid expiration?"** with **No** (one tap) or a **quantity** (the item's number buttons or keypad) and an optional reason (Expiring · Gave away · Damaged, default Expiring). Also reachable any time from the item card ("Mark out…").
+- `markout` (append-only, voidable): `id`, `item_id`, `location_id`, `quantity` (> 0), `reason`, `count_id` (the count that prompted it; nullable), `by_user`, `at`. **When linked to a count (the normal case) it is informational**: the count of 0 already reflects the loss, so balances are not reduced twice. A **standalone** markout (no count) subtracts from the place's balance like a movement of `−n`.
+- **Admin > Reports:** markouts by item, place and week (cost can be added when prices exist; INIT-0007). Needs `admin.reports`.
+
 ## Who can do what (ADR-0005)
-- **General:** counts, Check in, Rebalance, and Reset/Undo of their **own** recent actions.
+- **General:** counts, Check in, Rebalance, found stock, markouts, and Reset/Undo of their **own** recent actions.
 - **Shopper:** shopping list and recording purchases (creates stock).
-- **Admin:** setup (items, locations, racks, shelves, vendors, bulk placement), voiding **anyone's** action, reports, users.
+- **Admin:** setup (items, locations, racks, shelves, vendors, bulk placement), voiding **anyone's** action, reviewing found stock and notes, reports (including markouts), users.
 Roles stack; abilities are the union. Anyone signed in can read stock levels and shopping needs. Wherever these docs earlier say "Manager/Admin", read it as the **Admin** role (Kristyn holds General + Shopper + Admin).
 
 ## Shopping lists (derived, not stored)
@@ -81,6 +98,7 @@ Fewer taps: instead of a keypad, a `whole` item shows **number buttons sized to 
 Some items aren't worth counting: one case of cream cheese packets, a bulk bag, a jug. We need to know **when it's getting low**, not how many.
 - The count card shows four big buttons instead of a keypad: **Over half · Under half · Low · Out**. One tap saves and advances (the fastest action in the app). **Full** is offered too, for "just opened a new case". A small **"Enter a number"** link on every level card switches to the keypad for that one entry (the number is stored as a quantity).
 - **Shopping rule for level items:** needs replacing when the latest reading is **Low** or **Out** (a per-item threshold, default `low`; a Manager can raise it to `under_half` for items with long lead times). A typed quantity on a level item is compared to `par_level` if one is set.
+- **Open case + sealed cases (user, 2026-10-06):** a level item holds two things per place: the **open (partial) case**, read as a fullness level or a typed quantity (for example "running low", or 37 packets), and **sealed cases** (a whole number, usually 0 or 1). **Check in** of a level item adds sealed cases (default 1), or sets the open case to **Full** if nothing is open. Tapping **"Opened a new case"** on the card sets the open case to Full and subtracts one sealed case (if any). **Shopping rule:** a level item needs replacing only when the open case is at or below its threshold **and no sealed case remains**. Data: `stock_count.sealed` (integer ≥ 0) saved with level counts; between counts, sealed changes are `stock_movement` rows whose `delta` is in cases.
 - **Multiple locations:** each location has its own reading; a level item needs replacing only if *every* location is at/below the threshold (backstock Full + counter Low means refill the counter, not shop).
 
 ## Walking order (location → rack → shelf)
@@ -133,4 +151,13 @@ A location view that mirrors the room: an **Unplaced** tray, then a card per **r
 - Whether level items appear on every pass, and whether they may span several locations: **decide when needed** (no schema impact either way).
 
 ## Open questions
-- None blocking v1. (Pack sizes, INIT-0006, are deferred; `item_vendor` can be extended later.)
+- Markout prompt: only when a count is **0** (as stated), or also when a count drops sharply? Default: 0 only.
+- Level items: is one sealed case the usual maximum, or can several be stored? Default: any number, shown as a whole number.
+- Pack sizes (INIT-0006) are deferred; `item_vendor` can be extended later.
+- Pacific time (America/Los_Angeles), **DST-aware**, for every date and time shown or scheduled; stored in UTC.
+- Check in uses Check In All / Still Undelivered / Partial Delivery toggles per item; over-delivery needs a written explanation.
+- Rebalance can't exceed what is present; shortfalls show the "Not enough in the source" alert with fixes; Undelivered is reached through Check in, not directly.
+- Found stock (Add anyway) needs an explanation and is flagged for Admin review.
+- Level items hold one open case plus sealed cases; check-in adds a sealed case.
+- Markouts: perishable items asked "Did we mark any out to avoid expiration?" when counted at 0.
+- Removed (Reset) counts: the hidden Admin-only record stays by default (the user's answer moved to markouts without objecting).

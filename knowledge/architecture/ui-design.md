@@ -24,3 +24,5 @@ Prototype of record: `design/layout-options.html` (also a private artifact). Dec
 ## Home (user, 2026-10-06)
 **Home is where reminders appear** (`knowledge/architecture/reminders.md`): a Reminders section at the top, listing what is due now with its check box, or the line **"No reminders due."** when nothing is. Home no longer carries shortcut cards; the main menu is the way to every section. Built so far: the section and its empty state; reminders themselves are not built yet.
 
+## Reminder banner (user, 2026-10-06)
+One persistent banner on **every** screen ("N reminders need attention", linking to Home) while any reminder is past its time and not done; one banner for all of them. Home lists all of today's reminders, including future ones (dimmed, with their time). Details: `reminders.md`.

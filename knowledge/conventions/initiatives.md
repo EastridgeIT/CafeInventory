@@ -31,6 +31,6 @@ Captured ──► Fleshing-out ──► (implemented) ──► moved to Initi
 **Before starting any new idea or process, read `Initiatives-Open.md`.** Develop with the known future in mind — leave extension points for what's coming, even if we're not building it yet. Don't paint into corners.
 
 ## Status values
-`Captured` · `Fleshing-out` · `Deferred` (kept, not now) · (then removed from Open when moved to Complete).
+`Captured` · `Fleshing-out` · `Deferred` (kept, not now) · `Declined` (the user said not needed; kept so it isn't suggested again) · (then removed from Open when moved to Complete).
 
 Template: `../templates/initiative.md`.
