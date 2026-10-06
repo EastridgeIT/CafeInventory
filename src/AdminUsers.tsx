@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { api, ApiError } from "./api";
-import { roleLabel, useAuth } from "./auth";
+import { ROLES, roleHelp, roleLabel, useAuth } from "./auth";
 import type { Role } from "./auth";
 
-type Row = { id: string; display_name: string; role: Role; toast_employee_ref: string | null; active: number };
+type Row = { id: string; display_name: string; roles: Role[]; toast_employee_ref: string | null; active: number };
 
 const errText = (e: unknown): string => {
   if (e instanceof ApiError) {
     if (e.code === "name_taken") return "Someone already has that name.";
-    if (e.code === "last_admin") return "There must be at least one active admin.";
-    if (e.code === "invalid_request") return "Check the fields. A PIN is 4 to 8 numbers.";
+    if (e.code === "last_admin") return "There must be at least one active person with the Admin role.";
+    if (e.code === "invalid_request") return "Check the fields. Pick at least one role. A PIN is 4 to 8 numbers.";
   }
   return "That didn't save. Check your connection and try again.";
 };
@@ -43,7 +43,7 @@ export function AdminUsers() {
   return (
     <>
       <h2>Users</h2>
-      <p className="muted">Volunteers sign in by picking their name and entering a PIN. PINs are never shown, only set or reset.</p>
+      <p className="muted">People sign in by picking their name and entering a PIN. PINs are never shown, only set or reset. Roles stack: someone can be General and Shopper, and they get everything both allow.</p>
       <div aria-live="polite">
         {note && <p className="ok">{note}</p>}
         {error && <p className="error" role="alert">{error}</p>}
@@ -61,17 +61,32 @@ export function AdminUsers() {
   );
 }
 
-function AddUser({ onAdd }: { onAdd: (b: { display_name: string; role: Role; pin: string; toast_employee_ref: string | null }) => Promise<boolean> }) {
+function RolePicker({ value, onChange }: { value: Role[]; onChange: (r: Role[]) => void }) {
+  const toggle = (r: Role) => onChange(value.includes(r) ? value.filter((x) => x !== r) : ROLES.filter((x) => x === r || value.includes(x)));
+  return (
+    <fieldset className="roles">
+      <legend>Roles (pick any that apply)</legend>
+      {ROLES.map((r) => (
+        <label key={r} className="check">
+          <input type="checkbox" checked={value.includes(r)} onChange={() => toggle(r)} />
+          <span><strong>{roleLabel[r]}</strong><small className="muted">{roleHelp[r]}</small></span>
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+
+function AddUser({ onAdd }: { onAdd: (b: { display_name: string; roles: Role[]; pin: string; toast_employee_ref: string | null }) => Promise<boolean> }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [role, setRole] = useState<Role>("volunteer");
+  const [roles, setRoles] = useState<Role[]>(["general"]);
   const [pin, setPin] = useState("");
   const [toast, setToast] = useState("");
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (await onAdd({ display_name: name.trim(), role, pin, toast_employee_ref: toast.trim() || null })) {
-      setName(""); setPin(""); setToast(""); setRole("volunteer"); setOpen(false);
+    if (await onAdd({ display_name: name.trim(), roles, pin, toast_employee_ref: toast.trim() || null })) {
+      setName(""); setPin(""); setToast(""); setRoles(["general"]); setOpen(false);
     }
   }
   if (!open) return <button className="btn primary" onClick={() => setOpen(true)}>Add user</button>;
@@ -79,16 +94,12 @@ function AddUser({ onAdd }: { onAdd: (b: { display_name: string; role: Role; pin
     <form className="panel form" onSubmit={submit}>
       <h3>New user</h3>
       <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} autoComplete="off" /></label>
-      <label>Role
-        <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-          {(Object.keys(roleLabel) as Role[]).map((r) => <option key={r} value={r}>{roleLabel[r]}</option>)}
-        </select>
-      </label>
+      <RolePicker value={roles} onChange={setRoles} />
       <label>PIN (4 to 8 numbers)<input type="password" inputMode="numeric" pattern="[0-9]{4,8}" value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))} required maxLength={8} autoComplete="new-password" /></label>
       <label>Toast employee ID (optional)<input value={toast} onChange={(e) => setToast(e.target.value)} maxLength={60} autoComplete="off" /></label>
       <div className="row">
         <button type="button" className="btn" onClick={() => setOpen(false)}>Cancel</button>
-        <button type="submit" className="btn primary grow" disabled={!name.trim() || pin.length < 4}>Add user</button>
+        <button type="submit" className="btn primary grow" disabled={!name.trim() || pin.length < 4 || roles.length === 0}>Add user</button>
       </div>
     </form>
   );
@@ -98,7 +109,7 @@ type Mode = "view" | "edit" | "pin" | "off";
 function UserCard({ r, isMe, run }: { r: Row; isMe: boolean; run: (fn: () => Promise<unknown>, ok: string) => Promise<boolean> }) {
   const [mode, setMode] = useState<Mode>("view");
   const [name, setName] = useState(r.display_name);
-  const [role, setRole] = useState<Role>(r.role);
+  const [roles, setRoles] = useState<Role[]>(r.roles);
   const [toast, setToast] = useState(r.toast_employee_ref ?? "");
   const [pin, setPin] = useState("");
   const done = () => setMode("view");
@@ -107,7 +118,7 @@ function UserCard({ r, isMe, run }: { r: Row; isMe: boolean; run: (fn: () => Pro
     <li className={`card${r.active ? "" : " off"}`}>
       <div className="line">
         <strong>{r.display_name}{isMe && " (you)"}</strong>
-        <span className="pill">{roleLabel[r.role]}</span>
+        {r.roles.map((x) => <span key={x} className="pill">{roleLabel[x]}</span>)}
         {!r.active && <span className="pill warn">Inactive</span>}
       </div>
       {r.toast_employee_ref && <div className="muted small">Toast ID {r.toast_employee_ref}</div>}
@@ -125,15 +136,12 @@ function UserCard({ r, isMe, run }: { r: Row; isMe: boolean; run: (fn: () => Pro
       )}
 
       {mode === "edit" && (
-        <form className="form" onSubmit={async (e) => { e.preventDefault(); if (await run(() => api(`/admin/users/${r.id}`, { method: "PATCH", body: { display_name: name.trim(), role, toast_employee_ref: toast.trim() || null } }), "Saved.")) done(); }}>
+        <form className="form" onSubmit={async (e) => { e.preventDefault(); if (await run(() => api(`/admin/users/${r.id}`, { method: "PATCH", body: { display_name: name.trim(), roles, toast_employee_ref: toast.trim() || null } }), "Saved.")) done(); }}>
           <label>Name<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={60} /></label>
-          <label>Role
-            <select value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              {(Object.keys(roleLabel) as Role[]).map((x) => <option key={x} value={x}>{roleLabel[x]}</option>)}
-            </select>
-          </label>
+          <RolePicker value={roles} onChange={setRoles} />
+          <p className="muted small">Changing roles signs this person out so the new roles apply right away.</p>
           <label>Toast employee ID<input value={toast} onChange={(e) => setToast(e.target.value)} maxLength={60} /></label>
-          <div className="row"><button type="button" className="btn sm" onClick={done}>Cancel</button><button className="btn sm primary grow" type="submit">Save</button></div>
+          <div className="row"><button type="button" className="btn sm" onClick={done}>Cancel</button><button className="btn sm primary grow" type="submit" disabled={roles.length === 0}>Save</button></div>
         </form>
       )}
 

@@ -41,8 +41,11 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 4. **Undo:** an immediate Undo (and Reset on the latest action) **voids the whole group**, the same pattern as counts. Who can void: whoever made it, plus Manager/Admin.
 5. **Items need a backstock location:** `item_location.is_backstock` (0/1, at most one per item) marks the default source/destination.
 
-## Roles (proposed; confirm)
-Anyone signed in can do Buy, Check-in, Rebalance and Reset their own actions; Manager/Admin can void anyone's.
+## Who can do what (ADR-0005)
+- **General:** counts, Check in, Rebalance, and Reset/Undo of their **own** recent actions.
+- **Shopper:** shopping list and recording purchases (creates stock).
+- **Admin:** setup (items, locations, racks, shelves, vendors, bulk placement), voiding **anyone's** action, reports, users.
+Roles stack; abilities are the union. Anyone signed in can read stock levels and shopping needs. Wherever these docs earlier say "Manager/Admin", read it as the **Admin** role (Kristyn holds General + Shopper + Admin).
 
 ## Shopping lists (derived, not stored)
 - An item **needs replacing** when `current_stock < par_level`, where `current_stock` already includes Undelivered (so a purchase removes the need at once). Suggested quantity = `par_level − current_stock`. Volunteers can also tap **"We're out / low"** on any item to force it onto the list.

@@ -123,26 +123,32 @@ describe("stored PINs", () => {
 
 describe("admin: user management", () => {
   async function admin() {
-    const u = await addUser({ role: "admin", name: "Boss" });
+    const u = await addUser({ roles: ["admin"], name: "Boss" });
     const { cookie } = await signIn(u);
     return { u, cookie };
   }
 
-  it("is closed to volunteers and managers", async () => {
-    for (const role of ["volunteer", "manager"]) {
-      const { cookie } = await signIn(await addUser({ role }));
+  it("is closed to anyone without the Admin role, however many other roles they stack", async () => {
+    for (const roles of [["general"], ["shopper"], ["general", "shopper"]]) {
+      const { cookie } = await signIn(await addUser({ roles }));
       expect((await call("/api/admin/users", { cookie })).status).toBe(403);
     }
     expect((await call("/api/admin/users")).status).toBe(401);
   });
 
+  it("opens for Admin even when it is the only role", async () => {
+    const { cookie } = await admin();
+    expect((await call("/api/admin/users", { cookie })).status).toBe(200);
+  });
+
   it("creates a user who can sign in, and never returns PIN data", async () => {
     const { cookie } = await admin();
-    const res = await call("/api/admin/users", { method: "POST", cookie, body: { display_name: "Maria", role: "volunteer", pin: "7391", toast_employee_ref: "T-204" } });
+    const res = await call("/api/admin/users", { method: "POST", cookie, body: { display_name: "Maria", roles: ["general", "shopper"], pin: "7391", toast_employee_ref: "T-204" } });
     expect(res.status).toBe(201);
     const text = await res.text();
     expect(text).not.toMatch(/7391|pin_hash|pin_salt/);
-    const { user } = JSON.parse(text) as { user: { id: string } };
+    const { user } = JSON.parse(text) as { user: { id: string; roles: string[] } };
+    expect(user.roles).toEqual(["general", "shopper"]);
     expect((await signIn({ id: user.id, pin: "7391" })).res.status).toBe(200);
     const list = await (await call("/api/admin/users", { cookie })).text();
     expect(list).not.toMatch(/pin_hash|pin_salt|7391/);
@@ -150,10 +156,12 @@ describe("admin: user management", () => {
 
   it("rejects duplicate names (case-insensitive) and bad PINs", async () => {
     const { cookie } = await admin();
-    const make = (name: string, pin: string) => call("/api/admin/users", { method: "POST", cookie, body: { display_name: name, role: "volunteer", pin } });
+    const make = (name: string, pin: string, roles: string[] = ["general"]) => call("/api/admin/users", { method: "POST", cookie, body: { display_name: name, roles, pin } });
     expect((await make("Maria", "1234")).status).toBe(201);
     expect((await make("maria", "1234")).status).toBe(409);
     expect((await make("Dev", "12")).status).toBe(400);
+    expect((await make("NoRoles", "1234", [])).status).toBe(400);
+    expect((await make("Odd", "1234", ["superuser"])).status).toBe(400);
   });
 
   it("deactivating a user ends their sessions immediately", async () => {
@@ -179,10 +187,33 @@ describe("admin: user management", () => {
   it("refuses to remove the last active admin", async () => {
     const { u, cookie } = await admin();
     expect((await call(`/api/admin/users/${u.id}`, { method: "PATCH", cookie, body: { active: false } })).status).toBe(409);
-    expect((await call(`/api/admin/users/${u.id}`, { method: "PATCH", cookie, body: { role: "manager" } })).status).toBe(409);
-    const second = await addUser({ role: "admin" });
-    expect((await call(`/api/admin/users/${u.id}`, { method: "PATCH", cookie, body: { role: "manager" } })).status).toBe(200);
+    expect((await call(`/api/admin/users/${u.id}`, { method: "PATCH", cookie, body: { roles: ["general", "shopper"] } })).status).toBe(409);
+    const second = await addUser({ roles: ["admin"] });
+    expect((await call(`/api/admin/users/${u.id}`, { method: "PATCH", cookie, body: { roles: ["general"] } })).status).toBe(200);
     expect(second.id).toBeTruthy();
+  });
+});
+
+describe("roles and permissions on sessions", () => {
+  it("returns roles and the union of their permissions on sign in and /me", async () => {
+    const u = await addUser({ roles: ["general", "shopper"] });
+    const { res, cookie } = await signIn(u);
+    const body = (await res.json()) as { user: { roles: string[]; permissions: string[] } };
+    expect(body.user.roles).toEqual(["general", "shopper"]);
+    expect(body.user.permissions).toEqual(expect.arrayContaining(["inventory.count", "inventory.checkin", "inventory.rebalance", "shopping.use"]));
+    expect(body.user.permissions).not.toContain("admin.users");
+    const me = (await (await call("/api/me", { cookie })).json()) as typeof body;
+    expect(me.user.permissions).toEqual(body.user.permissions);
+  });
+
+  it("changing someone's roles takes effect at once by ending their sessions", async () => {
+    const adm = await signIn(await addUser({ roles: ["admin"] }));
+    const v = await addUser({ roles: ["general"] });
+    const vs = await signIn(v);
+    expect((await call(`/api/admin/users/${v.id}`, { method: "PATCH", cookie: adm.cookie, body: { roles: ["general", "shopper"] } })).status).toBe(200);
+    expect((await call("/api/me", { cookie: vs.cookie })).status).toBe(401);
+    const again = (await (await signIn(v).then((x) => x.res)).json()) as { user: { roles: string[] } };
+    expect(again.user.roles).toEqual(["general", "shopper"]);
   });
 });
 

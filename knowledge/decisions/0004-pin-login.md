@@ -7,7 +7,7 @@
 Volunteers must sign in with near-zero friction (feature test: ease of use drives adoption). The user (admin) will **pre-create every user** and assign each a 4–8 digit PIN **based on their Toast POS login**. There is no self sign-up, no email, and no passwords. The app is on the public internet, and a 4-digit PIN has only 10,000 possibilities.
 
 ## Decision
-- **Users live in D1**, created and managed only by an admin. Each user has a role: `volunteer`, `manager`, or `admin`.
+- **Users live in D1**, created and managed only by an admin. Roles are stackable (see ADR-0005, which replaced the original single `volunteer`/`manager`/`admin` role).
 - **Login = choose your name, then enter your PIN.** PINs don't need to be unique. A PIN alone never identifies a user.
 - **PIN = the person's Toast POS PIN** (user's decision, 2026-10-06; risk accepted, see Consequences).
 - **PINs are never stored readable:** PBKDF2-SHA256 (WebCrypto) with a per-user random salt **plus a server-side pepper** held as a Worker secret (`PIN_PEPPER`), never in D1.

@@ -20,7 +20,8 @@ Category tags: `UX · Frontend · Backend · Database · API · Integrations · 
 - [UX] Design direction chosen: option A (guided card) for volunteers, with per-item one-tap number buttons (`quick_max`) and fullness buttons; layouts prototype published as a private artifact.
 - [Backend] PIN login, sessions, per-user lockout and per-IP throttle, admin user management; [Database] migrations for users, sessions and the full inventory schema (items, locations, racks, shelves, vendors, counts with void, purchases); [Security] hashed PINs with a server-side pepper; [Infra] production migrations applied, `PIN_PEPPER` secret set, first-admin seed script. 35 tests. Build stamp `2610002`.
 - [Frontend] Sign-in screen (name picker + PIN), app shell with sign out, Admin > Users screen (add, edit, set PIN, deactivate); [UX] app icon and theme color moved to the chosen blue. First admin created in production. Build stamp `2610003`.
-- [Docs] Design: buy by quantity, Undelivered location, Check in and Rebalance flows, stock-movement ledger, derived balances (prototype `design/stock-flows.html`). Schema change pending as migration 0003.
+- [Docs] Design: buy by quantity, Undelivered location, Check in and Rebalance flows, stock-movement ledger, derived balances (prototype `design/stock-flows.html`). Stock-movement schema pending as a later migration.
+- [Backend] Stackable cumulative roles (General, Shopper, Admin) replace the single role; permission-based checks; [Database] migration 0003; [Frontend] role checkboxes in Admin > Users and permission-driven home cards. ADR-0005. 42 tests. Build stamp `2610004`.
 - [UX] Typeface chosen: Public Sans (self-hosted).
 - [UX] Layout prototype gains a typeface switcher (nine fonts).
 - [Docs] Design: per-item "Reset this count" (void, excluded from all calculations; Admin-only audit trace).

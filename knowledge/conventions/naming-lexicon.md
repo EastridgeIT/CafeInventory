@@ -14,9 +14,10 @@ updated: 2026-10-06
 | Concept | Default label (`key`) | Notes / avoid |
 |---|---|---|
 | A person who can sign in | **User** (`user`) | Avoid "account", "member", "staff". Role is an attribute, not a separate entity. |
-| Role: logs stock activity | **Volunteer** (`volunteer`) | |
-| Role: owns procurement | **Manager** (`manager`) | UI label "Cafe Manager". |
-| Role: manages users & settings | **Admin** (`admin`) | |
+| Role: update inventory from what is available | **General** (`general`) | Counts, check in, rebalance. Roles stack; never call a person "a general". |
+| Role: use the shopping list, record purchases | **Shopper** (`shopper`) | Creates stock. |
+| Role: administration, reports, undo anyone's action | **Admin** (`admin`) | Does not imply General or Shopper. |
+| What a role allows | **Permission** (`permission`) | e.g. `inventory.count`; code checks permissions, not role names. |
 | Numeric sign-in secret (4–8 digits) | **PIN** (`pin`) | Never "password" or "passcode". **Never interchange with a Toast PIN.** |
 | A thing the cafe stocks | **Item** (`item`) | Avoid "product", "SKU", "ingredient". |
 | A physical place stock is kept | **Location** (`location`) | e.g. Beverage Case, Cafe Counter, Cafe Pantry. Avoid "shelf", "area". |

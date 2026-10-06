@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AdminUsers } from "./AdminUsers";
 import { AuthProvider, roleLabel, useAuth } from "./auth";
+import type { Permission } from "./auth";
 import { SignIn } from "./SignIn";
 
 const useHash = () => {
@@ -14,11 +15,14 @@ const useHash = () => {
 };
 
 function Shell() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, can } = useAuth();
   const hash = useHash();
   if (!user) return null;
-  const isAdmin = user.role === "admin";
-  const page = hash === "#/admin/users" && isAdmin ? "users" : "home";
+  const page = hash === "#/admin/users" && can("admin.users") ? "users" : "home";
+  const soon = (p: Permission, title: string, text: string) =>
+    can(p) && (
+      <li className="card disabled"><strong>{title}</strong><div className="muted small">{text}</div></li>
+    );
 
   return (
     <div className="shell">
@@ -28,7 +32,7 @@ function Shell() {
           <span>Cafe Inventory</span>
         </a>
         <div className="who">
-          <span>{user.display_name}<small className="muted"> · {roleLabel[user.role]}</small></span>
+          <span>{user.display_name}<small className="muted"> · {user.roles.map((r) => roleLabel[r]).join(" + ") || "No roles"}</small></span>
           <button className="btn sm" onClick={signOut}>Sign out</button>
         </div>
       </header>
@@ -42,12 +46,15 @@ function Shell() {
           <>
             <h2>Hello, {user.display_name}</h2>
             <ul className="cards">
-              <li className="card disabled"><strong>Quick Inventory</strong><div className="muted small">Coming next: count items by location, one tap at a time.</div></li>
-              <li className="card disabled"><strong>Shopping lists</strong><div className="muted small">Coming soon: what to buy, by vendor.</div></li>
-              {isAdmin && (
+              {soon("inventory.count", "Quick Inventory", "Coming next: count items by location, one tap at a time.")}
+              {soon("inventory.checkin", "Check in deliveries", "Coming soon: put bought stock on the shelves.")}
+              {soon("inventory.rebalance", "Rebalance", "Coming soon: move stock between places.")}
+              {soon("shopping.use", "Shopping list", "Coming soon: what to buy, by vendor, and record what you bought.")}
+              {can("admin.users") && (
                 <li><a className="card link" href="#/admin/users"><strong>Users</strong><div className="muted small">Add volunteers, set PINs, change roles.</div></a></li>
               )}
             </ul>
+            {user.roles.length === 0 && <p className="muted">You don't have any roles yet. Ask an admin to give you one.</p>}
           </>
         )}
       </main>

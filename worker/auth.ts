@@ -3,9 +3,12 @@ import type { Context, MiddlewareHandler } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
 import { fromB64, hashPin, nowIso, randomBytes, sha256Hex, timingSafeEqual, toB64, ulid, PIN_ITERATIONS, PIN_PATTERN } from "./crypto";
+import { normalizeRoles, permissionsOf } from "./permissions";
+import type { Permission, Role } from "./permissions";
 
-export type Role = "volunteer" | "manager" | "admin";
-export type SessionUser = { id: string; display_name: string; role: Role };
+export type SessionUser = { id: string; display_name: string; roles: Role[] };
+/** What the client gets: roles for display, permissions for gating screens. */
+export const publicUser = (u: SessionUser) => ({ ...u, permissions: permissionsOf(u.roles) });
 export type AppEnv = { Bindings: Env; Variables: { user: SessionUser } };
 
 const COOKIE = "ci_session";
@@ -14,7 +17,6 @@ const MAX_FAILS = 5;
 const LOCK_MINUTES = 15;
 const IP_WINDOW_MS = 10 * 60_000;
 const IP_MAX_PER_WINDOW = 30;
-const RANK: Record<Role, number> = { volunteer: 1, manager: 2, admin: 3 };
 
 // Computed against unknown/locked users so every failure path costs about the same.
 const DUMMY_SALT = new Uint8Array(16);
@@ -35,12 +37,13 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   const token = getCookie(c, COOKIE);
   if (!token) return fail(c, 401, "not_signed_in");
   const row = await c.env.DB.prepare(
-    `SELECT s.id AS sid, s.expires_at, s.last_seen_at, u.id, u.display_name, u.role
+    `SELECT s.id AS sid, s.expires_at, s.last_seen_at, u.id, u.display_name,
+            (SELECT group_concat(role) FROM user_role WHERE user_id = u.id) AS roles
        FROM session s JOIN user u ON u.id = s.user_id
       WHERE s.token_hash = ? AND u.active = 1`,
   )
     .bind(await sha256Hex(token))
-    .first<{ sid: string; expires_at: string; last_seen_at: string; id: string; display_name: string; role: Role }>();
+    .first<{ sid: string; expires_at: string; last_seen_at: string; id: string; display_name: string; roles: string | null }>();
   if (!row || row.expires_at <= nowIso()) {
     deleteCookie(c, COOKIE, { path: "/" });
     return fail(c, 401, "not_signed_in");
@@ -48,12 +51,13 @@ export const requireAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (Date.now() - Date.parse(row.last_seen_at) > 60_000) {
     await c.env.DB.prepare("UPDATE session SET last_seen_at = ? WHERE id = ?").bind(nowIso(), row.sid).run();
   }
-  c.set("user", { id: row.id, display_name: row.display_name, role: row.role });
+  c.set("user", { id: row.id, display_name: row.display_name, roles: normalizeRoles((row.roles ?? "").split(",")) });
   await next();
 };
 
-export const requireRole = (min: Role): MiddlewareHandler<AppEnv> => async (c, next) => {
-  if (RANK[c.get("user").role] < RANK[min]) return fail(c, 403, "forbidden");
+/** Gate a route by permission (union of the user's roles), never by role name. */
+export const requirePermission = (perm: Permission): MiddlewareHandler<AppEnv> => async (c, next) => {
+  if (!permissionsOf(c.get("user").roles).includes(perm)) return fail(c, 403, "forbidden");
   await next();
 };
 
@@ -97,10 +101,10 @@ authRoutes.post("/login", async (c) => {
   const { user_id, pin } = parsed.data;
 
   const u = await c.env.DB.prepare(
-    "SELECT id, display_name, role, pin_hash, pin_salt, pin_iterations, active, failed_attempts, locked_until FROM user WHERE id = ?",
+    "SELECT id, display_name, pin_hash, pin_salt, pin_iterations, active, failed_attempts, locked_until, (SELECT group_concat(role) FROM user_role WHERE user_id = user.id) AS roles FROM user WHERE id = ?",
   )
     .bind(user_id)
-    .first<{ id: string; display_name: string; role: Role; pin_hash: string; pin_salt: string; pin_iterations: number; active: number; failed_attempts: number; locked_until: string | null }>();
+    .first<{ id: string; display_name: string; roles: string | null; pin_hash: string; pin_salt: string; pin_iterations: number; active: number; failed_attempts: number; locked_until: string | null }>();
 
   const usable = !!u && u.active === 1;
   const lockedNow = !!u?.locked_until && u.locked_until > nowIso();
@@ -139,7 +143,7 @@ authRoutes.post("/login", async (c) => {
     ),
   ]);
   setCookie(c, COOKIE, token, { httpOnly: true, secure: true, sameSite: "Lax", path: "/", maxAge: SESSION_HOURS * 3600 });
-  return c.json({ user: { id: u.id, display_name: u.display_name, role: u.role } });
+  return c.json({ user: publicUser({ id: u.id, display_name: u.display_name, roles: normalizeRoles((u.roles ?? "").split(",")) }) });
 });
 
 authRoutes.post("/logout", async (c) => {
@@ -149,4 +153,4 @@ authRoutes.post("/logout", async (c) => {
   return c.json({ ok: true });
 });
 
-authRoutes.get("/me", requireAuth, (c) => c.json({ user: c.get("user") }));
+authRoutes.get("/me", requireAuth, (c) => c.json({ user: publicUser(c.get("user")) }));

@@ -2,10 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { ReactNode } from "react";
 import { api, setUnauthorizedHandler } from "./api";
 
-export type Role = "volunteer" | "manager" | "admin";
-export type User = { id: string; display_name: string; role: Role };
+// Mirrors worker/permissions.ts (ADR-0005). The server enforces; the client only decides what to show.
+export type Role = "general" | "shopper" | "admin";
+export type Permission =
+  | "inventory.count" | "inventory.checkin" | "inventory.rebalance" | "shopping.use" | "shopping.new_item"
+  | "admin.users" | "admin.catalog" | "admin.void_any" | "admin.reports";
+export type User = { id: string; display_name: string; roles: Role[]; permissions: Permission[] };
 
-type AuthState = { user: User | null; ready: boolean; signedIn: (u: User) => void; signOut: () => Promise<void> };
+type AuthState = { user: User | null; ready: boolean; signedIn: (u: User) => void; signOut: () => Promise<void>; can: (p: Permission) => boolean };
 const Ctx = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -25,7 +29,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const value = useMemo(() => ({ user, ready, signedIn: setUser, signOut }), [user, ready, signOut]);
+  const value = useMemo(
+    () => ({ user, ready, signedIn: setUser, signOut, can: (p: Permission) => !!user?.permissions.includes(p) }),
+    [user, ready, signOut],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
@@ -35,4 +42,10 @@ export function useAuth(): AuthState {
   return v;
 }
 
-export const roleLabel: Record<Role, string> = { volunteer: "Volunteer", manager: "Cafe Manager", admin: "Admin" };
+export const ROLES: Role[] = ["general", "shopper", "admin"];
+export const roleLabel: Record<Role, string> = { general: "General", shopper: "Shopper", admin: "Admin" };
+export const roleHelp: Record<Role, string> = {
+  general: "Count inventory, check in deliveries, move stock between places.",
+  shopper: "Use the shopping list and record purchases.",
+  admin: "Manage users, items and places, undo anyone's action, see reports.",
+};

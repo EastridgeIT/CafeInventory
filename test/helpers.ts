@@ -2,23 +2,24 @@ import { env } from "cloudflare:test";
 import { exports } from "cloudflare:workers";
 import { newPinRecord, nowIso, ulid } from "../worker/crypto";
 
-const TABLES = ["purchase", "stock_count", "item_vendor", "item_location", "vendor", "item", "shelf", "rack", "location", "session", "login_throttle", "user"];
+const TABLES = ["purchase", "stock_count", "item_vendor", "item_location", "vendor", "item", "shelf", "rack", "location", "session", "login_throttle", "user_role", "user"];
 
 export async function resetDb() {
   for (const t of TABLES) await env.DB.prepare(`DELETE FROM ${t}`).run();
 }
 
-export async function addUser(over: { name?: string; role?: string; pin?: string; active?: number } = {}) {
+export async function addUser(over: { name?: string; roles?: string[]; pin?: string; active?: number } = {}) {
   const id = ulid();
   const pin = over.pin ?? "1234";
   const rec = await newPinRecord(pin, id, env.PIN_PEPPER);
   const name = over.name ?? `User ${id.slice(-6)}`;
   const now = nowIso();
   await env.DB.prepare(
-    `INSERT INTO user (id, display_name, role, pin_hash, pin_salt, pin_iterations, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO user (id, display_name, pin_hash, pin_salt, pin_iterations, active, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
   )
-    .bind(id, name, over.role ?? "volunteer", rec.pin_hash, rec.pin_salt, rec.pin_iterations, over.active ?? 1, now, now)
+    .bind(id, name, rec.pin_hash, rec.pin_salt, rec.pin_iterations, over.active ?? 1, now, now)
     .run();
+  for (const r of over.roles ?? ["general"]) await env.DB.prepare("INSERT INTO user_role (user_id, role) VALUES (?, ?)").bind(id, r).run();
   return { id, pin, name };
 }
 
