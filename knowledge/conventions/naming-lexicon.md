@@ -30,6 +30,7 @@ updated: 2026-10-06
 | A recorded buy/order of an item | **Purchase** (`purchase`) | Append-only. |
 | How an item is measured | **Measurement method** (`measurement_method`: `whole` \| `decimal` \| `level`) | Avoid "count mode", "unit type". |
 | Largest number shown as a one-tap button for an item | **Quick max** (`quick_max`) | Must be ≥ par level. Avoid "button limit", "max count". |
+| Removing a mistaken count so it never counted | **Void** / UI label **Reset this count** (`voided_at`) | Never "delete" or "revert". Voided rows are excluded from every calculation. |
 | A rack within a location | **Rack** (`rack`) | Optional. |
 | A shelf, top to bottom | **Shelf** (`shelf`) | Belongs to a location, optionally a rack. Avoid "row", "tier". |
 | A fullness reading (Full, Over half, Under half, Low, Out) | **Level** (`level`) | Used by level-mode items. Never summed. Avoid "gauge", "status". |

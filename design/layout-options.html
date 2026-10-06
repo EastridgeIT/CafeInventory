@@ -176,7 +176,7 @@ const OPTS={
  c:{name:'C · Rack map',tag:'The rack drawn as it looks in the room. Tap an item on its shelf.',
    best:'Learning where things live, and locations with real racks and shelves.',
    watch:'Only as good as the shelf setup (that is the bulk-placement job), and thin for locations with no racks.'}};
-const mk=()=>({c:{},cur:1,conf:null,num:{},undo:null,open:false,err:'',touched:false});
+const mk=()=>({rc:null,c:{},cur:1,conf:null,num:{},undo:null,open:false,err:'',touched:false});
 const S={a:mk(),b:mk(),c:mk()};
 const lastTxt=it=>it.m==='level'?`${it.lastL} · ${it.when}`:`${it.last} ${it.u} · ${it.when}`;
 const valTxt=(it,v)=>v.skip?'Skipped':v.l?v.l:v.v===0&&it.q?'None':v.min?`More than ${v.v} ${it.u}`:`${v.v} ${it.u}`;
@@ -193,12 +193,15 @@ function trySave(o,id,raw){const st=S[o],it=ITEMS[id];raw=(raw||'').trim();st.to
  if(it.m!=='decimal'&&!Number.isInteger(v)){st.err='This item is counted in whole numbers.';return renderQI(o)}
  if(it.last!=null&&(v===0||v>=it.last*5)&&!(st.conf&&st.conf.id===id&&st.conf.v===v)){st.conf={id,v};st.err='';return renderQI(o)}
  commit(o,id,{v})}
-function go(o,id){const st=S[o];st.cur=id;st.conf=null;st.err='';st.open=true;st.touched=true;renderQI(o)}
+function go(o,id){const st=S[o];st.rc=null;st.cur=id;st.conf=null;st.err='';st.open=true;st.touched=true;renderQI(o)}
 function undo(o){const st=S[o],u=st.undo;if(!u)return;if(u.prev)st.c[u.id]=u.prev;else delete st.c[u.id];st.cur=u.id;st.undo=null;st.open=true;renderQI(o)}
 const toast=o=>S[o].undo?`<div class="toast"><span>${esc(S[o].undo.msg)}</span><button data-act="undo" data-o="${o}">Undo</button></div>`:'';
 const askHTML=(o,id)=>{const st=S[o];if(!st.conf||st.conf.id!==id)return'';const it=ITEMS[id];
  return `<div class="ask"><span>That is ${st.conf.v}. Last time it was ${it.last}. Is that right?</span><div><button class="btn sm" data-act="fix" data-o="${o}">Fix it</button><button class="btn sm p" data-act="yes" data-o="${o}">Yes, save</button></div></div>`};
-function entry(o,id){const st=S[o],it=ITEMS[id],mode=modeOf(st,id);let h='';
+const resetHTML=(o,id)=>{const st=S[o],v=st.c[id];if(!v||v.skip)return'';
+ return st.rc===id?`<div class="ask"><span>Remove this count completely? It will be as if ${ITEMS[id].s} was never counted today.</span><div><button class="btn sm" data-act="rno" data-o="${o}">Keep it</button><button class="btn sm p" data-act="ryes" data-o="${o}" data-id="${id}">Remove count</button></div></div>`
+ :`<div class="ask"><span>Counted: ${valTxt(ITEMS[id],v)}</span><div><button class="btn sm" data-act="rask" data-o="${o}" data-id="${id}">Reset this count</button></div></div>`};
+function entry(o,id){const st=S[o],it=ITEMS[id],mode=modeOf(st,id);let h=resetHTML(o,id);
  if(mode==='key'){h+=`<label for="in-${o}" class="mu">Count in ${it.u}${it.m==='decimal'?' (halves are fine)':''}</label>
   <input class="num" id="in-${o}" data-in="${o}" data-id="${id}" inputmode="${it.m==='decimal'?'decimal':'numeric'}" pattern="${it.m==='decimal'?'[0-9.]*':'[0-9]*'}" autocomplete="off" placeholder="0" aria-describedby="e-${o}">`;
   if(st.err)h+=`<div class="err" id="e-${o}" role="alert">${st.err}</div>`;h+=askHTML(o,id);
@@ -308,7 +311,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
  if(a==='tab')pick(t.dataset.k);
  else if(a==='save')trySave(o,S[o].cur,($('#in-'+o)||{}).value);
  else if(a==='skip'){const st=S[o];st.undo={id:st.cur,prev:st.c[st.cur],msg:`Skipped ${ITEMS[st.cur].s}`};st.c[st.cur]={skip:1};st.cur=ORDER[ORDER.indexOf(st.cur)+1]??null;if(st.cur===null)st.open=false;st.conf=null;st.err='';st.touched=true;renderQI(o)}
- else if(a==='back'){const st=S[o];const i=ORDER.indexOf(st.cur);const p=ORDER[(i<0?ORDER.length:i)-1];if(p){st.cur=p;st.conf=null;st.err='';st.touched=true;renderQI(o)}}
+ else if(a==='back'){const st=S[o];st.rc=null;const i=ORDER.indexOf(st.cur);const p=ORDER[(i<0?ORDER.length:i)-1];if(p){st.cur=p;st.conf=null;st.err='';st.touched=true;renderQI(o)}}
  else if(a==='pick')go(o,id);
  else if(a==='close'){S[o].open=false;renderQI(o)}
  else if(a==='level')commit(o,id,{l:t.dataset.l});
@@ -320,6 +323,9 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
  else if(a==='yes'){const c=S[o].conf;if(c)commit(o,c.id,{v:c.v})}
  else if(a==='fix'){S[o].conf=null;renderQI(o);const i=$('#in-'+o);if(i){i.select()}}
  else if(a==='undo')undo(o);
+ else if(a==='rask'){S[o].rc=id;renderQI(o)}
+ else if(a==='rno'){S[o].rc=null;renderQI(o)}
+ else if(a==='ryes'){const st=S[o];delete st.c[id];st.rc=null;st.undo=null;st.err='';st.conf=null;st.touched=true;st.cur=id;st.open=true;renderQI(o)}
  else if(a==='reset'){S[o]=mk();SL[o]={v:'Fred Meyer',b:new Set(),last:null};renderQI(o);renderSL(o)}
  else if(a==='vend'){SL[o].v=t.dataset.v;renderSL(o)}
  else if(a==='buy'){SL[o].b.add(id);SL[o].last=NEED.find(n=>n.id===id);renderSL(o)}

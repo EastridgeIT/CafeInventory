@@ -21,7 +21,8 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 - `shelf` — `id`, `location_id`, `rack_id` (null for locations without racks, like a beverage case), `name` (e.g. "Shelf 1 (top)"), `sort_order` (top to bottom).
 - `item` — `id`, `name`, `unit_label` (e.g. "bags", "cases"), `measurement_method` (`whole` default | `decimal` | `level`, see below), `quick_max` (nullable integer; see Quick buttons), `in_quick_inventory` (checkbox, default on), `active`, `par_level` (total across locations; **a normal field on every item**, user decision 2026-10-06; Kristyn sets them at setup. A `level`-mode item may leave it blank because its Low/Out threshold drives the list instead).
 - `item_location` — `item_id`, `location_id`, optional `shelf_id`, `position` (order within the shelf). This is the "Where will I find this?" answer, down to the shelf for items where that matters.
-- `stock_count` — **append-only**: `id`, `item_id`, `location_id`, exactly one of `quantity` (whole by default; fractional only for `decimal` items) or `level`; `is_minimum` (0/1, set only by a "More than X" tap: the quantity is a lower bound) (`full` | `over_half` | `under_half` | `low` | `out`), `counted_by` (user id), `counted_at`. Never edited; a correction is a new count. History is the audit trail.
+- `stock_count` — **append-only, with one exception: voiding** (see Reset): `id`, `item_id`, `location_id`, exactly one of `quantity` (whole by default; fractional only for `decimal` items) or `level`; `is_minimum` (0/1, set only by a "More than X" tap: the quantity is a lower bound) (`full` | `over_half` | `under_half` | `low` | `out`), `counted_by` (user id), `counted_at`, and nullable `voided_at`, `voided_by`, `void_reason`. Never edited; a correction is a new count. History is the audit trail.
+- **Every calculation ignores voided counts** (current stock, "last counted", staleness, pass progress): query through a view `active_stock_count` (`WHERE voided_at IS NULL`); never read the raw table for business logic.
 - **Current stock** of a `quantity` item = sum over its locations of the *latest* count per location. A `level` reading is never summed; it's shown as its label ("Over half"). "Last counted" and staleness come from the same rows.
 
 - `vendor` — `id`, `name` (Costco.com, Chef Store, Fred Meyer, Safeway, …), `kind` (`online` | `in_store`), `sort_order`, `active`.
@@ -65,6 +66,15 @@ Entering racks and shelves item by item would be the biggest setup chore, so the
 - **Shelf screen, reverse direction:** open a shelf, tick the items that belong on it from a searchable list ("Add items here"), so someone standing in front of Rack 1 can fill it quickly.
 - **Same multi-select, other bulk actions:** set vendor(s), Quick Inventory checkbox, measurement method, par level, active/inactive.
 - **Safety:** a bulk change is one D1 batch (all or nothing) with a one-tap **Undo** right after; placements are not history-bearing (counts are), so changing a shelf never touches past counts.
+
+## Reset (remove a count completely)
+User requirement (2026-10-06): a mistaken count must be removable so that it **looks as if nobody counted or verified that item at all**. Changing the number back is not acceptable, because it would record a count that never happened.
+- **Where:** on the count card of any item that has a count in this pass, a **"Reset this count"** button (visible via Back, or by tapping the item in the list). One confirm step ("Remove this count completely?"), then the item returns to uncounted.
+- **What it does:** **voids** the latest active `stock_count` for that item and location (sets `voided_at/by`). Every normal view and calculation then behaves as if it never existed: "last counted" and current stock revert to the previous real count, and the item shows as uncounted in the pass. A second reset steps back to the one before.
+- **Undo toast = the same operation:** the "Saved…Undo" tap voids the count rather than adding a correcting one.
+- **Who:** the person who entered it (within the same pass) and Manager/Admin at any time. Volunteers cannot reset a count someone else entered.
+- **Trace:** voided rows stay in the table and show only in an **Admin-only audit view** (who, when, original value, reason optional). No normal screen, history or report shows them. Choosing a hard delete instead would remove even that; I recommend keeping the quiet audit row, because with shared Toast-style PINs it's the only record if a count is ever disputed.
+- A **skip** isn't a record, so there is nothing to reset.
 
 ## Quick Inventory behavior
 1. Pick a **location** (big list/tabs, each showing "x of y counted" and when it was last done).
