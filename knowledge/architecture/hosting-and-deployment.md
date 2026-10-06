@@ -60,7 +60,8 @@ After changing `wrangler.jsonc` bindings, run `npm run cf-typegen`. Keep `compat
 ### Email DNS (done 2026-10-06)
 Three DNS-only CNAMEs for SMTP2GO sender verification were added to the `jammin.cafe` zone through the API token: `em959675` → `return.smtp2go.net` (return path), `s959675._domainkey` → `dkim.smtp2go.net` (DKIM), `maillink` → `track.smtp2go.net` (tracking domain). Keep them DNS only (not proxied). Verification is completed with the Verify button in SMTP2GO.
 
-### Email (secret set 2026-10-06; sending not built yet)
+### Email (secret set and tested 2026-10-06; sending not built yet)
+A test message from `inventory@jammin.cafe` to `mail@mattorr.me` was accepted by SMTP2GO (`succeeded: 1`), so the verified sender domain and key work. Inbox delivery is confirmed by the user, not by the API.
 SMTP2GO via its HTTPS API: `POST https://api.smtp2go.com/v3/email/send`, key in the `X-Smtp2go-Api-Key` header, JSON with `sender`, `to` (array), `subject`, `text_body`/`html_body`; success is HTTP 200 with `data.succeeded`, failure is HTTP 400 with `error_code` and `error`. Worker secret `SMTP2GO_API_KEY` is uploaded (value also in `.dev.vars`, set like `PIN_PEPPER`). Sender domain `jammin.cafe` verified with DNS records added through the Cloudflare API token. Details: `scheduling-and-notifications.md`.
 
 ### Rotation
