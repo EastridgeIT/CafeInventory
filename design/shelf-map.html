@@ -1,0 +1,187 @@
+<title>Cafe Inventory Shelf Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: location dropdown, an "Unplaced" tray, then one card per rack; each shelf is a horizontally scrolling row of item tiles. */
+/* Tokens: option A palette and Public Sans, as chosen for the app. */
+:root{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--f:'Public Sans',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f);margin:0;padding-inline:16px;padding-block:20px 80px}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font:800 clamp(1.6rem,4vw,2.2rem)/1.1 var(--f);margin:0 0 8px;text-wrap:balance}
+.lede{max-width:70ch;color:var(--mu);margin:0 0 16px}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;list-style:none;margin:0 0 20px;padding:0}
+.how li{background:var(--sf);border-radius:14px;padding:10px 14px;font-size:.92rem}.how b{display:block}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px}
+.bar label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem;color:var(--mu)}
+select{font:700 17px var(--f);min-height:48px;border-radius:12px;border:2px solid var(--ln);background:var(--sf);color:var(--ink);padding:0 12px;min-width:220px}
+.btn{min-height:48px;padding:0 16px;border-radius:12px;border:2px solid var(--ln);background:var(--sf);color:var(--ink);font:700 16px var(--f);cursor:pointer}
+.btn:focus-visible,select:focus-visible,.tile:focus-visible,.grip:focus-visible,.kebab:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+#map{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:16px;align-items:start}
+.rack{background:var(--sf);border-radius:var(--r);padding:14px 14px 6px;min-width:0}
+.rack>h3{margin:0 0 8px;font:800 18px var(--f)}.rack>h3 small{font-weight:600;color:var(--mu);margin-left:6px;font-size:13px}
+.rack.unp{border:2px dashed var(--wn);grid-column:1/-1}
+.shelf{margin-bottom:12px;min-width:0}
+.slab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;color:var(--mu);margin-bottom:4px}.slab b{color:var(--ink);font-size:14px}
+.tiles{display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;padding:4px 2px 12px;min-height:116px;scrollbar-width:thin;scrollbar-color:var(--ln) transparent;border-bottom:8px solid var(--so);border-radius:0 0 4px 4px;overscroll-behavior-x:contain}
+.tiles.over{background:var(--so)}
+.empty{align-self:center;color:var(--mu);font-size:14px;padding:0 8px}
+.tile{flex:none;width:112px;min-height:98px;border:2px solid var(--ln);background:var(--bg);border-radius:14px;padding:4px 6px 8px;display:flex;flex-direction:column;position:relative;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;cursor:default}
+.tile .top{display:flex;justify-content:space-between;align-items:center;margin-inline:-4px}
+.grip,.kebab{width:44px;height:36px;border:0;background:transparent;color:var(--mu);border-radius:10px;cursor:grab;display:grid;place-items:center;padding:0}
+.grip{touch-action:none}.kebab{cursor:pointer}
+.grip:hover,.kebab:hover{background:var(--so);color:var(--ink)}
+.nm{font-weight:700;font-size:14.5px;line-height:1.2;margin-top:2px}.un{color:var(--mu);font-size:12.5px;margin-top:auto}
+.tile.dragging{opacity:.25}
+.ghost{position:fixed;z-index:50;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.28);transform:rotate(2deg);opacity:.96;background:var(--sf);border-color:var(--ac)}
+.ins{flex:none;width:6px;border-radius:99px;background:var(--ac);align-self:stretch;margin-inline:-3px}
+.held{outline:3px solid var(--ac);transform:scale(1.03)}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 16px;display:flex;gap:14px;align-items:center;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:70;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--sf);width:min(100%,520px);max-height:80vh;overflow:auto;border-radius:24px 24px 0 0;padding:16px 16px 22px}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:24px}}
+.sheet h2{margin:0;font:800 20px var(--f)}.sheet .sub{color:var(--mu);font-size:14px;margin:0 0 10px}
+.grp{font-weight:700;font-size:13px;color:var(--mu);margin:12px 0 4px}
+.opt{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;min-height:50px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);border-radius:12px;padding:0 14px;font:600 16px var(--f);cursor:pointer;margin-bottom:6px}
+.opt[aria-current="true"]{border-color:var(--ac);background:var(--so)}.opt small{color:var(--mu);font-weight:600}
+.opt.un2{border-style:dashed;border-color:var(--wn)}
+.quick{display:flex;gap:8px;margin:6px 0 2px}.quick .opt{margin:0;justify-content:center}
+.sr{position:absolute;left:-9999px}
+@media (prefers-reduced-motion:no-preference){.tile{transition:transform .12s}}
+</style>
+
+<div class="wrap">
+  <h1>Shelf map</h1>
+  <p class="lede">Admin view of one location, laid out the way the room is built. Each shelf scrolls sideways. Try it with a mouse or your finger; the items are sample pantry stock.</p>
+  <ul class="how">
+    <li><b>Drag to reorder or move</b>Grab the dotted handle at the tile's top left and drop it on any shelf, or back in the Unplaced tray. The shelf scrolls itself near its edges.</li>
+    <li><b>Press and hold for "Move to"</b>Hold any tile (or tap the three dots, or right-click) to pick a rack and shelf from a list, or nudge it left or right. Same location only.</li>
+    <li><b>Swipe the shelf freely</b>Touching anywhere except the handle scrolls the shelf, so a long shelf never gets in your way.</li>
+  </ul>
+  <div class="bar">
+    <label for="loc">Location<select id="loc"></select></label>
+    <button class="btn" id="reset">Reset demo</button>
+  </div>
+  <div id="map"></div>
+</div>
+<div id="live" class="sr" role="status" aria-live="polite"></div>
+<div id="layer"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const IT={}; let n=0;
+const mk=(name,unit)=>{const id='i'+(++n);IT[id]={n:name,u:unit};return id};
+const seed=()=>{n=0;for(const k in IT)delete IT[k];
+ const p=(...a)=>a.map(([x,y])=>mk(x,y));
+ return {
+  pantry:{name:'Cafe Pantry',unplaced:p(['Cream cheese','case']),racks:[
+   {id:'r1',name:'Rack 1',shelves:[
+    {id:'r1s1',name:'Shelf 1 (top)',items:p(['Coffee beans','bags'],['Decaf beans','bags'],['Cocoa powder','canisters'],['Chai concentrate','bottles'],['Raw sugar','boxes'],['Brown sugar','boxes'],['Stevia','boxes'],['Honey','bottles'])},
+    {id:'r1s2',name:'Shelf 2',items:p(['Vanilla syrup','bottles'],['Caramel syrup','bottles'],['Hazelnut syrup','bottles'],['Whipped cream','cans'])},
+    {id:'r1s3',name:'Shelf 3',items:p(['Oat milk','cartons'],['Almond milk','cartons'],['Soy milk','cartons'])}]},
+   {id:'r2',name:'Rack 2',shelves:[
+    {id:'r2s1',name:'Shelf 1 (top)',items:p(['12 oz cups','sleeves'],['16 oz cups','sleeves'],['12 oz lids','sleeves'],['16 oz lids','sleeves'],['Napkins','packs'],['Stir sticks','boxes'],['Straws','boxes'])},
+    {id:'r2s2',name:'Shelf 2',items:p(['Paper towels','rolls'],['Trash bags','boxes'])}]}]},
+  bev:{name:'Beverage Case',unplaced:[],racks:[
+   {id:'b0',name:null,shelves:[
+    {id:'b1',name:'Shelf 1 (top)',items:p(['Coke','bottles'],['Diet Coke','bottles'],['Sprite','bottles'],['Root beer','bottles'],['Ginger ale','bottles'])},
+    {id:'b2',name:'Shelf 2',items:p(['Bottled water','bottles'],['Sparkling water','cans'],['Orange juice','bottles'])}]}]}};};
+let D=seed(),loc='pantry',history=[];
+const L=()=>D[loc];
+const shelves=()=>L().racks.flatMap(r=>r.shelves.map(s=>({...s,rack:r.name,ref:s})));
+const listFor=key=>key==='unplaced'?L().unplaced:shelves().find(s=>s.id===key)?.ref.items;
+const where=id=>{if(L().unplaced.includes(id))return 'unplaced';const s=shelves().find(s=>s.items.includes(id));return s?s.id:null};
+const label=key=>{if(key==='unplaced')return 'Unplaced';const s=shelves().find(s=>s.id===key);return (s.rack?s.rack+' · ':'')+s.name};
+
+const dots='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" fill="currentColor"><circle cx="6" cy="4" r="1.6"/><circle cx="12" cy="4" r="1.6"/><circle cx="6" cy="9" r="1.6"/><circle cx="12" cy="9" r="1.6"/><circle cx="6" cy="14" r="1.6"/><circle cx="12" cy="14" r="1.6"/></svg>';
+const more='<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" fill="currentColor"><circle cx="3.5" cy="9" r="1.7"/><circle cx="9" cy="9" r="1.7"/><circle cx="14.5" cy="9" r="1.7"/></svg>';
+const tile=id=>`<div class="tile" data-item="${id}" tabindex="0" role="group" aria-label="${esc(IT[id].n)}. Press Enter for Move to."><div class="top"><button class="grip" data-grip aria-label="Drag ${esc(IT[id].n)}" tabindex="-1">${dots}</button><button class="kebab" data-menu aria-label="Move ${esc(IT[id].n)} to…">${more}</button></div><div class="nm">${esc(IT[id].n)}</div><div class="un">${esc(IT[id].u)}</div></div>`;
+const row=(key,title,items,sub)=>`<div class="shelf"><div class="slab"><b>${esc(title)}</b><span>${items.length} item${items.length===1?'':'s'}${sub||''}</span></div><div class="tiles" data-shelf="${key}">${items.map(tile).join('')||'<span class="empty">Drop items here</span>'}</div></div>`;
+function render(){const l=L();
+ $('#map').innerHTML=`<section class="rack unp"><h3>Unplaced<small>${l.unplaced.length?'These need a shelf':'Everything has a shelf'}</small></h3>${row('unplaced','Not on a shelf yet',l.unplaced)}</section>`+
+  l.racks.map(r=>`<section class="rack">${r.name?`<h3>${esc(r.name)}</h3>`:`<h3>${esc(l.name)}</h3>`}${r.shelves.map(s=>row(s.id,s.name,s.items)).join('')}</section>`).join('');}
+const live=m=>{$('#live').textContent=m};
+function toast(msg,snap){clearTimeout(toast.t);$('#layer').querySelector('.toast')?.remove();const d=document.createElement('div');d.className='toast';d.innerHTML=`<span>${esc(msg)}</span><button>Undo</button>`;$('#layer').appendChild(d);
+ d.querySelector('button').onclick=()=>{D=JSON.parse(snap);d.remove();render();live('Move undone')};toast.t=setTimeout(()=>d.remove(),7000);live(msg)}
+function move(id,dest,index,how){const snap=JSON.stringify(D);const from=where(id);const src=listFor(from);const i=src.indexOf(id);src.splice(i,1);
+ const dst=listFor(dest);const at=index==null?dst.length:Math.max(0,Math.min(index,dst.length));dst.splice(at,0,id);
+ if(from===dest&&at===i)return;render();toast(from===dest?`Moved ${IT[id].n} within ${label(dest)}`:`Moved ${IT[id].n} to ${label(dest)}`,snap)}
+
+/* ---------- Move to menu ---------- */
+function openMenu(id){closeMenu();const cur=where(id);const l=L();
+ const opt=(key,t,s)=>`<button class="opt ${key==='unplaced'?'un2':''}" data-dest="${key}" ${key===cur?'aria-current="true"':''}><span>${esc(t)}</span><small>${key===cur?'Here':s}</small></button>`;
+ let h=`<div class="scrim" data-scrim><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 id="mt">Move ${esc(IT[id].n)}</h2><p class="sub">Currently: ${esc(label(cur))}. Choose where it goes in ${esc(l.name)}.</p>
+ <div class="quick"><button class="opt" data-pos="left">Move left</button><button class="opt" data-pos="right">Move right</button></div><div class="quick"><button class="opt" data-pos="start">To start of shelf</button><button class="opt" data-pos="end">To end of shelf</button></div>`;
+ for(const r of l.racks){h+=`<div class="grp">${esc(r.name||l.name)}</div>`+r.shelves.map(s=>opt(s.id,s.name,s.items.length+' items')).join('')}
+ h+=`<div class="grp">Not on a shelf</div>${opt('unplaced','Unplaced',l.unplaced.length+' items')}<button class="btn" style="width:100%;margin-top:10px" data-close>Cancel</button></div></div>`;
+ $('#layer').insertAdjacentHTML('beforeend',h);const sc=$('#layer .scrim');sc.dataset.item=id;sc.querySelector('.opt[aria-current]')?.focus()||sc.querySelector('.opt').focus()}
+function closeMenu(){$('#layer .scrim')?.remove()}
+document.addEventListener('click',e=>{const sc=e.target.closest('.scrim');
+ if(sc){const id=sc.dataset.item;
+  if(e.target.closest('[data-close]')||e.target===sc){closeMenu();return}
+  const d=e.target.closest('[data-dest]');if(d){closeMenu();move(id,d.dataset.dest,null);return}
+  const p=e.target.closest('[data-pos]');if(p){const cur=where(id),i=listFor(cur).indexOf(id),k=p.dataset.pos;closeMenu();move(id,cur,k==='start'?0:k==='end'?1e9:k==='left'?Math.max(0,i-1):Math.min(listFor(cur).length-1,i+1))}
+  return}
+ const k=e.target.closest('[data-menu]');if(k&&!dragging){openMenu(k.closest('.tile').dataset.item)}});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){if($('#layer .scrim'))closeMenu();else cancelDrag()}
+ const t=e.target.closest&&e.target.closest('.tile');if(t&&e.target===t&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openMenu(t.dataset.item)}});
+document.addEventListener('contextmenu',e=>{const t=e.target.closest('.tile');if(t){e.preventDefault();openMenu(t.dataset.item)}});
+
+/* ---------- press and hold on the tile body ---------- */
+let hold=null;
+document.addEventListener('pointerdown',e=>{const t=e.target.closest('.tile');if(!t||e.target.closest('[data-grip],[data-menu]')||e.button>0||dragging)return;
+ const sx=e.clientX,sy=e.clientY,id=t.dataset.item;t.classList.add('held');
+ const move=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>8)stop()};
+ const stop=()=>{clearTimeout(timer);t.classList.remove('held');document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',stop);document.removeEventListener('pointercancel',stop);hold=null};
+ const timer=setTimeout(()=>{stop();suppressClick=true;openMenu(id);if(navigator.vibrate)navigator.vibrate(15)},480);
+ hold=stop;document.addEventListener('pointermove',move);document.addEventListener('pointerup',stop);document.addEventListener('pointercancel',stop)});
+let suppressClick=false;
+
+/* ---------- drag by the handle (mouse can also drag the tile body) ---------- */
+let dragging=null,raf=0;
+document.addEventListener('pointerdown',e=>{
+ const g=e.target.closest('[data-grip]');const t=e.target.closest('.tile');
+ if(!t||e.button>0||e.target.closest('[data-menu]'))return;
+ if(!g&&e.pointerType!=='mouse')return;               // touch/pen: only the handle drags, the body scrolls the shelf
+ if(e.pointerType==='mouse'&&!g){/* mouse: drag from body after a small move, keeping click-and-hold for the menu */
+  const sx=e.clientX,sy=e.clientY;const mv=ev=>{if(Math.hypot(ev.clientX-sx,ev.clientY-sy)>6){off();hold&&hold();begin(ev,t)}};const off=()=>{document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',off)};
+  document.addEventListener('pointermove',mv);document.addEventListener('pointerup',off);return}
+ e.preventDefault();begin(e,t)});
+function begin(e,t){if(dragging)return;const id=t.dataset.item;const r=t.getBoundingClientRect();
+ const ghost=t.cloneNode(true);ghost.classList.add('ghost');ghost.style.width=r.width+'px';ghost.style.height=r.height+'px';document.body.appendChild(ghost);
+ const ox=e.clientX-r.left,oy=e.clientY-r.top;t.classList.add('dragging');
+ dragging={id,t,ghost,ox,oy,x:e.clientX,y:e.clientY,target:null,index:0,ins:document.createElement('div')};dragging.ins.className='ins';
+ document.addEventListener('pointermove',onMove);document.addEventListener('pointerup',onUp);document.addEventListener('pointercancel',cancelDrag);
+ try{e.target.setPointerCapture?.(e.pointerId)}catch(_){}
+ place(e.clientX,e.clientY);loop()}
+function onMove(e){if(!dragging)return;dragging.x=e.clientX;dragging.y=e.clientY;place(e.clientX,e.clientY)}
+function place(x,y){const d=dragging;d.ghost.style.left=(x-d.ox)+'px';d.ghost.style.top=(y-d.oy)+'px';
+ d.ghost.style.display='none';const el=document.elementFromPoint(x,y);d.ghost.style.display='';
+ const tiles=el&&el.closest?el.closest('.tiles'):null;
+ document.querySelectorAll('.tiles.over').forEach(n=>n.classList.remove('over'));
+ if(!tiles){d.ins.remove();d.target=null;return}
+ tiles.classList.add('over');d.target=tiles;
+ const kids=[...tiles.querySelectorAll('.tile')].filter(k=>k!==d.t);let idx=kids.length;
+ for(let i=0;i<kids.length;i++){const b=kids[i].getBoundingClientRect();if(x<b.left+b.width/2){idx=i;break}}
+ d.index=idx;tiles.querySelector('.empty')?.remove();
+ const ref=kids[idx]||null;if(d.ins.parentNode!==tiles||d.ins.nextSibling!==ref)tiles.insertBefore(d.ins,ref)}
+function loop(){cancelAnimationFrame(raf);const step=()=>{const d=dragging;if(!d)return;
+  const edge=56,sp=14;
+  if(d.target){const b=d.target.getBoundingClientRect();if(d.x<b.left+edge)d.target.scrollLeft-=sp;else if(d.x>b.right-edge)d.target.scrollLeft+=sp;place(d.x,d.y)}
+  if(d.y<70)window.scrollBy(0,-12);else if(d.y>innerHeight-70)window.scrollBy(0,12);
+  raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+function end(){cancelAnimationFrame(raf);const d=dragging;dragging=null;if(!d)return null;document.removeEventListener('pointermove',onMove);document.removeEventListener('pointerup',onUp);document.removeEventListener('pointercancel',cancelDrag);
+ d.ghost.remove();d.ins.remove();d.t.classList.remove('dragging');document.querySelectorAll('.tiles.over').forEach(n=>n.classList.remove('over'));return d}
+function onUp(){const d=end();if(!d)return;if(d.target)move(d.id,d.target.dataset.shelf,d.index);else render()}
+function cancelDrag(){end();render()}
+
+$('#loc').innerHTML=Object.entries(D).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+$('#loc').onchange=e=>{loc=e.target.value;render()};
+$('#reset').onclick=()=>{D=seed();render();live('Demo reset')};
+render();
+</script>

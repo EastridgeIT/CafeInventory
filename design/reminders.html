@@ -1,0 +1,133 @@
+<title>Cafe Inventory Reminders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: a demo clock on top, then the volunteer's Home screen (phone) beside the admin Reminders screen. */
+/* Tokens: option A palette and Public Sans, as chosen for the app. */
+:root{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--f:'Public Sans',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f);margin:0;padding-inline:16px;padding-block:20px 60px;font-variant-numeric:tabular-nums}
+.wrap{max-width:1150px;margin:0 auto}
+h1{font:800 clamp(1.6rem,4vw,2.2rem)/1.1 var(--f);margin:0 0 8px;text-wrap:balance}
+.lede{max-width:72ch;color:var(--mu);margin:0 0 16px}
+.clock{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;background:var(--sf);border-radius:var(--r);padding:12px 16px;margin-bottom:22px}
+.clock label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.88rem;color:var(--mu)}
+.clock b{font-size:1.4rem;color:var(--ink)}
+select,input[type=text],input[type=date]{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--ln);border-radius:12px;min-height:46px;padding:0 12px;width:100%}
+input[type=range]{width:min(320px,100%);accent-color:var(--ac)}
+.cols{display:flex;flex-wrap:wrap;gap:28px 32px;align-items:flex-start}.col{min-width:0;max-width:100%}.col>h2{font-size:.95rem;margin:0 0 8px;color:var(--mu)}
+.phone{width:360px;max-width:100%;height:660px;background:var(--bg);border:1px solid var(--ln);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.sc{flex:1;min-height:0;overflow:auto;padding:0 14px 14px}
+.hd{padding:16px 16px 8px}.hd h3{margin:0;font:800 22px/1.15 var(--f)}.hd p{margin:2px 0 0;color:var(--mu);font-size:14px}
+.card{background:var(--sf);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.rem{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:start}
+.cb{width:36px;height:36px;border-radius:10px;border:2px solid var(--mu);background:var(--bg);color:#fff;cursor:pointer;display:grid;place-items:center;font:800 20px/1 var(--f);padding:0}
+.cb[aria-checked="true"]{background:var(--gd);border-color:var(--gd)}
+.rem b{font-size:17px;line-height:1.25}.rem small{color:var(--mu);font-size:13px}
+.rem.done b{text-decoration:line-through;color:var(--mu)}
+.sub{grid-column:2;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{min-height:46px;padding:0 14px;border-radius:12px;border:2px solid var(--ln);background:var(--sf);color:var(--ink);font:700 15px var(--f);cursor:pointer}
+.btn.p{background:var(--ac);border-color:var(--ac);color:var(--aci)}.btn.sm{min-height:40px;font-size:14px}
+.btn:focus-visible,.cb:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:14px}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:0 8px;border:1px solid var(--mu);color:var(--mu);margin-left:6px}.tag.late{border-color:var(--wn);color:var(--wn)}
+.empty{text-align:center;color:var(--mu);padding:24px 12px}
+.toast{margin:8px 14px 0;background:var(--ink);color:var(--bg);border-radius:12px;padding:8px 12px;font-size:14px}
+.panel{background:var(--sf);border-radius:var(--r);padding:16px;width:min(560px,100%)}
+.panel h3{margin:0 0 10px;font:800 18px var(--f)}
+.f{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:.9rem;color:var(--mu);margin-bottom:10px}
+.days{display:flex;gap:6px;flex-wrap:wrap}.days label{display:flex;align-items:center;gap:4px;font-weight:700;color:var(--ink);background:var(--bg);border:2px solid var(--ln);border-radius:10px;padding:6px 10px;min-height:40px;cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{min-width:0}.grow{flex:1 1 140px}
+table{border-collapse:collapse;width:100%;font-size:14.5px}td,th{padding:8px 6px;border-bottom:1px solid var(--ln);text-align:left;vertical-align:top}th{font-size:12.5px;color:var(--mu)}
+.st-done{color:var(--gd);font-weight:700}.st-missed{color:var(--wn);font-weight:700}.st-open{color:var(--mu);font-weight:700}
+.tw{overflow-x:auto;margin-top:6px}
+</style>
+
+<div class="wrap">
+  <h1>Reminders</h1>
+  <p class="lede">A reminder shows up for <b>whoever is using the app that day</b>, at or after its time. The first person to check it off completes it for everyone, and everyone sees who did and when. Use the demo clock to watch a reminder appear, carry over, or get missed.</p>
+  <div class="clock" role="group" aria-label="Demo clock">
+    <label for="day">Pretend today is<select id="day"></select></label>
+    <label for="tm">Time of day <b id="tmv"></b><input id="tm" type="range" min="360" max="1200" step="15" value="540"></label>
+    <label for="who">Signed in as<select id="who"><option>Maria</option><option>Dev</option><option>Pat</option></select></label>
+  </div>
+  <div class="cols">
+    <div class="col"><h2>Anyone: Home screen</h2><div class="phone" id="home"></div></div>
+    <div class="col"><h2>Admin: Reminders</h2><div id="admin"></div></div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const DAYS=[new Date(2026,9,6),new Date(2026,9,7),new Date(2026,9,8),new Date(2026,9,9),new Date(2026,9,10)];
+const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],DL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const ds=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fm=m=>{const h=Math.floor(m/60),mm=m%60;return ((h+11)%12+1)+':'+String(mm).padStart(2,'0')+' '+(h<12?'AM':'PM')};
+const ACTIONS={none:'No button',qi:'Start Quick Inventory',shop:'Open the shopping list',checkin:'Check in deliveries'};
+let seq=4;
+let defs=[
+ {id:1,title:'Perform a Quick Inventory',details:'Cafe Pantry, then the Beverage Case.',type:'rec',days:[2,5],at:540,action:'qi',on:true},
+ {id:2,title:'Wipe down the espresso machine',details:'',type:'rec',days:[0,1,2,3,4,5,6],at:840,action:'none',on:true},
+ {id:3,title:'Move the bagels to the freezer',details:'Anything left from the weekend.',type:'one',date:'2026-10-06',at:690,action:'none',on:true}];
+const done={};   // key -> {by, atMin, day}
+const S={day:0,min:540,who:'Maria',msg:''};
+const key=(d,date)=>d.type==='one'?'o'+d.id:'r'+d.id+'|'+date;
+const today=()=>ds(DAYS[S.day]);
+
+/* what is on the Home screen right now */
+function visible(){const date=today(),out=[];
+ for(const d of defs){if(!d.on)continue;
+  if(d.type==='rec'){const dow=DAYS[S.day].getDay();if(d.days.includes(dow)&&S.min>=d.at)out.push({d,date,k:key(d,date),late:false})}
+  else{if(d.date<date||(d.date===date&&S.min>=d.at))out.push({d,date:d.date,k:key(d,d.date),late:d.date<date})}}
+ return out.sort((a,b)=>(!!done[a.k]-!!done[b.k])||a.d.at-b.d.at)}
+/* recurring occurrences from earlier demo days that nobody checked */
+function missed(){const out=[];for(let i=0;i<S.day;i++){const dt=DAYS[i],date=ds(dt);for(const d of defs){if(d.type==='rec'&&d.on&&d.days.includes(dt.getDay())&&!done[key(d,date)])out.push({d,date})}}return out}
+
+function home(){const v=visible(),open=v.filter(x=>!done[x.k]).length;
+ let h=`<div class="hd"><h3>Reminders</h3><p>${DL[DAYS[S.day].getDay()]}, ${fm(S.min)} · ${open?open+' to do':'all done'}</p></div>${S.msg?`<div class="toast" role="status">${esc(S.msg)}</div>`:''}<div class="sc">`;
+ if(!v.length)h+=`<div class="empty"><b>Nothing to do right now.</b><br>Reminders appear here at their time.</div>`;
+ for(const x of v){const dn=done[x.k],d=x.d;
+  h+=`<div class="card"><div class="rem ${dn?'done':''}"><button class="cb" role="checkbox" aria-checked="${!!dn}" aria-label="${esc(d.title)}" data-a="chk" data-k="${x.k}">${dn?'✓':''}</button>
+   <div><b>${esc(d.title)}</b>${x.late?'<span class="tag late">From '+DL[new Date(x.date+'T12:00').getDay()]+'</span>':''}<br><small>${d.details?esc(d.details)+' · ':''}Due ${fm(d.at)}</small></div>
+   <div class="sub">${dn?`<small>Done by <b>${esc(dn.by)}</b> · ${dn.late?'':fm(dn.atMin)}${dn.by===S.who?'':''}</small> <button class="link" data-a="undo" data-k="${x.k}">Undo</button>`:(d.action!=='none'?`<button class="btn sm p" data-a="go" data-act="${d.action}">${ACTIONS[d.action]}</button>`:'')}</div></div></div>`}
+ return h+'</div>'}
+
+function admin(){const m=missed();const hist=[];
+ for(const [k,v] of Object.entries(done))hist.push(v);
+ let h=`<div class="panel"><h3>New reminder</h3>
+  <label class="f" for="nt">What should people do?<input id="nt" type="text" maxlength="120" placeholder="e.g. Check the walk-in thermometer"></label>
+  <label class="f" for="nd">Details (optional)<input id="nd" type="text" maxlength="300"></label>
+  <div class="f">When<div class="row"><label class="days"><input type="radio" name="ty" value="one" checked> One time</label><label class="days"><input type="radio" name="ty" value="rec"> Repeats</label></div></div>
+  <div class="f" id="onew"><span>On which day</span><select id="nday">${DAYS.map((d,i)=>`<option value="${ds(d)}">${DN[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</option>`).join('')}</select></div>
+  <div class="f" id="recw" hidden><span>Repeat on</span><div class="days">${[1,2,3,4,5,6,0].map(n=>`<label><input type="checkbox" class="dw" value="${n}"> ${DN[n]}</label>`).join('')}</div></div>
+  <div class="row"><label class="f grow" for="nat">At or after<select id="nat">${Array.from({length:57},(_,i)=>360+i*15).map(m=>`<option value="${m}" ${m===540?'selected':''}>${fm(m)}</option>`).join('')}</select></label>
+  <label class="f grow" for="nac">Button on the reminder<select id="nac">${Object.entries(ACTIONS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label></div>
+  <button class="btn p" data-a="add">Add reminder</button></div>
+  <div class="panel" style="margin-top:14px"><h3>All reminders</h3><div class="tw"><table><thead><tr><th>Reminder</th><th>When</th><th></th></tr></thead><tbody>`+
+  defs.map(d=>`<tr><td><b>${esc(d.title)}</b>${d.on?'':' <span class="tag">Paused</span>'}</td><td>${d.type==='one'?'Once · '+d.date.slice(5).replace('-','/'):'Every '+[1,2,3,4,5,6,0].filter(n=>d.days.includes(n)).map(n=>DN[n]).join(', ')}<br><small>at ${fm(d.at)}</small></td><td><button class="link" data-a="pause" data-id="${d.id}">${d.on?'Pause':'Resume'}</button></td></tr>`).join('')+
+  `</tbody></table></div></div>
+  <div class="panel" style="margin-top:14px"><h3>History</h3><div class="tw"><table><thead><tr><th>Reminder</th><th>Day</th><th>Result</th></tr></thead><tbody>`+
+  (Object.entries(done).map(([k,v])=>`<tr><td>${esc(v.title)}</td><td>${v.date.slice(5).replace('-','/')}</td><td class="st-done">Done by ${esc(v.by)} · ${fm(v.atMin)}</td></tr>`).join('')+
+   m.map(x=>`<tr><td>${esc(x.d.title)}</td><td>${x.date.slice(5).replace('-','/')}</td><td class="st-missed">Missed</td></tr>`).join('')||'<tr><td colspan="3" style="color:var(--mu)">Nothing yet.</td></tr>')+`</tbody></table></div></div>`;
+ return h}
+function render(){$('#home').innerHTML=home();const keep={t:($('#nt')||{}).value,d:($('#nd')||{}).value};$('#admin').innerHTML=admin();if(keep.t!==undefined){$('#nt').value=keep.t||'';$('#nd').value=keep.d||''}toggleType();$('#tmv').textContent=fm(S.min)}
+function toggleType(){const r=document.querySelector('input[name=ty]:checked');if(!r)return;$('#onew').hidden=r.value!=='one';$('#recw').hidden=r.value!=='rec'}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;S.msg='';
+ if(a==='chk'){const k=t.dataset.k;const v=visible().find(x=>x.k===k);if(done[k]){S.msg=`Already done by ${done[k].by}.`}else{done[k]={by:S.who,atMin:S.min,title:v.d.title,date:v.date,late:false};S.msg=`Checked off: ${v.d.title}`}}
+ else if(a==='undo'){delete done[t.dataset.k];S.msg='Check removed.'}
+ else if(a==='go'){S.msg=`Would open: ${ACTIONS[t.dataset.act]}`}
+ else if(a==='pause'){const d=defs.find(x=>x.id===+t.dataset.id);d.on=!d.on}
+ else if(a==='add'){const title=$('#nt').value.trim();if(!title){S.msg='Add a title first.';render();return}
+  const ty=document.querySelector('input[name=ty]:checked').value;const days=[...document.querySelectorAll('.dw:checked')].map(x=>+x.value);
+  if(ty==='rec'&&!days.length){S.msg='Pick at least one day.';render();return}
+  defs.push({id:++seq,title,details:$('#nd').value.trim(),type:ty,days,date:$('#nday').value,at:+$('#nat').value,action:$('#nac').value,on:true});$('#nt').value='';$('#nd').value='';S.msg=`Added "${title}".`}
+ render()});
+document.addEventListener('change',e=>{if(e.target.name==='ty')toggleType();
+ if(e.target.id==='day'){S.day=+e.target.value;S.msg='';render()}if(e.target.id==='who'){S.who=e.target.value;S.msg='';render()}});
+document.addEventListener('input',e=>{if(e.target.id==='tm'){S.min=+e.target.value;S.msg='';render()}});
+$('#day').innerHTML=DAYS.map((d,i)=>`<option value="${i}">${DL[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</option>`).join('');
+render();
+</script>

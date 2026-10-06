@@ -87,3 +87,24 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Web Push to the installed app (home-screen PWA) and optionally SMS, using the same notification queue as email.
 - **Fleshing-out notes:** SMS needs a provider and per-person consent; push needs the app installed. Both reuse `notification` rows with a `channel`.
 - **Related:** INIT-0009
+
+### INIT-0012 — Notes on item cards
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Volunteers pass on what they see; the Cafe Manager reviews it
+- **Idea:** Add a note on any item card; saved independent of counting or skipping; editable by its author for 12 hours; locked and removed from the card after 12 hours or when an Admin acknowledges it; full history in Admin.
+- **Fleshing-out notes:** `knowledge/architecture/item-notes.md`. Open: visibility to others, acknowledge comment, alerts to Admins.
+- **Related:** INIT-0009
+
+### INIT-0013 — Reminders
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Whoever is using the app that day gets the day's tasks at the right time
+- **Idea:** One-time and recurring reminders that appear at or after a time, checked off once for everyone, with an optional button to the right screen; Admin history of done and missed.
+- **Fleshing-out notes:** `knowledge/architecture/reminders.md`; prototype `design/reminders.html`.
+- **Related:** INIT-0009, INIT-0010
+
+### INIT-0014 — Shelf map editor (admin)
+- **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Admins arrange racks and shelves the way the room is, fast, so Quick Inventory walks in the right order
+- **Idea:** Horizontally scrolling shelves, drag and drop to reorder or move between shelves, press and hold for Move to within the same location.
+- **Fleshing-out notes:** `stock-counting.md` (Shelf map); prototype `design/shelf-map.html`. Touch drag by the handle needs a real-phone test.
+- **Related:** INIT-0005

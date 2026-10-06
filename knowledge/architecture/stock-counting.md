@@ -104,6 +104,13 @@ User requirement (2026-10-06): a mistaken count must be removable so that it **l
 - **Trace:** voided rows stay in the table and show only in an **Admin-only audit view** (who, when, original value, reason optional). No normal screen, history or report shows them. Choosing a hard delete instead would remove even that; I recommend keeping the quiet audit row, because with shared Toast-style PINs it's the only record if a count is ever disputed.
 - A **skip** isn't a record, so there is nothing to reset.
 
+## Shelf map (admin; user, 2026-10-06; prototype `design/shelf-map.html`)
+A location view that mirrors the room: an **Unplaced** tray, then a card per **rack**, each **shelf** a **horizontally scrolling row** of item tiles (location chosen from a dropdown).
+- **Drag and drop (Admin):** reorder within a shelf or move across shelves and to/from Unplaced. The shelf autoscrolls near its edges and the page near the top/bottom; an insertion bar shows the drop spot; Escape cancels. Mouse can drag from anywhere on the tile; **touch drags by a handle** at the tile's top-left (`touch-action: none`), so swiping anywhere else still scrolls the shelf.
+- **Press and hold = "Move to":** hold a tile (about half a second), right-click it, press Enter on it, or tap its three-dot button. A sheet lists every rack and shelf **in the same location** plus Unplaced, and **Move left / Move right / To start / To end**. Moving between locations is bulk placement, not this screen.
+- **Every move shows Undo.** Server: one call per move (`item_id`, `location_id`, destination `shelf_id` or null, index) that renumbers `item_location.position` in the source and destination shelves in a single D1 batch. Needs `admin.catalog`. Two admins editing at once: last write wins.
+- **Verified in a desktop browser with a real mouse:** all of the above, including autoscroll and keyboard. **Touch:** press-and-hold, Move to, and Move left/right work in an emulated phone. Dragging by the handle with a finger **could not be confirmed** (the browser cancelled the gesture in the test tool for a reason I couldn't isolate), so test it on a real phone; the Move to menu is the touch fallback and covers every move.
+
 ## Quick Inventory behavior
 1. Pick a **location** (big list/tabs, each showing "x of y counted" and when it was last done).
 2. Items for that location (only those with `in_quick_inventory` on) appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.

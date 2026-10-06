@@ -36,7 +36,7 @@ Why: ADR-0004. This file is the current design.
 | Shopper | `shopping.use`, `shopping.new_item` |
 | Admin | `admin.users`, `admin.catalog`, `admin.void_any`, `admin.reports` |
 
-Admin does not imply the others. At least one active Admin must exist. Changing roles ends that user's sessions. Migration `0003` converted existing users (volunteer → General; manager → General + Shopper; admin → all three).
+**Planned additions** (when notes, reminders and scheduling are built): `notes.add` (General, Shopper), `admin.notes`, `admin.reminders`, `admin.schedule` (Admin); everyone signed in can see and check reminders. Admin does not imply the others. At least one active Admin must exist. Changing roles ends that user's sessions. Migration `0003` converted existing users (volunteer → General; manager → General + Shopper; admin → all three).
 
 ## Implementation status (2026-10-06)
 Built and deployed: migrations `0001`/`0002`/`0003`, `worker/crypto.ts`, `worker/auth.ts` (login, logout, `/api/me`, session middleware, role guard, per-user lockout, per-IP throttle of 30 attempts per 10 min), `worker/users.ts` (user management, needs `admin.users`), `worker/permissions.ts`, `scripts/seed-admin.ts`. Covered by `test/auth.test.ts`, `schema.test.ts`, `seed.test.ts`, `crypto.test.ts`. State-changing requests must be `application/json` (CSRF defence together with `SameSite=Lax`).

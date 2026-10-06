@@ -40,6 +40,9 @@ updated: 2026-10-06
 | A person scheduled to count at a time | **Inventory assignment** (`inventory_assignment`) | UI: "scheduled inventory". Avoid "shift", "task". |
 | A queued email or alert | **Notification** (`notification`) | `channel` = email or in_app. |
 | The emailed one-tap sign-in | **Count link** (`login_link`) | Scoped to one assignment. Avoid "magic link" in the UI. |
+| A short text attached to an item card | **Item note** (`item_note`) | Avoid "comment", "memo". Active on the card 12 hours. |
+| Admin confirms they've seen a note | **Acknowledge** (`acknowledged_at`) | Locks the note and removes it from the card. |
+| A task shown on Home at a time of day | **Reminder** (`reminder`, `reminder_occurrence`) | Avoid "alert" (that is the email/in-app notification). Recurring or one-time. |
 | A rack within a location | **Rack** (`rack`) | Optional. |
 | A shelf, top to bottom | **Shelf** (`shelf`) | Belongs to a location, optionally a rack. Avoid "row", "tier". |
 | A fullness reading (Full, Over half, Under half, Low, Out) | **Level** (`level`) | Used by level-mode items. Never summed. Avoid "gauge", "status". |
