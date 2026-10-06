@@ -17,9 +17,11 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 
 ## Data model (D1)
 - `location` — `id`, `name`, `sort_order`, `active`.
-- `item` — `id`, `name`, `unit_label` (e.g. "bags", "cases"), `count_mode` (`quantity` | `level`, see below), `active`, `par_level` (total across locations; **a normal field on every item**, user decision 2026-10-06; Kristyn sets them at setup. A `level`-mode item may leave it blank because its Low/Out threshold drives the list instead).
-- `item_location` — `item_id`, `location_id`, `sort_order` (walking order inside that location). This is the "Where will I find this?" answer.
-- `stock_count` — **append-only**: `id`, `item_id`, `location_id`, exactly one of `quantity` (integer) or `level` (`full` | `over_half` | `under_half` | `low` | `out`), `counted_by` (user id), `counted_at`. Never edited; a correction is a new count. History is the audit trail.
+- `rack` — optional subdivision of a location: `id`, `location_id`, `name` (e.g. "Rack 2"), `sort_order`.
+- `shelf` — `id`, `location_id`, `rack_id` (null for locations without racks, like a beverage case), `name` (e.g. "Shelf 1 (top)"), `sort_order` (top to bottom).
+- `item` — `id`, `name`, `unit_label` (e.g. "bags", "cases"), `measurement_method` (`whole` default | `decimal` | `level`, see below), `in_quick_inventory` (checkbox, default on), `active`, `par_level` (total across locations; **a normal field on every item**, user decision 2026-10-06; Kristyn sets them at setup. A `level`-mode item may leave it blank because its Low/Out threshold drives the list instead).
+- `item_location` — `item_id`, `location_id`, optional `shelf_id`, `position` (order within the shelf). This is the "Where will I find this?" answer, down to the shelf for items where that matters.
+- `stock_count` — **append-only**: `id`, `item_id`, `location_id`, exactly one of `quantity` (whole by default; fractional only for `decimal` items) or `level` (`full` | `over_half` | `under_half` | `low` | `out`), `counted_by` (user id), `counted_at`. Never edited; a correction is a new count. History is the audit trail.
 - **Current stock** of a `quantity` item = sum over its locations of the *latest* count per location. A `level` reading is never summed; it's shown as its label ("Over half"). "Last counted" and staleness come from the same rows.
 
 - `vendor` — `id`, `name` (Costco.com, Chef Store, Fred Meyer, Safeway, …), `kind` (`online` | `in_store`), `sort_order`, `active`.
@@ -32,27 +34,38 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 - **Check-off:** marking an item bought/ordered creates a `purchase`; the item disappears from **all** vendor views immediately (no double buying). The next count of that item closes the loop and clears the purchase.
 - Vendor view is a first-class screen: a vendor picker at the top (one tap), big check boxes, works on a phone in a store aisle.
 
-## Count modes: quantity vs. level
+## Measurement methods
+Set per item at creation (Manager/Admin), changeable later; history keeps what was recorded.
+- **`whole` (default):** whole numbers, numerals-only keypad.
+- **`decimal`:** allows fractions (e.g. 0.5 bag); the keypad includes a decimal point.
+- **`level`:** fullness buttons, see below.
+- **`in_quick_inventory` checkbox:** unchecked items are never in the routine pass (still countable from the item screen, and still shown on shopping lists).
+
+## Level measurement (for case-style items)
 Some items aren't worth counting: one case of cream cheese packets, a bulk bag, a jug. We need to know **when it's getting low**, not how many.
-- **`quantity` mode (default):** type a number.
-- **`level` mode:** the count card shows four big buttons instead of a keypad: **Over half · Under half · Low · Out**. One tap saves and advances (the fastest action in the app). **Full** is offered too, for "just opened a new case". A small **"Enter a number"** link on every level card switches to the keypad for that one entry (the number is stored as a quantity).
-- The mode is set per item at creation (Manager/Admin) and can be changed later; history keeps whatever was recorded.
+- The count card shows four big buttons instead of a keypad: **Over half · Under half · Low · Out**. One tap saves and advances (the fastest action in the app). **Full** is offered too, for "just opened a new case". A small **"Enter a number"** link on every level card switches to the keypad for that one entry (the number is stored as a quantity).
 - **Shopping rule for level items:** needs replacing when the latest reading is **Low** or **Out** (a per-item threshold, default `low`; a Manager can raise it to `under_half` for items with long lead times). A typed quantity on a level item is compared to `par_level` if one is set.
 - **Multiple locations:** each location has its own reading; a level item needs replacing only if *every* location is at/below the threshold (backstock Full + counter Low means refill the counter, not shop).
 
+## Walking order (location → rack → shelf)
+Quick Inventory lists a location's items in the order a person walks it: **rack** (by `sort_order`), then **shelf top to bottom**, then `position`, then name. Group headers show "Rack 2 · Shelf 1 (top)" and a rack/shelf jump list lets a volunteer start mid-room. Auto-advance follows the same order. Items placed in a location with **no shelf set** are grouped last under "Unplaced" and flagged to the Manager so the order can be fixed. Racks and shelves are optional: a small location can use none.
+
 ## Quick Inventory behavior
 1. Pick a **location** (big list/tabs, each showing "x of y counted" and when it was last done).
-2. Items for that location appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.
+2. Items for that location (only those with `in_quick_inventory` on) appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.
 3. Input uses `inputmode="numeric"` so phones show a numbers-only pad; **Enter** (or the big Save button) saves and moves to the next uncounted item. On desktop it's keyboard-only: type, Enter, type, Enter.
 4. **Skip** and **Back** are one tap; a finished location shows a summary. No count is recorded for a skipped item.
 5. **Typo guard:** a count far from the last one (e.g. 10× or 0 when last was 12) asks "Is that right?" before saving.
 6. A saved count shows a brief **Undo**.
 
+## Decisions (user, 2026-10-06)
+- Par level is a standard item field. Level-mode items may leave it blank.
+- Quick Inventory membership is a per-item checkbox (not every item).
+- Measurement method is per item; default whole numbers.
+- Kristyn (Cafe Manager) and admins create items, locations, racks, shelves.
+- Reorder is judged on the **total across locations**.
+- Prices: **later**, not v1. Pack sizes: **to be designed** (INIT-0006).
+- Whether level items appear on every pass, and whether they may span several locations: **decide when needed** (no schema impact either way).
+
 ## Open questions
-1. Are quantities **whole numbers** only, or do some items need halves (half a bag)? (Whole = numeric pad; fractions need a decimal pad.)
-2. Does *every* item belong in Quick Inventory, or can items be flagged "don't check routinely"?
-3. Who creates items and locations: Manager only, or Admin too? (Proposed: Manager and Admin.)
-7. Should level items appear on **every** Quick Inventory pass (one tap each, my recommendation) or only when a volunteer flags them? Should level items be restricted to one location in v1?
-5. **Buying unit vs. counting unit:** Coke is counted in bottles but bought in 24-packs. Do we need a pack size per vendor now, or is "suggested quantity in counting units" enough for v1?
-6. Does anyone need **prices/cost** shown or tracked?
-4. Is "reorder" judged on the **total across locations** (proposed) or per location?
+- Pack sizes (INIT-0006): buying unit vs. counting unit. Not in v1 tables; keep `item_vendor` open to extension.

@@ -46,3 +46,17 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Idea:** Shopping lists filtered by vendor, items with multiple preferred vendors appear under each, check-off removes them everywhere.
 - **Fleshing-out notes:** See `knowledge/architecture/stock-counting.md` (Shopping lists). Open: buying-unit vs counting-unit, prices.
 - **Related:** INIT-0002
+
+### INIT-0006 — Pack sizes (buying unit vs. counting unit)
+- **Status:** Captured · **Source:** User · **Added:** 2026-10-06
+- **Serves:** Kristyn: shopping lists that say "1 case" instead of "24 bottles"
+- **Idea:** Per item (and likely per vendor), record how it is bought (case of 24, 5 lb bag) vs. how it is counted, and convert on the shopping list.
+- **Fleshing-out notes:** User: "will need to consider how to build this out effectively." Vendors may sell the same item in different pack sizes, so it probably lives on `item_vendor`. Needs a design discussion before v2; not in v1 tables.
+- **Related:** `knowledge/architecture/stock-counting.md`, INIT-0005
+
+### INIT-0007 — Prices and cost tracking
+- **Status:** Deferred · **Source:** User ("maybe later") · **Added:** 2026-10-06
+- **Serves:** Kristyn: spending visibility; "cheapest vendor" hints
+- **Idea:** Record price per item per vendor; show cost on shopping lists and totals.
+- **Fleshing-out notes:** Extra upkeep for whoever keeps prices current; pairs with INIT-0006 (price is per pack).
+- **Related:** INIT-0005, INIT-0006
