@@ -2,10 +2,10 @@ import { env } from "cloudflare:test";
 import { exports } from "cloudflare:workers";
 import { newPinRecord, nowIso, ulid } from "../worker/crypto";
 
-const TABLES = ["purchase", "stock_count", "item_vendor", "item_location", "vendor", "item", "shelf", "rack", "location", "session", "login_throttle", "user_role", "user"];
+const TABLES = ["purchase", "stock_count", "item_vendor", "item_location", "item_variant", "vendor", "item", "shelf", "rack", "location", "session", "login_throttle", "user_role", "user"];
 
 export async function resetDb() {
-  for (const t of TABLES) await env.DB.prepare(`DELETE FROM ${t}`).run();
+  for (const t of TABLES) await env.DB.prepare(t === "location" ? "DELETE FROM location WHERE kind = 'normal'" : `DELETE FROM ${t}`).run();
 }
 
 export async function addUser(over: { name?: string; roles?: string[]; pin?: string; active?: number } = {}) {

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { authRoutes, requireJson } from "./auth";
 import type { AppEnv } from "./auth";
+import { catalogRoutes } from "./catalog";
 import { userRoutes } from "./users";
 
 // API lives under /api/*; everything else is served from static assets (wrangler.jsonc).
@@ -16,6 +17,7 @@ app.get("/health", async (c) => {
 
 app.route("/", authRoutes);
 app.route("/admin/users", userRoutes);
+app.route("/admin/catalog", catalogRoutes);
 
 app.notFound((c) => c.json({ error: "not_found" }, 404));
 app.onError((err, c) => {

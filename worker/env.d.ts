@@ -12,3 +12,9 @@ declare namespace Cloudflare {
     TEST_MIGRATIONS: unknown;
   }
 }
+
+// Lets tests import fixture files as text (Vite's ?raw).
+declare module "*?raw" {
+  const content: string;
+  export default content;
+}

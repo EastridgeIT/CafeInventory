@@ -13,7 +13,8 @@
     "cf-typegen": "wrangler types worker/worker-configuration.d.ts",
     "db:migrate:local": "wrangler d1 migrations apply cafe-inventory --local",
     "db:migrate:remote": "wrangler d1 migrations apply cafe-inventory --remote",
-    "seed:admin": "node scripts/seed-admin.ts"
+    "seed:admin": "node scripts/seed-admin.ts",
+    "import:items": "node scripts/import-items.ts"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.62.5",

@@ -85,6 +85,15 @@ input:focus, select:focus { border-color: var(--brand); outline: 3px solid var(-
 .reminders { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
 .reminders h3 { margin: 0 0 6px; font-size: 1.1rem; }
 .reminders .none { margin: 0; color: var(--muted); }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.toolbar input[type=search] { flex: 1 1 200px; width: auto; }
+.toolbar select { width: auto; flex: 0 1 220px; }
+.btn[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+button.link { all: unset; cursor: pointer; color: var(--brand); text-decoration: underline; font: 600 0.95rem var(--font-ui); min-height: 44px; padding: 0 8px; display: inline-flex; align-items: center; }
+button.link:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
+ul.plain .grow { flex: 1 1 150px; min-width: 0; }
+ul.plain { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+h4 { margin: 14px 0 6px; font-size: 0.95rem; }
 .cards { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; grid-template-columns: 1fr; }
 .card { display: block; background: var(--surface); border-radius: var(--radius); padding: 16px; color: var(--text); text-decoration: none; }
 .card .line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 4px; }

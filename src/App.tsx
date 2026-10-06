@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { AdminItems } from "./AdminItems";
+import { AdminPlaces } from "./AdminPlaces";
 import { AdminUsers } from "./AdminUsers";
 import { AuthProvider, roleLabel, useAuth } from "./auth";
 import { Menu, useWide } from "./Nav";
@@ -43,7 +45,10 @@ function Shell() {
   const wanted = activeId(hash);
   const allowed = items.some((i) => i.id === wanted);
   const active = allowed ? wanted : "home";
-  const showUsers = active === "admin" && hash === "#/admin/users" && can("admin.users");
+  const sub = active === "admin" ? hash.replace(/^#\/admin\/?/, "") : "";
+  const showUsers = sub === "users" && can("admin.users");
+  const showItems = sub === "items" && can("admin.catalog");
+  const showPlaces = sub === "places" && can("admin.catalog");
 
   return (
     <div className="app">
@@ -75,23 +80,20 @@ function Shell() {
             </>
           )}
           {active in SOON && <Soon id={active} />}
-          {active === "admin" && !showUsers && (
+          {active === "admin" && !showUsers && !showItems && !showPlaces && (
             <>
               <h2>Admin</h2>
               <ul className="cards">
-                {can("admin.users") && (
-                  <li><a className="card link" href="#/admin/users"><strong>Users</strong><div className="muted small">Add people, set PINs, change roles.</div></a></li>
-                )}
-                <li className="card disabled"><strong>Items, places and shelves</strong><div className="muted small">Coming next: items, locations, racks, shelves, vendors, bulk placement.</div></li>
+                {can("admin.users") && <li><a className="card link" href="#/admin/users"><strong>Users</strong><div className="muted small">Add people, set PINs, change roles.</div></a></li>}
+                {can("admin.catalog") && <li><a className="card link" href="#/admin/items"><strong>Items</strong><div className="muted small">Everything the cafe stocks, with sizes, minimums and categories.</div></a></li>}
+                {can("admin.catalog") && <li><a className="card link" href="#/admin/places"><strong>Places</strong><div className="muted small">Locations, racks and shelves.</div></a></li>}
               </ul>
             </>
           )}
-          {showUsers && (
-            <>
-              <a href="#/admin" className="back">← Admin</a>
-              <AdminUsers />
-            </>
-          )}
+          {(showUsers || showItems || showPlaces) && <a href="#/admin" className="back">← Admin</a>}
+          {showUsers && <AdminUsers />}
+          {showItems && <AdminItems />}
+          {showPlaces && <AdminPlaces />}
         </main>
       </div>
       {!wide && <Menu items={items} active={active} wide={false} />}
