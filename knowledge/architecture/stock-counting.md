@@ -17,7 +17,7 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 
 ## Data model (D1)
 - `location` — `id`, `name`, `sort_order`, `active`.
-- `item` — `id`, `name`, `unit_label` (e.g. "bags", "cases"), `count_mode` (`quantity` | `level`, see below), `active`, optional `par_level` (total across locations; an item with no par level never appears on shopping lists automatically).
+- `item` — `id`, `name`, `unit_label` (e.g. "bags", "cases"), `count_mode` (`quantity` | `level`, see below), `active`, `par_level` (total across locations; **a normal field on every item**, user decision 2026-10-06; Kristyn sets them at setup. A `level`-mode item may leave it blank because its Low/Out threshold drives the list instead).
 - `item_location` — `item_id`, `location_id`, `sort_order` (walking order inside that location). This is the "Where will I find this?" answer.
 - `stock_count` — **append-only**: `id`, `item_id`, `location_id`, exactly one of `quantity` (integer) or `level` (`full` | `over_half` | `under_half` | `low` | `out`), `counted_by` (user id), `counted_at`. Never edited; a correction is a new count. History is the audit trail.
 - **Current stock** of a `quantity` item = sum over its locations of the *latest* count per location. A `level` reading is never summed; it's shown as its label ("Over half"). "Last counted" and staleness come from the same rows.
