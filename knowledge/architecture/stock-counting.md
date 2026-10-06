@@ -50,6 +50,14 @@ Some items aren't worth counting: one case of cream cheese packets, a bulk bag, 
 ## Walking order (location → rack → shelf)
 Quick Inventory lists a location's items in the order a person walks it: **rack** (by `sort_order`), then **shelf top to bottom**, then `position`, then name. Group headers show "Rack 2 · Shelf 1 (top)" and a rack/shelf jump list lets a volunteer start mid-room. Auto-advance follows the same order. Items placed in a location with **no shelf set** are grouped last under "Unplaced" and flagged to the Manager so the order can be fixed. Racks and shelves are optional: a small location can use none.
 
+## Bulk placement (admin)
+Entering racks and shelves item by item would be the biggest setup chore, so the admin side supports **bulk assignment** (user request, 2026-10-06):
+- **Items screen (desktop-first, works on a phone):** search/filter (by name, current location, vendor, "Unplaced"), tick items or **Select all in this view**, then **Assign to…** a location → rack → shelf (new racks/shelves can be created inline in the picker).
+- **Add vs. Move:** for a selected item already in that location the shelf is updated; for one not in it, **Add** creates a new placement (an item may live in several locations) while **Move** replaces its existing placement in the source location. The dialog states the counts first ("12 items, 3 moved, 9 added") and confirms before saving.
+- **Shelf screen, reverse direction:** open a shelf, tick the items that belong on it from a searchable list ("Add items here"), so someone standing in front of Rack 1 can fill it quickly.
+- **Same multi-select, other bulk actions:** set vendor(s), Quick Inventory checkbox, measurement method, par level, active/inactive.
+- **Safety:** a bulk change is one D1 batch (all or nothing) with a one-tap **Undo** right after; placements are not history-bearing (counts are), so changing a shelf never touches past counts.
+
 ## Quick Inventory behavior
 1. Pick a **location** (big list/tabs, each showing "x of y counted" and when it was last done).
 2. Items for that location (only those with `in_quick_inventory` on) appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.
