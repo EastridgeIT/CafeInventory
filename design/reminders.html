@@ -32,6 +32,9 @@ input[type=range]{width:min(320px,100%);accent-color:var(--ac)}
 .btn.p{background:var(--ac);border-color:var(--ac);color:var(--aci)}.btn.sm{min-height:40px;font-size:14px}
 .btn:focus-visible,.cb:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
 .link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:14px}
+.later{opacity:.7}.cb.dim{border-style:dashed;color:var(--mu)}
+.banner{margin:6px 14px 0;padding:10px 14px;border-radius:12px;background:var(--wn);color:var(--aci);display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:15px}.banner .link{color:var(--aci);font-weight:800}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px 10px 12px;border-top:1px solid var(--ln);background:var(--sf)}.tabs button{min-height:46px;border-radius:12px;border:0;background:transparent;color:var(--mu);font:700 15px var(--f);cursor:pointer}.tabs button[aria-pressed="true"]{background:var(--so);color:var(--ac)}
 .ask{background:var(--so);border-radius:12px;padding:10px 12px}.ask span{flex:1 1 100%}
 .tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:0 8px;border:1px solid var(--mu);color:var(--mu);margin-left:6px}.tag.late{border-color:var(--wn);color:var(--wn)}
 .empty{text-align:center;color:var(--mu);padding:24px 12px}
@@ -48,7 +51,7 @@ table{border-collapse:collapse;width:100%;font-size:14.5px}td,th{padding:8px 6px
 
 <div class="wrap">
   <h1>Reminders</h1>
-  <p class="lede">A reminder shows up for <b>whoever is using the app that day</b>, at or after its time. The first person to check it off completes it for everyone, and everyone sees who did and when. Use the demo clock to watch a reminder appear, carry over, or get missed.</p>
+  <p class="lede">Home lists <b>all of today's reminders</b> for whoever is using the app: due ones first, later ones dimmed. A reminder can be checked from <b>2 hours before</b> its time; earlier than that it asks "Are we closing early?". The first person to check it off completes it for everyone, and everyone sees who did and when. Use the demo clock to watch a reminder appear, carry over, or get missed.</p>
   <div class="clock" role="group" aria-label="Demo clock">
     <label for="day">Pretend today is<select id="day"></select></label>
     <label for="tm">Time of day <b id="tmv"></b><input id="tm" type="range" min="360" max="1200" step="15" value="540"></label>
@@ -75,32 +78,42 @@ let defs=[
  {id:3,title:'Move the bagels to the freezer',details:'Anything left from the weekend.',type:'one',date:'2026-10-06',at:690,action:'none',on:true}];
 const done={};   // key -> {by, atMin, day}
 const events=[]; // audit trail: every check and uncheck, kept for the admin history
-const S={day:0,min:540,who:'Maria',msg:'',confirm:null};
+const S={day:0,min:540,who:'Maria',msg:'',confirm:null,early:null,tab:'home'};
 const key=(d,date)=>d.type==='one'?'o'+d.id:'r'+d.id+'|'+date;
 const today=()=>ds(DAYS[S.day]);
 
-/* what is on the Home screen right now */
+/* all of today's reminders, due ones first, then later ones, then done */
 function visible(){const date=today(),out=[];
  for(const d of defs){if(!d.on)continue;
-  if(d.type==='rec'){const dow=DAYS[S.day].getDay();if(d.days.includes(dow)&&S.min>=d.at)out.push({d,date,k:key(d,date),late:false})}
-  else{if(d.date<date||(d.date===date&&S.min>=d.at))out.push({d,date:d.date,k:key(d,d.date),late:d.date<date})}}
- return out.sort((a,b)=>(!!done[a.k]-!!done[b.k])||a.d.at-b.d.at)}
+  if(d.type==='rec'){const dow=DAYS[S.day].getDay();if(d.days.includes(dow))out.push({d,date,k:key(d,date),late:false,future:S.min<d.at})}
+  else if(d.date<=date)out.push({d,date:d.date,k:key(d,d.date),late:d.date<date,future:d.date===date&&S.min<d.at})}
+ const rank=x=>done[x.k]?2:x.future?1:0;
+ return out.sort((a,b)=>rank(a)-rank(b)||a.d.at-b.d.at)}
+const canCheck=x=>!x.future||x.d.at-S.min<=120;           // within 2 hours ahead, or ask "closing early?"
+const attention=()=>visible().filter(x=>!done[x.k]&&!x.future);
 /* recurring occurrences from earlier demo days that nobody checked */
 function missed(){const out=[];for(let i=0;i<S.day;i++){const dt=DAYS[i],date=ds(dt);for(const d of defs){if(d.type==='rec'&&d.on&&d.days.includes(dt.getDay())&&!done[key(d,date)])out.push({d,date})}}return out}
 
-function home(){const v=visible(),open=v.filter(x=>!done[x.k]).length;
- let h=`<div class="hd"><h3>Reminders</h3><p>${DL[DAYS[S.day].getDay()]}, ${fm(S.min)} · ${open?open+' to do':'all done'}</p></div>${S.msg?`<div class="toast" role="status">${esc(S.msg)}</div>`:''}<div class="sc">`;
- if(!v.length)h+=`<div class="empty"><b>Nothing to do right now.</b><br>Reminders appear here at their time.</div>`;
- for(const x of v){const dn=done[x.k],d=x.d;
-  h+=`<div class="card"><div class="rem ${dn?'done':''}"><button class="cb" role="checkbox" aria-checked="${!!dn}" aria-label="${esc(d.title)}" data-a="chk" data-k="${x.k}">${dn?'✓':''}</button>
-   <div><b>${esc(d.title)}</b>${x.late?'<span class="tag late">From '+DL[new Date(x.date+'T12:00').getDay()]+'</span>':''}<br><small>${d.details?esc(d.details)+' · ':''}Due ${fm(d.at)}</small></div>
+function banner(){const n=attention().length;return n?`<div class="banner" role="status"><span><b>${n} reminder${n>1?'s':''} need${n>1?'':'s'} attention</b></span><button class="link" data-a="tab" data-t="home">View</button></div>`:''}
+function card(x){const dn=done[x.k],d=x.d,can=canCheck(x);
+ return `<div class="card ${x.future&&!dn?'later':''}"><div class="rem ${dn?'done':''}"><button class="cb ${!dn&&!can?'dim':''}" role="checkbox" aria-checked="${!!dn}" aria-label="${esc(d.title)}" data-a="chk" data-k="${x.k}">${dn?'✓':''}</button>
+   <div><b>${esc(d.title)}</b>${x.late?'<span class="tag late">From '+DL[new Date(x.date+'T12:00').getDay()]+'</span>':''}<br><small>${d.details?esc(d.details)+' · ':''}${x.future&&!dn?'Later today · due ':'Due '}${fm(d.at)}</small></div>
    ${S.confirm===x.k&&dn?`<div class="sub ask" role="alertdialog" aria-label="Remove ${esc(dn.by)}'s check?"><span><b>Remove ${esc(dn.by)}'s check?</b> They marked this done at ${fm(dn.atMin)}.</span><button class="btn sm" data-a="keep">Keep it</button><button class="btn sm p" data-a="remove" data-k="${x.k}">Remove check</button></div>`:''}
-   <div class="sub">${dn?`<small>Done by <b>${esc(dn.by)}</b> · ${dn.late?'':fm(dn.atMin)}${dn.by===S.who?'':''}</small>${S.confirm===x.k?'':'<small>Tap the box again to remove the check.</small>'}`:(d.action!=='none'?`<button class="btn sm p" data-a="go" data-act="${d.action}">${ACTIONS[d.action]}</button>`:'')}</div></div></div>`}
- return h+'</div>'}
+   ${S.early===x.k&&!dn?`<div class="sub ask" role="alertdialog" aria-label="Closing early?"><span><b>This isn't due until ${fm(d.at)}.</b> Are we closing early?</span><button class="btn sm" data-a="notyet">Not yet</button><button class="btn sm p" data-a="early" data-k="${x.k}">Yes, check it off</button></div>`:''}
+   <div class="sub">${dn?`<small>Done by <b>${esc(dn.by)}</b> · ${fm(dn.atMin)}${dn.early?' · early':''}</small>${S.confirm===x.k?'':'<small>Tap the box again to remove the check.</small>'}`:(d.action!=='none'&&!x.future?`<button class="btn sm p" data-a="go" data-act="${d.action}">${ACTIONS[d.action]}</button>`:(x.future&&!can?`<small>Can be checked from ${fm(d.at-120)}</small>`:''))}</div></div></div>`}
+function home(){const v=visible(),open=attention().length;
+ let h=`<div class="hd"><h3>${S.tab==='home'?'Reminders':'Quick Inventory'}</h3><p>${DL[DAYS[S.day].getDay()]}, ${fm(S.min)}${S.tab==='home'?(v.length?` · ${open?open+' need attention':'nothing due now'}`:''):''}</p></div>${banner()}${S.msg?`<div class="toast" role="status">${esc(S.msg)}</div>`:''}<div class="sc">`;
+ if(S.tab!=='home')h+=`<div class="empty"><b>(Placeholder screen)</b><br>The reminder banner above stays on every screen until all open reminders are done.</div>`;
+ else if(!v.length)h+=`<div class="empty"><b>No reminders due.</b><br>Nothing is scheduled for today.</div>`;
+ else h+=v.map(card).join('');
+ return h+`</div><div class="tabs" role="tablist"><button data-a="tab" data-t="home" aria-pressed="${S.tab==='home'}">Home</button><button data-a="tab" data-t="count" aria-pressed="${S.tab==='count'}">Count</button></div>`}
 
+function alerts(){const out=[];for(const x of visible()){if(!done[x.k]&&!x.future&&S.min>=x.d.at+60)out.push(`${fm(x.d.at+60)}${x.late?' (carried over)':''}: “${x.d.title}” was not done an hour after ${fm(x.d.at)}.`)}
+ for(const x of missed())out.push(`${DN[new Date(x.date+'T12:00').getDay()]} ${x.date.slice(5).replace('-','/')}: “${x.d.title}” was never done.`);return out}
 function admin(){const m=missed();const hist=[];
  for(const [k,v] of Object.entries(done))hist.push(v);
- let h=`<div class="panel"><h3>New reminder</h3>
+ let h=`<div class="panel" id="alerts"><h3>Alerts sent to admins</h3>${alerts().length?'<ul style="margin:0;padding-left:18px">'+alerts().map(a=>'<li>'+esc(a)+'</li>').join('')+'</ul>':'<p style="margin:0;color:var(--mu)">None. A reminder not done within an hour of its time alerts every admin.</p>'}</div>
+  <div class="panel" style="margin-top:14px"><h3>New reminder</h3>
   <label class="f" for="nt">What should people do?<input id="nt" type="text" maxlength="120" placeholder="e.g. Check the walk-in thermometer"></label>
   <label class="f" for="nd">Details (optional)<input id="nd" type="text" maxlength="300"></label>
   <div class="f">When<div class="row"><label class="days"><input type="radio" name="ty" value="one" checked> One time</label><label class="days"><input type="radio" name="ty" value="rec"> Repeats</label></div></div>
@@ -113,16 +126,20 @@ function admin(){const m=missed();const hist=[];
   defs.map(d=>`<tr><td><b>${esc(d.title)}</b>${d.on?'':' <span class="tag">Paused</span>'}</td><td>${d.type==='one'?'Once · '+d.date.slice(5).replace('-','/'):'Every '+[1,2,3,4,5,6,0].filter(n=>d.days.includes(n)).map(n=>DN[n]).join(', ')}<br><small>at ${fm(d.at)}</small></td><td><button class="link" data-a="pause" data-id="${d.id}">${d.on?'Pause':'Resume'}</button></td></tr>`).join('')+
   `</tbody></table></div></div>
   <div class="panel" style="margin-top:14px"><h3>History</h3><div class="tw"><table><thead><tr><th>Reminder</th><th>Day</th><th>Result</th></tr></thead><tbody>`+
-  (events.slice().reverse().map(v=>`<tr><td>${esc(v.title)}</td><td>${v.date.slice(5).replace('-','/')}</td><td class="${v.type==='checked'?'st-done':'st-open'}">${v.type==='checked'?'Checked by '+esc(v.by):'Check removed by '+esc(v.by)+(v.was&&v.was!==v.by?' (was '+esc(v.was)+')':'')} · ${fm(v.atMin)}</td></tr>`).join('')+
+  (events.slice().reverse().map(v=>`<tr><td>${esc(v.title)}</td><td>${v.date.slice(5).replace('-','/')}</td><td class="${v.type==='checked'?'st-done':'st-open'}">${v.type==='checked'?'Checked by '+esc(v.by)+(v.early?' (early)':''):'Check removed by '+esc(v.by)+(v.was&&v.was!==v.by?' (was '+esc(v.was)+')':'')} · ${fm(v.atMin)}</td></tr>`).join('')+
    m.map(x=>`<tr><td>${esc(x.d.title)}</td><td>${x.date.slice(5).replace('-','/')}</td><td class="st-missed">Missed</td></tr>`).join('')||'<tr><td colspan="3" style="color:var(--mu)">Nothing yet.</td></tr>')+`</tbody></table></div></div>`;
  return h}
 function render(){$('#home').innerHTML=home();const keep={t:($('#nt')||{}).value,d:($('#nd')||{}).value};$('#admin').innerHTML=admin();if(keep.t!==undefined){$('#nt').value=keep.t||'';$('#nd').value=keep.d||''}toggleType();$('#tmv').textContent=fm(S.min)}
 function toggleType(){const r=document.querySelector('input[name=ty]:checked');if(!r)return;$('#onew').hidden=r.value!=='one';$('#recw').hidden=r.value!=='rec'}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;S.msg='';if(a!=='chk'&&a!=='remove'&&a!=='keep')S.confirm=null;
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;S.msg='';if(a!=='chk'&&a!=='remove'&&a!=='keep')S.confirm=null;if(a!=='chk'&&a!=='early'&&a!=='notyet')S.early=null;
  if(a==='chk'){const k=t.dataset.k;const v=visible().find(x=>x.k===k);
   if(done[k]&&done[k].by!==S.who){S.confirm=k;S.msg=''}                      // someone else's check: ask first
   else if(done[k]){const was=done[k];delete done[k];events.push({type:'unchecked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,was:was.by});S.msg=`Check removed: ${v.d.title}`}
-  else{done[k]={by:S.who,atMin:S.min,title:v.d.title,date:v.date,late:false};events.push({type:'checked',title:v.d.title,date:v.date,by:S.who,atMin:S.min});S.msg=`Checked off: ${v.d.title}`}}
+  else if(!canCheck(v)){S.early=k;S.msg=''}                                   // more than 2 hours ahead: ask first
+  else{done[k]={by:S.who,atMin:S.min,title:v.d.title,date:v.date,late:false,early:v.future};events.push({type:'checked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,early:v.future});S.msg=`Checked off: ${v.d.title}`}}
+ else if(a==='notyet'){S.early=null}
+ else if(a==='early'){const k=t.dataset.k,v=visible().find(x=>x.k===k);if(v&&!done[k]){done[k]={by:S.who,atMin:S.min,title:v.d.title,date:v.date,late:false,early:true};events.push({type:'checked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,early:true});S.msg=`Checked off early: ${v.d.title}`}S.early=null}
+ else if(a==='tab'){S.tab=t.dataset.t}
  else if(a==='keep'){S.confirm=null}
  else if(a==='remove'){const k=t.dataset.k,was=done[k],v=visible().find(x=>x.k===k);if(was){delete done[k];events.push({type:'unchecked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,was:was.by});S.msg=`Removed ${was.by}'s check: ${v.d.title}`}S.confirm=null}
  else if(a==='go'){S.msg=`Would open: ${ACTIONS[t.dataset.act]}`}
@@ -133,7 +150,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
   defs.push({id:++seq,title,details:$('#nd').value.trim(),type:ty,days,date:$('#nday').value,at:+$('#nat').value,action:$('#nac').value,on:true});$('#nt').value='';$('#nd').value='';S.msg=`Added "${title}".`}
  render()});
 document.addEventListener('change',e=>{if(e.target.name==='ty')toggleType();
- if(e.target.id==='day'){S.day=+e.target.value;S.msg='';S.confirm=null;render()}if(e.target.id==='who'){S.who=e.target.value;S.msg='';S.confirm=null;render()}});
+ if(e.target.id==='day'){S.day=+e.target.value;S.msg='';S.confirm=null;S.early=null;render()}if(e.target.id==='who'){S.who=e.target.value;S.msg='';S.confirm=null;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='tm'){S.min=+e.target.value;S.msg='';render()}});
 $('#day').innerHTML=DAYS.map((d,i)=>`<option value="${i}">${DL[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</option>`).join('');
 render();

@@ -76,7 +76,7 @@ td.u{color:var(--wn);font-weight:700}td.t{font-weight:800}
   <ol class="how">
     <li><b>1 · Shopping list</b>Tap an item, enter how many you bought. It goes straight into stock as Undelivered.</li>
     <li><b>2 · Check in</b>Each delivery has three buttons: Check In All, Still Undelivered, Partial Delivery. More than expected needs a written reason.</li>
-    <li><b>3 · Rebalance</b>Check in first. You can't move more than is present. If it's short, the alert offers easy fixes, including adding found stock with a reason.</li>
+    <li><b>3 · Rebalance</b>Undelivered stock must be checked in first. You can't move more than is present. If it's short, the alert offers easy fixes, including found stock with a reason.</li>
   </ol>
   <div class="frames">
     <div class="fr"><h2>Kristyn: shopping list</h2><div class="phone" id="p1"></div></div>
@@ -186,7 +186,7 @@ const takeTxt=t=>t.map(([p,q])=>q+' from '+p).join(', ');
 function r3(){const s=S.rb,k=s.item,it=ITEMS[k];const cur=get(k,s.loc),nq=s.newq===''?null:Number(s.newq),und=get(k,'Undelivered');
  const valid=nq!==null&&Number.isInteger(nq)&&nq>=0,d=valid?nq-cur:0;
  let h=`<div class="hd"><h3>Rebalance</h3><p>Move stock between places. The total stays the same.</p></div>${toast(3,s.msg)}<div class="sc"><div class="card">`;
- if(und>0)h+=`<div class="mv warn"><b>${und} ${it.u} still undelivered.</b> Check them in before rebalancing. <button class="link" data-a="cinow" data-k="${k}">Open Check in</button></div>`;
+ if(und>0)h+=`<div class="alert" role="alert"><b>Check in first.</b><span>${und} ${it.u} of ${esc(it.n)} are still undelivered. They must be checked in before you can rebalance.</span><div class="fix"><button class="btn sm p" data-a="cinow" data-k="${k}">Check in ${und} now</button></div></div>`;
  h+=`<label class="lab">Item<select data-f="item">${Object.keys(ITEMS).filter(x=>ITEMS[x].locs.length).map(x=>`<option value="${x}" ${x===k?'selected':''}>${ITEMS[x].n}</option>`).join('')}</select></label>
  <label class="lab">Set the quantity in<select data-f="loc">${it.locs.map(l=>`<option ${l===s.loc?'selected':''}>${l}</option>`).join('')}</select></label>
  <div class="mu small">${s.loc} now has ${cur} ${it.u} · ${total(k)-und} on hand in all</div>
@@ -195,12 +195,12 @@ function r3(){const s=S.rb,k=s.item,it=ITEMS[k];const cur=get(k,s.loc),nq=s.newq
  if(valid&&d>0){const pl=plan(k,s.loc,d);
   if(pl.short===0){ok=true;line=`Taking ${takeTxt(pl.take)} to move ${d} into ${s.loc}.`}
   else{h+=`<div class="alert" role="alert"><b>Not enough in the source.</b><span>${pl.avail?`Only ${pl.avail} ${it.u} can be taken from the other places (${takeTxt(pl.take)}).`:`No other place holds any ${esc(it.n)}.`} You need ${pl.short} more, and you can't rebalance more than is present.</span>
-   <div class="fix">${und>0?`<button class="btn sm" data-a="cinow" data-k="${k}" data-need="${pl.short}">Check in ${Math.min(und,pl.short)} of the ${und} undelivered</button>`:''}${pl.avail?`<button class="btn sm" data-a="lower" data-v="${cur+pl.avail}">Use ${cur+pl.avail} instead (all that's available)</button>`:''}<button class="btn sm" data-a="foundopen" aria-pressed="${s.foundOpen}">Add ${pl.short} as found stock</button></div>
+   <div class="fix">${pl.avail?`<button class="btn sm" data-a="lower" data-v="${cur+pl.avail}">Use ${cur+pl.avail} instead (all that's available)</button>`:''}<button class="btn sm" data-a="foundopen" aria-pressed="${s.foundOpen}">Add ${pl.short} as found stock</button></div>
    ${s.foundOpen?`<label class="lab" for="fx">Why is there more? (required)</label><textarea id="fx" rows="2" maxlength="300" placeholder="e.g. found a case behind the fridge">${esc(s.expl)}</textarea>`:''}</div>`;
    if(s.foundOpen&&s.expl.trim().length>=5){ok=true;line=`Taking ${pl.take.length?takeTxt(pl.take):'nothing'} and adding ${pl.short} as found stock. An admin will review it.`}}}
  else if(valid&&d<0){const dest=[backOf(k),...locsOf(k)].find(p=>p!==s.loc);if(dest){ok=true;line=`Moving ${-d} from ${s.loc} to ${dest}.`}else line='No other place holds this item.'}
  h+=line?`<div class="mv">${line}</div>`:'';
- return h+`<button class="btn p" data-a="rebalance" ${ok?'':'disabled'}>Save</button></div></div>`}
+ return h+`<button class="btn p" data-a="rebalance" ${ok&&und===0?'':'disabled'}>Save</button></div></div>`}
 
 function ledger(){let h=`<table><thead><tr><th>Item</th>${PLACES.map(p=>`<th>${p}</th>`).join('')}<th>Total</th><th>Par</th></tr></thead><tbody>`;
  for(const k of Object.keys(ITEMS)){h+=`<tr class="${flash===k?'flash':''}"><td><b>${esc(ITEMS[k].n)}</b>${ITEMS[k].isNew?'<span class="tag">Needs setup</span>':''}</td>${PLACES.map(p=>`<td class="${p==='Undelivered'&&get(k,p)?'u':''}">${ITEMS[k].locs.includes(p)||p==='Undelivered'||get(k,p)?get(k,p):'<span class="mu">·</span>'}</td>`).join('')}<td class="t">${total(k)}</td><td>${ITEMS[k].par}</td></tr>`}
@@ -243,7 +243,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
    if(i.extra)review.push({k,q:i.extra,why,by:'You',e:e.id});
    s.ci.mode[k]='still';s.ci.alloc[k]={};s.ci.split[k]=false;s.ci.expl[k]='';s.ci.cancelRest[k]=false;n++}
   s.ci.msg={text:`Put away ${n} delivery${n>1?' items':''}.`,id:seq};s.ci.hint=''}
- else if(a==='cinow'){const k=t.dataset.k,u=get(k,'Undelivered'),need=+t.dataset.need||u;s.ci.mode[k]='partial';s.ci.alloc[k]={[s.rb.loc]:Math.min(u,need)};s.ci.split[k]=false;s.ci.hint=`From Rebalance: check in ${Math.min(u,need)} ${ITEMS[k].n} to ${s.rb.loc}, then go back.`;
+ else if(a==='cinow'){const k=t.dataset.k,u=get(k,'Undelivered');s.ci.mode[k]='all';s.ci.alloc[k]={[backOf(k)]:u};s.ci.split[k]=false;s.ci.hint=`Check in the ${u} ${ITEMS[k].n}, then go back to Rebalance.`;
   renderAll();document.getElementById('p2').scrollIntoView({behavior:'smooth',block:'center'});return}
  else if(a==='lower'){s.rb.newq=String(+t.dataset.v);s.rb.foundOpen=false}
  else if(a==='foundopen'){s.rb.foundOpen=!s.rb.foundOpen}

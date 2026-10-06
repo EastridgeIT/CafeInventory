@@ -16,7 +16,8 @@ Source: user, 2026-10-06. Nothing is built yet.
 - (Clarified: not tied to a scheduled person or "lead". Anyone using the app that day.)
 
 ## Behavior
-- **Home shows all of today's reminders, including ones not yet due** (user, 2026-10-06; "No reminders due." only when the day has none). Due-and-open reminders come first and are highlighted; reminders later today are listed below, dimmed, with their time ("Due 2:00 PM") and can't be checked until due; done ones follow with who and when. (Open: allow checking early? Default no.)
+- **Home shows all of today's reminders, including ones not yet due** (user, 2026-10-06; "No reminders due." only when the day has none). Due-and-open reminders come first and are highlighted; reminders later today are listed below, dimmed ("Later today · due 2:00 PM"); done ones follow with who and when.
+- **Checking ahead of time** (user, 2026-10-06): a reminder can be checked **from 2 hours before its time**. Earlier than that, tapping its box asks **"This isn't due until 5:00 PM. Are we closing early?"** with **Not yet** / **Yes, check it off**; "Yes" completes it and the event log and history mark it **early**.
 - **One banner for everything open** (user, 2026-10-06): a **single, persistent banner on every screen** (not only Home), "3 reminders need attention", appears whenever at least one reminder is **past its time and not done**, links to Home, and disappears when all are done. One banner represents all of them; it can't be dismissed while any is open.
 - **Admin alert after one hour** (user, 2026-10-06): if a reminder isn't completed **within one hour of its time**, an alert goes to **Admins** (everyone with the Admin role): an in-app alert (shown in Admin and as a badge) and an email once email is configured. **Once per occurrence** (`notification` unique per reminder occurrence and recipient), not repeated, and it clears itself if the reminder is then completed. For a one-time reminder that carries over, it alerts once, when it first goes an hour overdue.
 - **One check completes it for everyone.** The first person to check wins (atomic update). Done reminders stay on Home for the rest of that day with "Done by Maria · 10:42 AM", then drop off.
@@ -39,4 +40,4 @@ Add (title, details, one-time date or weekdays, time, optional button), edit, pa
 
 ## Decisions and remaining questions
 Decided: all of today's reminders show on Home; one persistent banner for open past-due ones; Admin alert one hour after the time; clicking a checked box again removes the check (confirm only for someone else's check). Time zone Pacific with DST.
-Open: may a future reminder be checked early (default: no)? More recurrence later (every N weeks, a day of the month).
+Open: more recurrence later (every N weeks, a day of the month).
