@@ -72,13 +72,15 @@ User requirement (2026-10-06): a mistaken count must be removable so that it **l
 - **Where:** on the count card of any item that has a count in this pass, a **"Reset this count"** button (visible via Back, or by tapping the item in the list). One confirm step ("Remove this count completely?"), then the item returns to uncounted.
 - **What it does:** **voids** the latest active `stock_count` for that item and location (sets `voided_at/by`). Every normal view and calculation then behaves as if it never existed: "last counted" and current stock revert to the previous real count, and the item shows as uncounted in the pass. A second reset steps back to the one before.
 - **Undo toast = the same operation:** the "Saved…Undo" tap voids the count rather than adding a correcting one.
+- **Intent:** an "oops" in the moment ("I didn't mean to record that"), not a way to rewrite history. Corrections to older counts are made by counting again.
 - **Who:** the person who entered it (within the same pass) and Manager/Admin at any time. Volunteers cannot reset a count someone else entered.
 - **Trace:** voided rows stay in the table and show only in an **Admin-only audit view** (who, when, original value, reason optional). No normal screen, history or report shows them. Choosing a hard delete instead would remove even that; I recommend keeping the quiet audit row, because with shared Toast-style PINs it's the only record if a count is ever disputed.
 - A **skip** isn't a record, so there is nothing to reset.
 
 ## Quick Inventory behavior
 1. Pick a **location** (big list/tabs, each showing "x of y counted" and when it was last done).
-2. Items for that location (only those with `in_quick_inventory` on) appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.
+2. **Every count card shows "Last update:"** with the quantity (or level), the **date and time**, and **who recorded it** (display name), e.g. "4 bags · Fri Oct 3, 4:10 PM · Maria". It reads the latest *active* count (voided counts excluded), so after a Reset it reverts to the previous real update. The same line appears in the Quick Inventory list rows. The typo guard compares against this value.
+3. Items for that location (only those with `in_quick_inventory` on) appear in walking order. Tapping one opens a **count card**: item name, unit, last count as a hint ("last: 6 · 3 days ago"), and a numeric input.
 3. Input uses `inputmode="numeric"` so phones show a numbers-only pad; **Enter** (or the big Save button) saves and moves to the next uncounted item. On desktop it's keyboard-only: type, Enter, type, Enter.
 4. **Skip** and **Back** are one tap; a finished location shows a summary. No count is recorded for a skipped item.
 5. **Typo guard:** a count far from the last one (e.g. 10× or 0 when last was 12) asks "Is that right?" before saving.

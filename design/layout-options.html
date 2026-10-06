@@ -57,7 +57,7 @@ h1{font:800 clamp(1.7rem,4vw,2.4rem)/1.1 'Bricolage Grotesque','Atkinson Hyperle
 .qb button:active,.lv button:active{background:var(--so);border-color:var(--ac)}
 .lv .bad{border-color:var(--wn);color:var(--wn)}
 .link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:15px}
-.mu{color:var(--mu)}.err{color:var(--wn);font-weight:700;font-size:15px}
+.mu{color:var(--mu)}.lu{font-size:15px;line-height:1.4;color:var(--mu)}.lu b{color:var(--ink)}.err{color:var(--wn);font-weight:700;font-size:15px}
 .ask{background:var(--so);border-radius:calc(var(--r) - 6px);padding:12px;display:flex;flex-direction:column;gap:8px;font-weight:700}
 .ask div{display:flex;gap:8px}.ask .btn{flex:1}
 .toast{flex:none;margin:10px 12px 0;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:15px}
@@ -166,6 +166,8 @@ const ITEMS={
  6:{id:6,n:'12 oz paper cups',s:'12 oz cups',u:'sleeves',m:'whole',q:12,last:8,when:'3 days ago'},
  7:{id:7,n:'12 oz cup lids',s:'12 oz lids',u:'sleeves',m:'whole',q:12,last:7,when:'3 days ago'},
  8:{id:8,n:'Bottled water',s:'Water',u:'bottles',m:'whole',q:24,last:18,when:'3 days ago'}};
+const META={1:['Fri Oct 3, 4:10 PM','Maria'],2:['Fri Oct 3, 4:10 PM','Maria'],3:['Tue Sep 30, 11:20 AM','Dev'],4:['Fri Oct 3, 4:12 PM','Maria'],5:['Tue Sep 30, 11:25 AM','Dev'],6:['Fri Oct 3, 4:15 PM','Maria'],7:['Fri Oct 3, 4:15 PM','Maria'],8:['Fri Oct 3, 4:18 PM','Maria']};
+for(const k in META){ITEMS[k].when=META[k][0];ITEMS[k].by=META[k][1]}
 const ORDER=[1,2,3,4,5,6,7,8];
 const SHELVES=[{n:'Shelf 1 (top)',ids:[1,2,3]},{n:'Shelf 2',ids:[4,5,6,7,8]}];
 const LEVELS=['Full','Over half','Under half','Low','Out'];
@@ -181,13 +183,16 @@ const OPTS={
    watch:'Only as good as the shelf setup (that is the bulk-placement job), and thin for locations with no racks.'}};
 const mk=()=>({rc:null,c:{},cur:1,conf:null,num:{},undo:null,open:false,err:'',touched:false});
 const S={a:mk(),b:mk(),c:mk()};
-const lastTxt=it=>it.m==='level'?`${it.lastL} · ${it.when}`:`${it.last} ${it.u} · ${it.when}`;
+const lastTxt=it=>it.m==='level'?`${it.lastL} · ${it.when} · ${it.by}`:`${it.last} ${it.u} · ${it.when} · ${it.by}`;
+const nowTxt=()=>'Today, '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+const luTxt=(o,id)=>{const v=S[o].c[id];return v&&!v.skip?`${valTxt(ITEMS[id],v)} · ${v.t} · ${v.by}`:lastTxt(ITEMS[id])};
+const luHTML=(o,id)=>`<div class="lu"><b>Last update:</b><br>${luTxt(o,id)}</div>`;
 const valTxt=(it,v)=>v.skip?'Skipped':v.l?v.l:v.v===0&&it.q?'None':v.min?`More than ${v.v} ${it.u}`:`${v.v} ${it.u}`;
 const modeOf=(st,id)=>{const it=ITEMS[id];return it.m==='level'?(st.num[id]?'key':'lvl'):(it.q&&!st.num[id]?'qb':'key')};
 const isBad=v=>v&&(v.l==='Low'||v.l==='Out');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
-function commit(o,id,val){const st=S[o];st.undo={id,prev:st.c[id],msg:`Saved ${ITEMS[id].s}: ${valTxt(ITEMS[id],val)}`};st.c[id]=val;st.conf=null;st.err='';
+function commit(o,id,val){const st=S[o];st.undo={id,prev:st.c[id],msg:`Saved ${ITEMS[id].s}: ${valTxt(ITEMS[id],val)}`};st.c[id]={...val,t:nowTxt(),by:'You'};st.conf=null;st.err='';
  st.cur=ORDER[ORDER.indexOf(id)+1]??null;if(st.cur===null)st.open=false;st.touched=true;renderQI(o)}
 function trySave(o,id,raw){const st=S[o],it=ITEMS[id];raw=(raw||'').trim();st.touched=true;
  if(raw===''){st.err='Type a number to save.';return renderQI(o)}
@@ -203,7 +208,7 @@ const askHTML=(o,id)=>{const st=S[o];if(!st.conf||st.conf.id!==id)return'';const
  return `<div class="ask"><span>That is ${st.conf.v}. Last time it was ${it.last}. Is that right?</span><div><button class="btn sm" data-act="fix" data-o="${o}">Fix it</button><button class="btn sm p" data-act="yes" data-o="${o}">Yes, save</button></div></div>`};
 const resetHTML=(o,id)=>{const st=S[o],v=st.c[id];if(!v||v.skip)return'';
  return st.rc===id?`<div class="ask"><span>Remove this count completely? It will be as if ${ITEMS[id].s} was never counted today.</span><div><button class="btn sm" data-act="rno" data-o="${o}">Keep it</button><button class="btn sm p" data-act="ryes" data-o="${o}" data-id="${id}">Remove count</button></div></div>`
- :`<div class="ask"><span>Counted: ${valTxt(ITEMS[id],v)}</span><div><button class="btn sm" data-act="rask" data-o="${o}" data-id="${id}">Reset this count</button></div></div>`};
+ :`<div class="ask"><span>Recorded by mistake?</span><div><button class="btn sm" data-act="rask" data-o="${o}" data-id="${id}">Reset this count</button></div></div>`};
 function entry(o,id){const st=S[o],it=ITEMS[id],mode=modeOf(st,id);let h=resetHTML(o,id);
  if(mode==='key'){h+=`<label for="in-${o}" class="mu">Count in ${it.u}${it.m==='decimal'?' (halves are fine)':''}</label>
   <input class="num" id="in-${o}" data-in="${o}" data-id="${id}" inputmode="${it.m==='decimal'?'decimal':'numeric'}" pattern="${it.m==='decimal'?'[0-9.]*':'[0-9]*'}" autocomplete="off" placeholder="0" aria-describedby="e-${o}">`;
@@ -224,13 +229,13 @@ function rA(){const st=S.a,id=st.cur,n=ORDER.filter(i=>st.c[i]).length;
  const head=`<div class="ahead"><span class="where">Rack 2 · ${id?SHELVES.find(s=>s.ids.includes(id)).n:'All shelves'}</span><span class="loc">Cafe Pantry</span><div class="prog"><i style="width:${n/ORDER.length*100}%"></i></div><span class="ptxt">${n} of ${ORDER.length} counted</span></div>`;
  if(id===null)return toast('a')+head+`<div class="scroll">${summary('a')}</div>`;
  const it=ITEMS[id],isLv=modeOf(st,id)!=='key';
- return toast('a')+head+`<div class="card"><h3>${it.n}</h3><div class="mu">Last count: ${lastTxt(it)}</div>${entry('a',id)}</div>
+ return toast('a')+head+`<div class="card"><h3>${it.n}</h3>${luHTML('a',id)}${entry('a',id)}</div>
  <div class="act"><button class="btn" data-act="back" data-o="a" ${id===1?'disabled':''}>Back</button><button class="btn" data-act="skip" data-o="a">Skip</button>${isLv?'<span></span>':`<button class="btn p" data-act="save" data-o="a">Save and next</button>`}</div>`}
 function rB(){const st=S.b,n=ORDER.filter(i=>st.c[i]).length;
  let h=toast('b')+`<div class="bhead"><h3>Cafe Pantry · Rack 2</h3><div class="mu" style="font-size:13px;margin-top:2px">${n} of ${ORDER.length} counted · tap a row to count</div><div class="prog"><i style="width:${n/ORDER.length*100}%"></i></div></div><div class="scroll">`;
  for(const sh of SHELVES){h+=`<div class="grp">${sh.n}</div>`;for(const id of sh.ids){const it=ITEMS[id],v=st.c[id],cur=st.cur===id;
   const right=v?`<span class="chip ${v.skip?'':isBad(v)?'bad':'ok'}">${valTxt(it,v)}</span>`:`<small>last ${it.m==='level'?it.lastL:it.last}</small>`;
-  h+=`<div class="row ${cur?'cur':''}"><button class="hd" data-act="pick" data-o="b" data-id="${id}" aria-expanded="${cur}"><b>${it.n}</b>${right}<small>${it.u} · ${lastTxt(it)}</small><span></span></button>`;
+  h+=`<div class="row ${cur?'cur':''}"><button class="hd" data-act="pick" data-o="b" data-id="${id}" aria-expanded="${cur}"><b>${it.n}</b>${right}<small>Last update: ${luTxt('b',id)}</small><span></span></button>`;
   if(cur){h+=`<div class="ex">${modeOf(st,id)!=='key'?entry('b',id):`<div class="line"><div style="flex:1;display:flex;flex-direction:column;gap:6px">${entry('b',id)}</div></div><div class="line"><button class="btn sm" data-act="skip" data-o="b">Skip</button><button class="btn sm p" data-act="save" data-o="b" style="flex:1">Save and next</button></div>`}${modeOf(st,id)!=='key'?`<div class="line"><button class="btn sm" data-act="skip" data-o="b">Skip</button></div>`:''}</div>`}
   h+=`</div>`}}
  h+=st.cur===null?`<div class="banner">All counted.${ORDER.some(i=>isBad(st.c[i]))?' Cream cheese is Low and is now on the shopping list.':''} <button class="link" data-act="reset" data-o="b">Start over</button></div>`:'';
@@ -242,7 +247,7 @@ function rC(){const st=S.c,n=ORDER.filter(i=>st.c[i]).length;
   h+=`</div></div>`}
  h+=`</div>${st.cur===null?`<div class="sum"><h3>Rack 2 is done</h3><button class="btn p" data-act="reset" data-o="c">Start over</button></div>`:''}<div style="height:${st.open?330:16}px"></div></div>`;
  if(st.open&&st.cur){const id=st.cur,it=ITEMS[id],sh=SHELVES.find(s=>s.ids.includes(id)),isLv=modeOf(st,id)!=='key';
-  h+=`<div class="sheet"><div class="top"><div><div class="mu" style="font-size:13px">${sh.n} · item ${sh.ids.indexOf(id)+1} of ${sh.ids.length}</div><h3>${it.n}</h3><div class="mu" style="font-size:14px">Last: ${lastTxt(it)}</div></div><button class="link" data-act="close" data-o="c">Close</button></div>${entry('c',id)}
+  h+=`<div class="sheet"><div class="top"><div><div class="mu" style="font-size:13px">${sh.n} · item ${sh.ids.indexOf(id)+1} of ${sh.ids.length}</div><h3>${it.n}</h3>${luHTML('c',id)}</div><button class="link" data-act="close" data-o="c">Close</button></div>${entry('c',id)}
   <div class="row2"><button class="btn sm" data-act="skip" data-o="c">Skip</button>${isLv?'':`<button class="btn sm p" data-act="save" data-o="c">Save and next</button>`}</div></div>`}
  return h}
 const R={a:rA,b:rB,c:rC};
