@@ -79,4 +79,4 @@ Full contract: `knowledge/conventions/partnership-contract.md`.
 - `CHANGELOG.md` — every publish, categorized.
 - `knowledge/` — the on-demand canon (conventions, architecture, decisions, templates).
 
-> Status: Pre-code. Governance & knowledge canon established; application code not yet scaffolded (stack TBD).
+> Status: Scaffolded and deployed (hello-world shell) at inventory.jammin.cafe. Stack: Worker + Hono + React/Vite + D1 (ADR-0003). Next: D1 schema + PIN login.

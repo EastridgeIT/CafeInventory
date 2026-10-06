@@ -8,7 +8,7 @@ updated: 2026-10-06
 # Hosting & deployment
 
 - **Host:** Cloudflare, at **`inventory.jammin.cafe`**. The `jammin.cafe` zone is already on Cloudflare (nameservers `garrett`/`gigi.ns.cloudflare.com`); `inventory` had no DNS record as of 2026-10-06.
-- **Runtime:** Cloudflare Workers (with static assets) is the expected target; storage (D1 / KV / R2) is decided with the stack. Not final until the stack ADR.
+- **Runtime:** one Cloudflare Worker serving the API (`/api/*`) plus static assets (ADR-0003). **Live since 2026-10-06.** Worker `cafe-inventory`, D1 database `cafe-inventory` (binding `DB`, id in `wrangler.jsonc`), custom domain `inventory.jammin.cafe` (created by the deploy; no manual DNS needed).
 - **Deploy tool:** `wrangler`, run via `npx wrangler` (not installed globally).
 
 ## API access (FORGE)
@@ -41,6 +41,16 @@ direnv exec . npx -y wrangler whoami
 ```
 
 **Verified 2026-10-06:** token `active`; account = the Eastridge Cloudflare account (`It@eastridgetoday.com's Account`, which also holds `eastridgechurch.net` and `eastridge.network`). Workers, D1, DNS and Workers Routes are reachable on `jammin.cafe`; DNS/routes on the other two zones are refused (error 10000), so zone scoping is correct. Those zones still show up in `/zones` listings, which is expected and grants nothing. `wrangler whoami` warns it can't read the user email (no `User Details: Read`); that's harmless and deliberately not granted.
+
+## Day-to-day
+
+```bash
+direnv exec . npm run deploy              # build + wrangler deploy
+direnv exec . npm run db:migrate:remote   # apply migrations to production D1
+npm run dev                               # local dev (local D1 via miniflare)
+npm test                                  # Vitest in the Workers runtime
+```
+After changing `wrangler.jsonc` bindings, run `npm run cf-typegen`. Keep `compatibility_date` no newer than the bundled workerd supports, or `npm test` fails to start (hit on 2026-10-06 with 2026-09-15; 2026-08-22 works).
 
 ### Rotation
 

@@ -1,0 +1,22 @@
+// Cloudflare Worker config. Hosting decision: knowledge/decisions/0002-host-on-cloudflare.md
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cafe-inventory",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-08-22",
+  "assets": {
+    // SPA: unknown paths fall back to index.html; /api/* always reaches the Worker.
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cafe-inventory",
+      "database_id": "af59b77d-fb7c-42dd-84da-b0c8f0694b06",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "routes": [{ "pattern": "inventory.jammin.cafe", "custom_domain": true }],
+  "observability": { "enabled": true }
+}

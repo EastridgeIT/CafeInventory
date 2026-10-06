@@ -16,7 +16,7 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
 - **Serves:** Volunteers (reachable on any phone) and the Cafe Manager (always-on, current data) · low-cost, low-ops hosting
 - **Idea:** Host at `inventory.jammin.cafe` on Cloudflare; set up a scoped API token for `wrangler` deploys.
-- **Fleshing-out notes:** Token stored per-project via `direnv` `.envrc` (gitignored). Token created & verified 2026-10-06 (scoped to the jammin.cafe zone only). Remaining: choose runtime/storage with the stack ADR, first deploy + custom domain. Consider Cloudflare Access (email OTP) for volunteer login.
+- **Fleshing-out notes:** Token stored per-project via `direnv` `.envrc` (gitignored). Token verified, stack chosen and first deploy to the custom domain done (2026-10-06); moves to Complete once the user declares the first release. Consider Cloudflare Access (email OTP) for volunteer login.
 - **Related:** `knowledge/decisions/0002-host-on-cloudflare.md`, `knowledge/architecture/hosting-and-deployment.md`
 
 ### INIT-0002 — Par-level reorder list

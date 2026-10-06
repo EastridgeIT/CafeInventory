@@ -6,7 +6,7 @@ A stock tracker for the Eastridge cafe. Volunteers record deliveries, usage, and
 
 ## Status
 
-Pre-code. Governance & knowledge canon established; application code not yet scaffolded (stack TBD).
+Scaffolded and deployed (hello-world shell) at https://inventory.jammin.cafe. Login, inventory and reorder features not yet built.
 
 ## How this repo is developed
 
