@@ -32,6 +32,7 @@ input[type=range]{width:min(320px,100%);accent-color:var(--ac)}
 .btn.p{background:var(--ac);border-color:var(--ac);color:var(--aci)}.btn.sm{min-height:40px;font-size:14px}
 .btn:focus-visible,.cb:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
 .link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:14px}
+.ask{background:var(--so);border-radius:12px;padding:10px 12px}.ask span{flex:1 1 100%}
 .tag{display:inline-block;font-size:11.5px;font-weight:700;border-radius:99px;padding:0 8px;border:1px solid var(--mu);color:var(--mu);margin-left:6px}.tag.late{border-color:var(--wn);color:var(--wn)}
 .empty{text-align:center;color:var(--mu);padding:24px 12px}
 .toast{margin:8px 14px 0;background:var(--ink);color:var(--bg);border-radius:12px;padding:8px 12px;font-size:14px}
@@ -74,7 +75,7 @@ let defs=[
  {id:3,title:'Move the bagels to the freezer',details:'Anything left from the weekend.',type:'one',date:'2026-10-06',at:690,action:'none',on:true}];
 const done={};   // key -> {by, atMin, day}
 const events=[]; // audit trail: every check and uncheck, kept for the admin history
-const S={day:0,min:540,who:'Maria',msg:''};
+const S={day:0,min:540,who:'Maria',msg:'',confirm:null};
 const key=(d,date)=>d.type==='one'?'o'+d.id:'r'+d.id+'|'+date;
 const today=()=>ds(DAYS[S.day]);
 
@@ -93,7 +94,8 @@ function home(){const v=visible(),open=v.filter(x=>!done[x.k]).length;
  for(const x of v){const dn=done[x.k],d=x.d;
   h+=`<div class="card"><div class="rem ${dn?'done':''}"><button class="cb" role="checkbox" aria-checked="${!!dn}" aria-label="${esc(d.title)}" data-a="chk" data-k="${x.k}">${dn?'✓':''}</button>
    <div><b>${esc(d.title)}</b>${x.late?'<span class="tag late">From '+DL[new Date(x.date+'T12:00').getDay()]+'</span>':''}<br><small>${d.details?esc(d.details)+' · ':''}Due ${fm(d.at)}</small></div>
-   <div class="sub">${dn?`<small>Done by <b>${esc(dn.by)}</b> · ${dn.late?'':fm(dn.atMin)}${dn.by===S.who?'':''}</small><small>Tap the box again to remove the check.</small>`:(d.action!=='none'?`<button class="btn sm p" data-a="go" data-act="${d.action}">${ACTIONS[d.action]}</button>`:'')}</div></div></div>`}
+   ${S.confirm===x.k&&dn?`<div class="sub ask" role="alertdialog" aria-label="Remove ${esc(dn.by)}'s check?"><span><b>Remove ${esc(dn.by)}'s check?</b> They marked this done at ${fm(dn.atMin)}.</span><button class="btn sm" data-a="keep">Keep it</button><button class="btn sm p" data-a="remove" data-k="${x.k}">Remove check</button></div>`:''}
+   <div class="sub">${dn?`<small>Done by <b>${esc(dn.by)}</b> · ${dn.late?'':fm(dn.atMin)}${dn.by===S.who?'':''}</small>${S.confirm===x.k?'':'<small>Tap the box again to remove the check.</small>'}`:(d.action!=='none'?`<button class="btn sm p" data-a="go" data-act="${d.action}">${ACTIONS[d.action]}</button>`:'')}</div></div></div>`}
  return h+'</div>'}
 
 function admin(){const m=missed();const hist=[];
@@ -116,10 +118,13 @@ function admin(){const m=missed();const hist=[];
  return h}
 function render(){$('#home').innerHTML=home();const keep={t:($('#nt')||{}).value,d:($('#nd')||{}).value};$('#admin').innerHTML=admin();if(keep.t!==undefined){$('#nt').value=keep.t||'';$('#nd').value=keep.d||''}toggleType();$('#tmv').textContent=fm(S.min)}
 function toggleType(){const r=document.querySelector('input[name=ty]:checked');if(!r)return;$('#onew').hidden=r.value!=='one';$('#recw').hidden=r.value!=='rec'}
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;S.msg='';
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a;S.msg='';if(a!=='chk'&&a!=='remove'&&a!=='keep')S.confirm=null;
  if(a==='chk'){const k=t.dataset.k;const v=visible().find(x=>x.k===k);
-  if(done[k]){const was=done[k];delete done[k];events.push({type:'unchecked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,was:was.by});S.msg=`Check removed: ${v.d.title}`}
+  if(done[k]&&done[k].by!==S.who){S.confirm=k;S.msg=''}                      // someone else's check: ask first
+  else if(done[k]){const was=done[k];delete done[k];events.push({type:'unchecked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,was:was.by});S.msg=`Check removed: ${v.d.title}`}
   else{done[k]={by:S.who,atMin:S.min,title:v.d.title,date:v.date,late:false};events.push({type:'checked',title:v.d.title,date:v.date,by:S.who,atMin:S.min});S.msg=`Checked off: ${v.d.title}`}}
+ else if(a==='keep'){S.confirm=null}
+ else if(a==='remove'){const k=t.dataset.k,was=done[k],v=visible().find(x=>x.k===k);if(was){delete done[k];events.push({type:'unchecked',title:v.d.title,date:v.date,by:S.who,atMin:S.min,was:was.by});S.msg=`Removed ${was.by}'s check: ${v.d.title}`}S.confirm=null}
  else if(a==='go'){S.msg=`Would open: ${ACTIONS[t.dataset.act]}`}
  else if(a==='pause'){const d=defs.find(x=>x.id===+t.dataset.id);d.on=!d.on}
  else if(a==='add'){const title=$('#nt').value.trim();if(!title){S.msg='Add a title first.';render();return}
@@ -128,7 +133,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
   defs.push({id:++seq,title,details:$('#nd').value.trim(),type:ty,days,date:$('#nday').value,at:+$('#nat').value,action:$('#nac').value,on:true});$('#nt').value='';$('#nd').value='';S.msg=`Added "${title}".`}
  render()});
 document.addEventListener('change',e=>{if(e.target.name==='ty')toggleType();
- if(e.target.id==='day'){S.day=+e.target.value;S.msg='';render()}if(e.target.id==='who'){S.who=e.target.value;S.msg='';render()}});
+ if(e.target.id==='day'){S.day=+e.target.value;S.msg='';S.confirm=null;render()}if(e.target.id==='who'){S.who=e.target.value;S.msg='';S.confirm=null;render()}});
 document.addEventListener('input',e=>{if(e.target.id==='tm'){S.min=+e.target.value;S.msg='';render()}});
 $('#day').innerHTML=DAYS.map((d,i)=>`<option value="${i}">${DL[d.getDay()]} ${d.getMonth()+1}/${d.getDate()}</option>`).join('');
 render();
