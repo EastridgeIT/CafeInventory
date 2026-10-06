@@ -1,0 +1,27 @@
+item,variant,equals_base_units,base_unit,preferred_to_buy,preferred_to_count
+"Milk, Whole",Gallon,1,gallon,yes,yes
+"Milk, Whole",Half Gallon,0.5,gallon,,yes
+"Milk, 1%",Gallon,1,gallon,yes,yes
+"Milk, 1%",Half Gallon,0.5,gallon,,yes
+Heavy Whipping Cream,32oz,1,32oz carton,,yes
+Heavy Whipping Cream,16oz,0.5,32oz carton,,yes
+Blueberry Lemon Loaf,Loaf,1,loaf,,yes
+Blueberry Lemon Loaf,Slice,(slices per loaf: ?),loaf,,yes
+"Hot Cups, 12oz",Sleeve,1,sleeve,,yes
+"Hot Cups, 12oz",Case,(sleeves per case: ?),sleeve,yes,
+"Hot Cups, 16oz",Sleeve,1,sleeve,,yes
+"Hot Cups, 16oz",Case,(sleeves per case: ?),sleeve,yes,
+"Hot Cups, 20oz",Sleeve,1,sleeve,,yes
+"Hot Cups, 20oz",Case,(sleeves per case: ?),sleeve,yes,
+"Cold Cups, 12oz",Sleeve,1,sleeve,,yes
+"Cold Cups, 12oz",Case,(sleeves per case: ?),sleeve,yes,
+"Cold Cups, 16oz",Sleeve,1,sleeve,,yes
+"Cold Cups, 16oz",Case,(sleeves per case: ?),sleeve,yes,
+"Cold Cups, 20oz",Sleeve,1,sleeve,,yes
+"Cold Cups, 20oz",Case,(sleeves per case: ?),sleeve,yes,
+Hot Lids,Sleeve,1,sleeve,,yes
+Hot Lids,Case,(sleeves per case: ?),sleeve,yes,
+Cold Sip Lids,Sleeve,1,sleeve,,yes
+Cold Sip Lids,Case,(sleeves per case: ?),sleeve,yes,
+Carriers,Each,1,each,,yes
+Carriers,Pack,(each per pack: ?),each,yes,

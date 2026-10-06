@@ -79,6 +79,16 @@ Roles stack; abilities are the union. Anyone signed in can read stock levels and
 - **Data:** `shopping_request` (append-only, voidable): `id`, `item_id`, `vendor_id` (nullable: the tab it was added from), `quantity` (> 0), `by_user`, `requested_at`, `closed_by_purchase_id`, void columns. **Open** requests add to the item's list quantity; **recording any purchase of that item closes all its open requests** (a partial buy does not keep an old manual remainder; the automatic shortfall still carries what is truly short). Undoing the purchase reopens them; undoing an add voids it, and undoing a new-item creation also removes the draft item if nothing else uses it.
 - `list_quantity(item) = max(0, par − current_stock) + Σ open requests`.
 
+## Variants (sizes and packages of one item; user, 2026-10-06; numbers pending)
+One item can come in several **variants** (Gallon / Half Gallon, Sleeve / Case, Pack / Each). **Not separate items**: the same item, tracked as separate variants (user, 2026-10-06). Most items have a single implicit variant and look exactly as before.
+- **Base unit and conversion.** Each item has a **base unit** (the unit its par level is measured in). Each variant is defined as "equals N base units" (Half Gallon = 0.5 gallon; Case = a number of sleeves). Conversion feeds **totals, par, need and suggestions only**; there is no recipe or unit engine.
+- **Count by variant.** Volunteers count what they see: "2 gallons, 3 half gallons". Stock is kept per (item, place, variant); an item's current stock is the sum converted to base units. Mixed inventory just works; zero variants are skipped. Quick Inventory shows the **preferred count variant's** buttons first and small rows for the others.
+- **Preferences.** `preferred_to_buy` and `preferred_to_count` are set per item and may differ (cups: buy Case, count Sleeve). We prefer Gallon but can pivot at any time.
+- **Shopping list.** The need is "how much short, in base units". The suggestion is shown in the **preferred buy variant, rounded up** ("Need 3.5 gallons. Suggest 4 gallons, or 7 half gallons"), with what we have by place and variant underneath so the shopper can decide in the store. Buying records **rows of variant x quantity** ("3 Gallons + 2 Half Gallons"); the need drops by their converted total and any remainder stays on the list. Undelivered, Check in and Rebalance keep the actual variants.
+- **Unpack.** A larger variant can be opened into a smaller one at the same place: **"Opened a sleeve"** is `-1` Sleeve and `+N` Each in one tap (a `stock_movement` of kind `unpack`, both legs, total unchanged), the same idea as "Opened a new case" for level items.
+- **Data.** `item_variant` (`id`, `item_id`, `name`, `equals_base_units` > 0, `sort_order`, `active`); `item.base_unit`, `item.buy_variant_id`, `item.count_variant_id`; `variant_id` (nullable = the item's only variant) on `stock_count`, `stock_movement` and purchase lines. Changing a conversion later changes how past totals compute; renaming is safe.
+- **Import:** `data/item-import-draft.csv` (66 items, 13 with variants) and `data/item-variants-draft.csv`. Unknown conversions (cups and lids per sleeve and sleeves per case, carriers per pack, slices per loaf) are blank for the user to fill.
+
 ## Measurement methods
 Set per item at creation (Manager/Admin), changeable later; history keeps what was recorded.
 - **`whole` (default):** whole numbers, numerals-only keypad.
@@ -152,7 +162,7 @@ A location view that mirrors the room: an **Unplaced** tray, then a card per **r
 
 ## Open questions
 - Level items: is one sealed case the usual maximum, or can several be stored? Default: any number, shown as a whole number.
-- Pack sizes (INIT-0006) are deferred; `item_vendor` can be extended later.
+- Variants: the conversion numbers (see Import above). Vendor-specific sizes and prices are still not modeled (`item_vendor` can be extended later).
 - Pacific time (America/Los_Angeles), **DST-aware**, for every date and time shown or scheduled; stored in UTC.
 - Check in uses Check In All / Still Undelivered / Partial Delivery toggles per item; over-delivery needs a written explanation.
 - Rebalance requires undelivered stock to be checked in first and never uses Undelivered as a source; it can't exceed what is present; shortfalls show the "Not enough in the source" alert with two fixes (use the maximum available, or add found stock with a reason).

@@ -46,6 +46,8 @@ updated: 2026-10-06
 | Waste thrown out or given away to avoid expiry | **Markout** (`markout`) | Avoid "waste", "spoilage" in the UI. |
 | Stock added with no delivery or move behind it | **Found stock** (`stock_movement.kind = 'found'`) | Needs an explanation; Admin reviews. |
 | The partly used case of a level item | **Open case** | With **sealed cases** (unopened). |
+| A size or package an item comes in | **Variant** (`item_variant`) | Gallon, Half Gallon, Sleeve, Case. Never a separate Item. Avoid "form", "pack size". |
+| The unit an item's par is measured in | **Base unit** (`base_unit`) | Variants convert to it. |
 | A rack within a location | **Rack** (`rack`) | Optional. |
 | A shelf, top to bottom | **Shelf** (`shelf`) | Belongs to a location, optionally a rack. Avoid "row", "tier". |
 | A fullness reading (Full, Over half, Under half, Low, Out) | **Level** (`level`) | Used by level-mode items. Never summed. Avoid "gauge", "status". |
