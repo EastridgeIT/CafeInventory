@@ -57,6 +57,9 @@ After changing `wrangler.jsonc` bindings, run `npm run cf-typegen`. Keep `compat
 - Production migrations applied 2026-10-06 (`0001`, `0002`). Apply later ones with `npm run db:migrate:remote`.
 - **First admin:** `direnv exec . npm run seed:admin -- --remote` in an interactive terminal. It prompts for a name and a hidden PIN, and sends only a salted hash. It does nothing if an admin already exists.
 
+### Email DNS (done 2026-10-06)
+Three DNS-only CNAMEs for SMTP2GO sender verification were added to the `jammin.cafe` zone through the API token: `em959675` → `return.smtp2go.net` (return path), `s959675._domainkey` → `dkim.smtp2go.net` (DKIM), `maillink` → `track.smtp2go.net` (tracking domain). Keep them DNS only (not proxied). Verification is completed with the Verify button in SMTP2GO.
+
 ### Email (planned)
 SMTP2GO via its HTTPS API; Worker secret `SMTP2GO_API_KEY` (set like `PIN_PEPPER`: value in `.dev.vars`, uploaded with `wrangler secret put`). Sender domain `jammin.cafe` verified with DNS records added through the Cloudflare API token. Details: `scheduling-and-notifications.md`.
 
