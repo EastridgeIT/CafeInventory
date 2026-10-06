@@ -1,0 +1,74 @@
+Milk, Whole (Gallon / Half Gallon)
+Milk, 1% (Gallon / Half Gallon)
+Half & Half (Half Gallon)
+Milk Alternative, Almond
+Milk Alternative, Oat
+Milk Alternative, Soy
+Apple Cider
+Heavy Whipping Cream (16oz / 32oz)
+Club Soda
+
+Bagels, Plain
+Bagles, Cheese
+Muffins, Blueberry
+Muffins, Double Chocolate
+Muffins, Pumpkin Streusel
+Blueberry Lemon Loaf (Loaf / Slice)
+
+Coffee, Dillon's Blend - Beans 2lb
+Coffee, Swiss Water Decaf - Espresso Ground 12oz
+Chai Concentrate, Oregon Extra Spicy
+Lotus, White
+
+Water, Bottles 16oz
+Iced Tea, Arizona Arnold Palmer
+Iced Tea, Arizona Green Tea
+Soda, Coca-Cola 16oz
+Soda, Coke Zero 16oz
+Soda, Diet Coke 16oz
+Soda, Sprite 16oz
+Vitamin Water Zero, Acai Blueberry Pomegranate
+Vitamin Water Zero, Orange
+
+Hot Cups, 12oz (case / sleeve)
+Hot Cups, 16oz (case / sleeve)
+Hot Cups, 20oz (case / sleeve)
+Cold Cups, 12oz (case / sleeve)
+Cold Cups, 16oz (case / sleeve)
+Cold Cups, 20oz (case / sleeve)
+Hot Lids (case / sleeve)
+Cold Sip Lids (case / sleeve)
+Straws (box)
+Carriers (pack / ea)
+
+All sauces/syrups below should be written as shown in the first example of each.
+
+Sauce, Caramel (64oz bottle)
+Mocha Sauce (64oz Bottle)
+White Mocha Sauce (64oz Bottle)
+
+Syrup, Almond (750mL Bottle)
+Blackberry Syrup (750mL Bottle)
+Blueberry Syrup (750mL Bottle)
+Brown Sugar Spice Syrup (750mL Bottle)
+Butter Pecan Syrup (750mL Bottle)
+Candied Orange Syrup (750mL Bottle)
+Cane Syrup (750mL Bottle)
+Cherry Syrup (750mL Bottle)
+Cinnamon Syrup (750mL Bottle)
+Coconut Syrup (750mL Bottle)
+Frosted Mint Syrup (750mL Bottle)
+Gingerbread Syrup (750mL Bottle)
+Hazelnut Syrup (750mL Bottle)
+SF Hazelnut Syrup (750mL Bottle)
+Irish Cream Syrup (750mL Bottle)
+Lavender Syrup (750mL Bottle)
+Peppermint Syrup (750mL Bottle)
+Pumpkin Pie/Spice Syrup (750mL Bottle)
+Raspberry Syrup (750mL Bottle)
+Strawberry Syrup (750mL Bottle)
+Toasted Marshmallow Syrup (750mL Bottle)
+Toffee Nut Syrup (750mL Bottle)
+Vanilla Syrup (750mL Bottle)
+SF Vanilla Syrup (750mL Bottle)
+Watermelon Syrup (750mL Bottle)

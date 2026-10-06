@@ -124,5 +124,5 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Status:** Captured · **Source:** User · **Added:** 2026-10-06
 - **Serves:** Admin setup: load the real item list instead of typing it
 - **Idea:** Admin import of a CSV/spreadsheet: items, units, par levels, vendors, locations/shelves, measurement method, Quick Inventory flag.
-- **Fleshing-out notes:** The user will provide the file shortly. Plan: look at its columns first, then map them to the catalog and show a preview before saving.
+- **Fleshing-out notes:** The user sent the list on 2026-10-06 (66 lines): `data/item-list-original.txt` (verbatim). A draft import is in `data/item-import-draft.csv` (79 items after expanding slash variants into separate items, a category per blank-line block, units, measurement method, markout flag). It contains names only: no locations, par levels or vendors yet. Awaiting the user's answers on variants, units, categories and level-with-sealed-bottles for syrups and sauces.
 - **Related:** INIT-0005

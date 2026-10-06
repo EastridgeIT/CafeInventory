@@ -1,0 +1,80 @@
+name,category,unit,measurement,quick_max,ask_markout,variant_group,unit_is_guess,notes
+"Milk, Whole (Gallon)",Dairy & Chilled,gallons,whole,6,,"Milk, Whole",,slash in the original: separate item per variant (proposed)
+"Milk, Whole (Half Gallon)",Dairy & Chilled,half gallons,whole,6,,"Milk, Whole",,slash in the original: separate item per variant (proposed)
+"Milk, 1% (Gallon)",Dairy & Chilled,gallons,whole,6,,"Milk, 1%",,slash in the original: separate item per variant (proposed)
+"Milk, 1% (Half Gallon)",Dairy & Chilled,half gallons,whole,6,,"Milk, 1%",,slash in the original: separate item per variant (proposed)
+Half & Half (Half Gallon),Dairy & Chilled,half gallons,whole,6,,,,
+"Milk Alternative, Almond",Dairy & Chilled,cartons,whole,6,,,yes,
+"Milk Alternative, Oat",Dairy & Chilled,cartons,whole,6,,,yes,
+"Milk Alternative, Soy",Dairy & Chilled,cartons,whole,6,,,yes,
+Apple Cider,Dairy & Chilled,jugs,whole,6,,,yes,
+Heavy Whipping Cream (16oz),Dairy & Chilled,cartons,whole,,,Heavy Whipping Cream,,slash in the original: separate item per variant (proposed)
+Heavy Whipping Cream (32oz),Dairy & Chilled,cartons,whole,,,Heavy Whipping Cream,,slash in the original: separate item per variant (proposed)
+Club Soda,Dairy & Chilled,bottles,whole,6,,,yes,
+"Bagels, Plain",Bakery,bagels,whole,12,1,,yes,
+"Bagels, Cheese",Bakery,bagels,whole,12,1,,yes,
+"Muffins, Blueberry",Bakery,muffins,whole,12,1,,yes,
+"Muffins, Double Chocolate",Bakery,muffins,whole,12,1,,yes,
+"Muffins, Pumpkin Streusel",Bakery,muffins,whole,12,1,,yes,
+Blueberry Lemon Loaf (Loaf),Bakery,loaves,whole,,1,Blueberry Lemon Loaf,,slash in the original: separate item per variant (proposed)
+Blueberry Lemon Loaf (Slice),Bakery,slices,whole,,1,Blueberry Lemon Loaf,,slash in the original: separate item per variant (proposed)
+"Coffee, Dillon's Blend - Beans 2lb",Coffee & Mixes,bags,whole,,,,,
+"Coffee, Swiss Water Decaf - Espresso Ground 12oz",Coffee & Mixes,bags,whole,,,,,
+"Chai Concentrate, Oregon Extra Spicy",Coffee & Mixes,cartons,whole,,,,yes,
+"Lotus, White",Coffee & Mixes,cans,whole,,,,yes,
+"Water, Bottles 16oz",Bottled Drinks,bottles,whole,24,,,yes,
+"Iced Tea, Arizona Arnold Palmer",Bottled Drinks,cans,whole,24,,,yes,
+"Iced Tea, Arizona Green Tea",Bottled Drinks,cans,whole,24,,,yes,
+"Soda, Coca-Cola 16oz",Bottled Drinks,bottles,whole,24,,,yes,
+"Soda, Coke Zero 16oz",Bottled Drinks,bottles,whole,24,,,yes,
+"Soda, Diet Coke 16oz",Bottled Drinks,bottles,whole,24,,,yes,
+"Soda, Sprite 16oz",Bottled Drinks,bottles,whole,24,,,yes,
+"Vitamin Water Zero, Acai Blueberry Pomegranate",Bottled Drinks,bottles,whole,24,,,yes,
+"Vitamin Water Zero, Orange",Bottled Drinks,bottles,whole,24,,,yes,
+"Hot Cups, 12oz (Case)",Cups & Supplies,cases,whole,,,"Hot Cups, 12oz",,slash in the original: separate item per variant (proposed)
+"Hot Cups, 12oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Hot Cups, 12oz",,slash in the original: separate item per variant (proposed)
+"Hot Cups, 16oz (Case)",Cups & Supplies,cases,whole,,,"Hot Cups, 16oz",,slash in the original: separate item per variant (proposed)
+"Hot Cups, 16oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Hot Cups, 16oz",,slash in the original: separate item per variant (proposed)
+"Hot Cups, 20oz (Case)",Cups & Supplies,cases,whole,,,"Hot Cups, 20oz",,slash in the original: separate item per variant (proposed)
+"Hot Cups, 20oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Hot Cups, 20oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 12oz (Case)",Cups & Supplies,cases,whole,,,"Cold Cups, 12oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 12oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Cold Cups, 12oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 16oz (Case)",Cups & Supplies,cases,whole,,,"Cold Cups, 16oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 16oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Cold Cups, 16oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 20oz (Case)",Cups & Supplies,cases,whole,,,"Cold Cups, 20oz",,slash in the original: separate item per variant (proposed)
+"Cold Cups, 20oz (Sleeve)",Cups & Supplies,sleeves,whole,12,,"Cold Cups, 20oz",,slash in the original: separate item per variant (proposed)
+Hot Lids (Case),Cups & Supplies,cases,whole,,,Hot Lids,,slash in the original: separate item per variant (proposed)
+Hot Lids (Sleeve),Cups & Supplies,sleeves,whole,12,,Hot Lids,,slash in the original: separate item per variant (proposed)
+Cold Sip Lids (Case),Cups & Supplies,cases,whole,,,Cold Sip Lids,,slash in the original: separate item per variant (proposed)
+Cold Sip Lids (Sleeve),Cups & Supplies,sleeves,whole,12,,Cold Sip Lids,,slash in the original: separate item per variant (proposed)
+Straws (box),Cups & Supplies,boxes,whole,,,,,
+Carriers (Pack),Cups & Supplies,packs,whole,,,Carriers,,slash in the original: separate item per variant (proposed)
+Carriers (Ea),Cups & Supplies,each,whole,,,Carriers,,slash in the original: separate item per variant (proposed)
+"Sauce, Caramel (64oz bottle)",Sauces,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Sauce, Mocha (64oz bottle)",Sauces,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Sauce, White Mocha (64oz bottle)",Sauces,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Almond (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Blackberry (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Blueberry (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Brown Sugar Spice (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Butter Pecan (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Candied Orange (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Cane (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Cherry (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Cinnamon (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Coconut (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Frosted Mint (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Gingerbread (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Hazelnut (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, SF Hazelnut (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Irish Cream (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Lavender (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Peppermint (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Pumpkin Pie/Spice (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Raspberry (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Strawberry (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Toasted Marshmallow (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Toffee Nut (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Vanilla (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, SF Vanilla (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
+"Syrup, Watermelon (750mL Bottle)",Syrups,bottles,level,,,,,open bottle level + sealed bottles (proposed)
