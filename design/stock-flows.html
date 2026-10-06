@@ -50,6 +50,12 @@ input.big{font-size:36px;font-weight:800;text-align:center;min-height:72px}
 .tag{display:inline-block;font-size:11px;font-weight:700;color:var(--wn);border:1px solid var(--wn);border-radius:99px;padding:0 7px;margin-left:6px}
 .by{display:inline-block;font-size:12px;font-weight:700;color:var(--ac);border:1px solid var(--ac);border-radius:99px;padding:0 7px;margin-left:6px}
 .sug{display:flex;flex-direction:column;gap:6px}.sug button{all:unset;cursor:pointer;background:var(--so);border-radius:10px;padding:8px 12px;font-weight:600}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.seg button{min-height:48px;padding:4px 6px;border-radius:12px;border:2px solid var(--ln);background:var(--bg);color:var(--ink);font:700 13.5px/1.15 var(--f);cursor:pointer}.seg button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+textarea{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--ln);border-radius:12px;padding:8px 12px;width:100%;resize:vertical}
+.alert{background:var(--so);border:2px solid var(--wn);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:15px}.alert .fix{display:flex;flex-direction:column;gap:8px}
+.mv.warn{border:2px solid var(--wn)}
+.strip{margin:6px 14px 0;padding:8px 12px;border-radius:12px;background:var(--so);font-size:14px;font-weight:600}
+.rv{margin-top:14px;background:var(--sf);border-radius:var(--r);padding:12px 16px;max-width:760px}.rv h3{margin:0 0 6px;font-size:1rem}.rv li{margin:4px 0}
 .mv{background:var(--so);border-radius:12px;padding:10px 12px;font-weight:600}
 .ledger{margin-top:32px}.ledger h2{font-size:1.2rem;margin:0 0 4px}.ledger>p{color:var(--mu);margin:0 0 12px;max-width:70ch}
 .tw{overflow-x:auto;background:var(--sf);border-radius:var(--r);border:1px solid var(--ln)}
@@ -69,8 +75,8 @@ td.u{color:var(--wn);font-weight:700}td.t{font-weight:800}
   <p class="lede">Working demo of the three new flows, with sample cafe items. Everything shares one set of numbers: buy something and watch Undelivered grow, put it away and watch it land on shelves, then rebalance. The table at the bottom updates live and shows that only a purchase changes the total.</p>
   <ol class="how">
     <li><b>1 · Shopping list</b>Tap an item, enter how many you bought. It goes straight into stock as Undelivered.</li>
-    <li><b>2 · Check in</b>When it arrives, split it across places: 8 here, 12 there. Leftover stays undelivered.</li>
-    <li><b>3 · Rebalance</b>Set the new quantity for one place. The difference comes from (or goes to) another place. The total never changes.</li>
+    <li><b>2 · Check in</b>Each delivery has three buttons: Check In All, Still Undelivered, Partial Delivery. More than expected needs a written reason.</li>
+    <li><b>3 · Rebalance</b>Check in first. You can't move more than is present. If it's short, the alert offers easy fixes, including adding found stock with a reason.</li>
   </ol>
   <div class="frames">
     <div class="fr"><h2>Kristyn: shopping list</h2><div class="phone" id="p1"></div></div>
@@ -81,6 +87,7 @@ td.u{color:var(--wn);font-weight:700}td.t{font-weight:800}
     <h2>Stock by place</h2>
     <p>This is what the database derives from counts and movements. Undelivered counts toward the total, so a purchase removes the need to buy again.</p>
     <div class="tw" id="ledger"></div>
+    <div class="rv" id="review"></div>
     <ul class="log" id="log"></ul>
   </section>
 </div>
@@ -97,8 +104,8 @@ ITEMS.milk={n:'Whole milk',u:'gallons',par:6,vend:['Fred Meyer','Safeway'],pref:
 ITEMS.syrup={n:'Vanilla syrup',u:'bottles',par:4,vend:['Costco.com','Fred Meyer','Chef Store'],pref:'Costco.com',locs:['Cafe Counter','Pantry'],back:'Pantry'};
 const bal={napkins:{'Cafe Counter':3,Pantry:6,Undelivered:0},milk:{'Beverage Case':6,Undelivered:0},syrup:{'Cafe Counter':2,Pantry:3,Undelivered:0},coke:{'Beverage Case':5,Pantry:16,Undelivered:0},oat:{'Cafe Counter':2,Pantry:3,Undelivered:0},cups:{'Cafe Counter':6,Pantry:4,Undelivered:0}};
 const VENDORS=['Costco.com','Fred Meyer','Safeway','Chef Store'];
-const log=[];let seq=0;let flash=null;let reqs=[],rseq=0,nseq=0;
-const S={shop:{v:'Costco.com',sel:null,err:'',msg:null,mode:null,q:'',addK:null,nn:'',nu:'each',nq:'1'},ci:{sel:null,alloc:{},msg:null},rb:{item:'coke',loc:'Beverage Case',newq:'',from:'Pantry',msg:null}};
+const review=[];const log=[];let seq=0;let flash=null;let reqs=[],rseq=0,nseq=0;
+const S={shop:{v:'Costco.com',sel:null,err:'',msg:null,mode:null,q:'',addK:null,nn:'',nu:'each',nq:'1'},ci:{mode:{},alloc:{},split:{},expl:{},cancelRest:{},msg:null,hint:''},rb:{item:'coke',loc:'Beverage Case',newq:'',foundOpen:false,expl:'',msg:null}};
 const total=k=>Object.values(bal[k]).reduce((a,b)=>a+b,0);
 const need=k=>Math.max(0,ITEMS[k].par-total(k));
 const extra=k=>reqs.filter(r=>r.k===k&&r.open).reduce((a,r)=>a+r.q,0);
@@ -113,6 +120,7 @@ function move(kind,k,legs,text){ // legs: [[place, delta]]
 function undo(id){const e=log.find(x=>x.id===id);if(!e||e.undone)return;e.undone=true;for(const [p,d] of e.legs)bal[e.k][p]=get(e.k,p)-d;
  if(e.closed)for(const rid of e.closed){const r=reqs.find(x=>x.id===rid);if(r)r.open=true}
  if(e.reqId){const r=reqs.find(x=>x.id===e.reqId);if(r)r.open=false}
+ {const ix=review.findIndex(x=>x.e===e.id);if(ix>=0)review.splice(ix,1)}
  if(e.newKey&&!reqs.some(r=>r.k===e.newKey&&r.open&&r.id!==e.reqId)){delete ITEMS[e.newKey];delete bal[e.newKey]}
  flash=e.k;renderAll()}
 const toast=(o,m)=>m?`<div class="toast"><span>${esc(m.text)}</span>${m.id?`<button data-a="undo" data-id="${m.id}">Undo</button>`:''}</div>`:'';
@@ -151,40 +159,55 @@ function r1(){const s=S.shop;
  return h+'</div>'}
 
 /* 2 Check in */
+function ciInfo(k){const u=get(k,'Undelivered'),m=S.ci.mode[k]||'still',al=S.ci.alloc[k]||{};const placed=Object.values(al).reduce((x,y)=>x+(+y||0),0);
+ let ok=true,extra=0,err='';
+ if(m==='all'&&S.ci.split[k]){ok=placed===u;if(!ok)err=placed>u?`${placed-u} more than were undelivered. Use Partial Delivery and explain the extra.`:`${u-placed} still to place.`}
+ else if(m==='partial'){extra=Math.max(0,placed-u);ok=placed>0&&(!extra||(S.ci.expl[k]||'').trim().length>=5);if(placed<=0)err='Enter how many arrived.';else if(extra&&!ok)err=`That is ${extra} more than were undelivered. Add a short reason.`}
+ return {u,m,placed,extra,ok,err}}
+function allocRows(k){const al=S.ci.alloc[k]||{};return locsOf(k).map((l,n)=>`<div class="alloc"><span>${l}${l===backOf(k)?' <small class="mu">(backstock)</small>':''}</span><input id="ciq-${k}-${n}" data-ciq="${k}" data-loc="${l}" aria-label="${esc(ITEMS[k].n)} to ${l}" inputmode="numeric" pattern="[0-9]*" value="${al[l]??''}" placeholder="0"></div>`).join('')}
 function r2(){const s=S.ci;const items=Object.keys(ITEMS).filter(k=>get(k,'Undelivered')>0);
- let h=`<div class="hd"><h3>Check in deliveries</h3><p>${items.length?'Tap an item to put it away':'Nothing waiting'}</p></div>${toast(2,s.msg)}<div class="sc">`;
- if(s.sel&&get(s.sel,'Undelivered')>0){const k=s.sel,it=ITEMS[k],u=get(k,'Undelivered');const placed=Object.values(s.alloc).reduce((a,b)=>a+(+b||0),0),left=u-placed;
-  h+=`<div class="card"><h4>${it.n}</h4><div class="mu small">${u} ${it.u} undelivered. Where did it go?</div>
-  ${locsOf(s.sel).map(l=>`<div class="alloc"><span>${l}${l===backOf(s.sel)?' <small class="mu">(backstock)</small>':''}</span><input data-loc="${l}" aria-label="${l} quantity" inputmode="numeric" pattern="[0-9]*" value="${s.alloc[l]??''}" placeholder="0"></div>`).join('')}
-  <div class="${left<0?'err':'mu'}">${left<0?`That is ${-left} more than were undelivered.`:left===0?'All placed.':`${left} will stay undelivered.`}</div>
-  <button class="btn p" data-a="putaway" ${placed<=0||left<0?'disabled':''}>Put away ${placed>0?placed:''}</button>
-  <div class="row"><button class="btn sm grow" data-a="cancel2">Back</button><button class="btn sm grow" data-a="notcoming">Not coming (clear ${u})</button></div></div>`;}
- else if(!items.length)h+=`<div class="empty"><b>No deliveries waiting.</b><br>Buy something on the shopping list and it will appear here.</div>`;
- else h+=items.map(k=>`<button class="item" data-a="pick2" data-k="${k}"><b>${ITEMS[k].n}</b><span class="q">${get(k,'Undelivered')} ${ITEMS[k].u}</span><small>Undelivered</small></button>`).join('');
+ let h=`<div class="hd"><h3>Check in deliveries</h3><p>${items.length?'Choose what happened to each one':'Nothing waiting'}</p></div>${toast(2,s.msg)}${s.hint?`<div class="strip">${esc(s.hint)}</div>`:''}<div class="sc">`;
+ if(!items.length)h+=`<div class="empty"><b>No deliveries waiting.</b><br>Buy something on the shopping list and it will appear here.</div>`;
+ let ready=0,valid=true;
+ for(const k of items){const it=ITEMS[k],i=ciInfo(k);const mb=(m,l)=>`<button data-a="cimode" data-k="${k}" data-m="${m}" aria-pressed="${i.m===m}">${l}</button>`;
+  h+=`<div class="card" data-ci="${k}"><div class="row" style="justify-content:space-between;gap:8px"><b>${esc(it.n)}</b><span class="mu small">${i.u} ${it.u} undelivered</span></div>
+  <div class="seg" role="group" aria-label="${esc(it.n)}">${mb('all','Check In All')}${mb('still','Still Undelivered')}${mb('partial','Partial Delivery')}</div>`;
+  if(i.m==='all')h+=!s.split[k]?`<div class="mu small">All ${i.u} go to ${backOf(k)} (backstock). <button class="link" data-a="cisplit" data-k="${k}">Choose places</button></div>`:allocRows(k);
+  if(i.m==='partial')h+=`<div class="mu small">How many arrived, and where did they go?</div>`+allocRows(k)+(i.extra?`<label class="lab" for="ex-${k}">Why more than expected? (required)</label><textarea id="ex-${k}" data-ex="${k}" rows="2" maxlength="300" placeholder="e.g. driver left two extra cases">${esc(s.expl[k]||'')}</textarea>`:'')+`<button class="link" data-a="notcoming" data-k="${k}">${s.cancelRest[k]?'✓ ':''}Not coming: clear what's left (${Math.max(0,i.u-i.placed)})</button>`;
+  if(i.err)h+=`<div class="err">${i.err}</div>`;h+='</div>';
+  if(i.m!=='still'){ready++;if(!i.ok)valid=false}}
+ if(items.length)h+=`<button class="btn p" style="width:100%" data-a="putaway" ${ready&&valid?'':'disabled'}>Put away${ready?` (${ready} item${ready>1?'s':''})`:''}</button>`;
  return h+'</div>'}
 
 /* 3 Rebalance */
-function r3(){const s=S.rb,it=ITEMS[s.item];
- const cur=get(s.item,s.loc),nq=s.newq===''?null:Number(s.newq),diff=nq===null?0:nq-cur;
- const others=[...it.locs.filter(l=>l!==s.loc),'Undelivered'];if(!others.includes(s.from))s.from=others.includes(it.back)?it.back:others[0];
- const src=get(s.item,s.from);let line='',bad=false;
- if(nq!==null&&diff>0){bad=src<diff;line=`Moving ${diff} from ${s.from} (has ${src}) to ${s.loc}`+(bad?'. Not enough there. Count '+s.from+' first, or pick another place.':'');}
- else if(nq!==null&&diff<0){line=`Moving ${-diff} from ${s.loc} to ${s.from}`}
- let h=`<div class="hd"><h3>Rebalance</h3><p>Move stock between places. The total stays the same.</p></div>${toast(3,s.msg)}<div class="sc"><div class="card">
- <label class="lab">Item<select data-f="item">${Object.keys(ITEMS).filter(k=>ITEMS[k].locs.length).map(k=>`<option value="${k}" ${k===s.item?'selected':''}>${ITEMS[k].n}</option>`).join('')}</select></label>
+function plan(k,loc,d){const order=[backOf(k),...locsOf(k)].filter((v,i,a)=>a.indexOf(v)===i&&v!==loc);let left=d;const take=[];
+ for(const p of order){const q=Math.min(Math.max(0,get(k,p)),left);if(q>0){take.push([p,q]);left-=q}}return {take,short:left,avail:d-left}}
+const takeTxt=t=>t.map(([p,q])=>q+' from '+p).join(', ');
+function r3(){const s=S.rb,k=s.item,it=ITEMS[k];const cur=get(k,s.loc),nq=s.newq===''?null:Number(s.newq),und=get(k,'Undelivered');
+ const valid=nq!==null&&Number.isInteger(nq)&&nq>=0,d=valid?nq-cur:0;
+ let h=`<div class="hd"><h3>Rebalance</h3><p>Move stock between places. The total stays the same.</p></div>${toast(3,s.msg)}<div class="sc"><div class="card">`;
+ if(und>0)h+=`<div class="mv warn"><b>${und} ${it.u} still undelivered.</b> Check them in before rebalancing. <button class="link" data-a="cinow" data-k="${k}">Open Check in</button></div>`;
+ h+=`<label class="lab">Item<select data-f="item">${Object.keys(ITEMS).filter(x=>ITEMS[x].locs.length).map(x=>`<option value="${x}" ${x===k?'selected':''}>${ITEMS[x].n}</option>`).join('')}</select></label>
  <label class="lab">Set the quantity in<select data-f="loc">${it.locs.map(l=>`<option ${l===s.loc?'selected':''}>${l}</option>`).join('')}</select></label>
- <div class="mu small">${s.loc} now has ${cur} ${it.u}</div>
- <label class="lab" for="nq">New quantity</label><input id="nq" class="big" data-f="newq" inputmode="numeric" pattern="[0-9]*" placeholder="${cur}" value="${esc(s.newq)}" autocomplete="off">
- <label class="lab">${diff<0?'Move to':'Move from'}<select data-f="from">${others.map(l=>`<option ${l===s.from?'selected':''}>${l}${l==='Undelivered'?'':''} (${get(s.item,l)})</option>`).join('')}</select></label>
- ${line?`<div class="mv ${bad?'err':''}">${line}</div>`:''}
- <button class="btn p" data-a="rebalance" ${nq===null||diff===0||bad||!Number.isInteger(nq)||nq<0?'disabled':''}>Save</button></div></div>`;
- return h}
+ <div class="mu small">${s.loc} now has ${cur} ${it.u} · ${total(k)-und} on hand in all</div>
+ <label class="lab" for="nq">New quantity</label><input id="nq" class="big" data-f="newq" inputmode="numeric" pattern="[0-9]*" placeholder="${cur}" value="${esc(s.newq)}" autocomplete="off">`;
+ let ok=false,line='';
+ if(valid&&d>0){const pl=plan(k,s.loc,d);
+  if(pl.short===0){ok=true;line=`Taking ${takeTxt(pl.take)} to move ${d} into ${s.loc}.`}
+  else{h+=`<div class="alert" role="alert"><b>Not enough in the source.</b><span>${pl.avail?`Only ${pl.avail} ${it.u} can be taken from the other places (${takeTxt(pl.take)}).`:`No other place holds any ${esc(it.n)}.`} You need ${pl.short} more, and you can't rebalance more than is present.</span>
+   <div class="fix">${und>0?`<button class="btn sm" data-a="cinow" data-k="${k}" data-need="${pl.short}">Check in ${Math.min(und,pl.short)} of the ${und} undelivered</button>`:''}${pl.avail?`<button class="btn sm" data-a="lower" data-v="${cur+pl.avail}">Use ${cur+pl.avail} instead (all that's available)</button>`:''}<button class="btn sm" data-a="foundopen" aria-pressed="${s.foundOpen}">Add ${pl.short} as found stock</button></div>
+   ${s.foundOpen?`<label class="lab" for="fx">Why is there more? (required)</label><textarea id="fx" rows="2" maxlength="300" placeholder="e.g. found a case behind the fridge">${esc(s.expl)}</textarea>`:''}</div>`;
+   if(s.foundOpen&&s.expl.trim().length>=5){ok=true;line=`Taking ${pl.take.length?takeTxt(pl.take):'nothing'} and adding ${pl.short} as found stock. An admin will review it.`}}}
+ else if(valid&&d<0){const dest=[backOf(k),...locsOf(k)].find(p=>p!==s.loc);if(dest){ok=true;line=`Moving ${-d} from ${s.loc} to ${dest}.`}else line='No other place holds this item.'}
+ h+=line?`<div class="mv">${line}</div>`:'';
+ return h+`<button class="btn p" data-a="rebalance" ${ok?'':'disabled'}>Save</button></div></div>`}
 
 function ledger(){let h=`<table><thead><tr><th>Item</th>${PLACES.map(p=>`<th>${p}</th>`).join('')}<th>Total</th><th>Par</th></tr></thead><tbody>`;
  for(const k of Object.keys(ITEMS)){h+=`<tr class="${flash===k?'flash':''}"><td><b>${esc(ITEMS[k].n)}</b>${ITEMS[k].isNew?'<span class="tag">Needs setup</span>':''}</td>${PLACES.map(p=>`<td class="${p==='Undelivered'&&get(k,p)?'u':''}">${ITEMS[k].locs.includes(p)||p==='Undelivered'||get(k,p)?get(k,p):'<span class="mu">·</span>'}</td>`).join('')}<td class="t">${total(k)}</td><td>${ITEMS[k].par}</td></tr>`}
  return h+'</tbody></table>'}
+function renderReview(){$('#review').innerHTML=`<h3>Found stock waiting for admin review</h3>`+(review.length?`<ul>${review.map(r=>`<li><b>${r.q}</b> ${esc(ITEMS[r.k]?ITEMS[r.k].n:'item')}: &ldquo;${esc(r.why)}&rdquo; (${esc(r.by)})</li>`).join('')}</ul>`:'<p class="mu" style="margin:0">Nothing waiting.</p>')}
 function renderLog(){$('#log').innerHTML=log.slice(0,6).map(e=>`<li><span>${e.undone?'<s>':''}${esc(e.text)}${e.undone?'</s> (undone)':''}</span>${e.undone?'':`<button data-a="undo" data-id="${e.id}">Undo</button>`}</li>`).join('')}
-function renderAll(){$('#p1').innerHTML=r1();$('#p2').innerHTML=r2();$('#p3').innerHTML=r3();$('#ledger').innerHTML=ledger();renderLog()}
+function renderAll(){$('#p1').innerHTML=r1();$('#p2').innerHTML=r2();$('#p3').innerHTML=r3();$('#ledger').innerHTML=ledger();renderReview();renderLog()}
 
 document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,s=S;
  if(a==='vend'){s.shop.v=t.dataset.v;s.shop.sel=null;s.shop.err='';s.shop.mode=null}
@@ -206,26 +229,44 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
   ITEMS[k]={n:name,u:s.shop.nu,par:0,vend:[s.shop.v],pref:s.shop.v,locs:[],back:null,isNew:true};bal[k]={Undelivered:0};
   const r={id:++rseq,k,v:s.shop.v,q,open:true};reqs.push(r);const e={id:++seq,kind:'new_item',k,legs:[],text:`Created new item "${name}" (needs setup) and added ${q} to the ${s.shop.v} list.`,undone:false,reqId:r.id,newKey:k};log.unshift(e);flash=k;
   s.shop.msg={text:`Added "${name}" to the catalog (needs setup) and ${q} to the list.`,id:e.id};s.shop.mode=null}
- else if(a==='pick2'){s.ci.sel=t.dataset.k;const k=t.dataset.k;s.ci.alloc={[backOf(k)]:get(k,'Undelivered')};s.ci.msg=null}
- else if(a==='cancel2'){s.ci.sel=null}
- else if(a==='putaway'){const k=s.ci.sel,legs=[];let n=0;for(const [l,q] of Object.entries(s.ci.alloc)){const v=+q||0;if(v>0){legs.push([l,v]);n+=v}}
-  move('check_in',k,[['Undelivered',-n],...legs],`Put away ${n} ${ITEMS[k].n}: ${legs.map(([l,v])=>v+' to '+l).join(', ')}.`);s.ci.msg={text:`Put away ${n} ${ITEMS[k].n}.`,id:seq};s.ci.sel=null}
- else if(a==='notcoming'){const k=s.ci.sel,u=get(k,'Undelivered');move('cancel',k,[['Undelivered',-u]],`Cleared ${u} undelivered ${ITEMS[k].n} (not coming).`);s.ci.msg={text:`Cleared ${u} undelivered.`,id:seq};s.ci.sel=null}
- else if(a==='rebalance'){const r=s.rb,k=r.item,cur=get(k,r.loc),nq=Number(r.newq),d=nq-cur;
-  move('rebalance',k,[[r.loc,d],[r.from,-d]],d>0?`Rebalanced ${ITEMS[k].n}: ${d} from ${r.from} to ${r.loc} (${cur} to ${nq}).`:`Rebalanced ${ITEMS[k].n}: ${-d} from ${r.loc} to ${r.from} (${cur} to ${nq}).`);
-  r.msg={text:`${r.loc} is now ${nq}. Total unchanged.`,id:seq};r.newq=''}
+ else if(a==='cimode'){const k=t.dataset.k,m=t.dataset.m,u=get(k,'Undelivered');s.ci.mode[k]=m;s.ci.hint='';
+  if(m==='all'){s.ci.alloc[k]={[backOf(k)]:u};s.ci.split[k]=false}else if(m==='partial'){s.ci.alloc[k]=s.ci.alloc[k]&&Object.keys(s.ci.alloc[k]).length?s.ci.alloc[k]:{}}}
+ else if(a==='cisplit'){s.ci.split[t.dataset.k]=true}
+ else if(a==='notcoming'){const k=t.dataset.k;s.ci.cancelRest[k]=!s.ci.cancelRest[k]}
+ else if(a==='putaway'){const items=Object.keys(ITEMS).filter(k=>get(k,'Undelivered')>0);let n=0;
+  for(const k of items){const i=ciInfo(k);if(i.m==='still'||!i.ok)continue;const al=s.ci.alloc[k]||{};
+   const dests=(i.m==='all'&&!s.ci.split[k])?[[backOf(k),i.u]]:Object.entries(al).map(([l,q])=>[l,+q||0]).filter(([,q])=>q>0);
+   const placed=dests.reduce((x,[,q])=>x+q,0);const clear=s.ci.cancelRest[k]&&i.m==='partial';
+   const un=-(clear?i.u:Math.min(placed,i.u));
+   const why=(s.ci.expl[k]||'').trim();const parts=dests.map(([l,q])=>q+' to '+l).join(', ');
+   const e=move('check_in',k,[['Undelivered',un],...dests],`Put away ${placed} ${ITEMS[k].n}: ${parts}.`+(i.extra?` ${i.extra} more than expected: "${why}".`:'')+(clear&&i.u>placed?` Cleared ${i.u-placed} (not coming).`:''));
+   if(i.extra)review.push({k,q:i.extra,why,by:'You',e:e.id});
+   s.ci.mode[k]='still';s.ci.alloc[k]={};s.ci.split[k]=false;s.ci.expl[k]='';s.ci.cancelRest[k]=false;n++}
+  s.ci.msg={text:`Put away ${n} delivery${n>1?' items':''}.`,id:seq};s.ci.hint=''}
+ else if(a==='cinow'){const k=t.dataset.k,u=get(k,'Undelivered'),need=+t.dataset.need||u;s.ci.mode[k]='partial';s.ci.alloc[k]={[s.rb.loc]:Math.min(u,need)};s.ci.split[k]=false;s.ci.hint=`From Rebalance: check in ${Math.min(u,need)} ${ITEMS[k].n} to ${s.rb.loc}, then go back.`;
+  renderAll();document.getElementById('p2').scrollIntoView({behavior:'smooth',block:'center'});return}
+ else if(a==='lower'){s.rb.newq=String(+t.dataset.v);s.rb.foundOpen=false}
+ else if(a==='foundopen'){s.rb.foundOpen=!s.rb.foundOpen}
+ else if(a==='rebalance'){const r=s.rb,k=r.item,cur=get(k,r.loc),nq=Number(r.newq),d=nq-cur;let legs,text,found=0;const nm=ITEMS[k].n;
+  if(d>0){const pl=plan(k,r.loc,d);found=pl.short;legs=[[r.loc,d],...pl.take.map(([p,q])=>[p,-q])];
+   text=`Rebalanced ${nm}: ${pl.take.length?takeTxt(pl.take)+' to '+r.loc:'nothing moved'} (${cur} to ${nq}).`+(found?` ${found} added as found stock: "${r.expl.trim()}".`:'')}
+  else{const dest=[backOf(k),...locsOf(k)].find(p=>p!==r.loc);legs=[[r.loc,d],[dest,-d]];text=`Rebalanced ${nm}: ${-d} from ${r.loc} to ${dest} (${cur} to ${nq}).`}
+  const e=move('rebalance',k,legs,text);if(found)review.push({k,q:found,why:r.expl.trim(),by:'You',e:e.id});
+  r.msg={text:`${r.loc} is now ${nq}.`+(found?' Found stock sent for review.':' Total unchanged.'),id:seq};r.newq='';r.foundOpen=false;r.expl=''}
  else if(a==='undo'){const id=+t.dataset.id;undo(id);for(const m of [s.shop,s.ci,s.rb])if(m.msg&&m.msg.id===id)m.msg=null;return}
  renderAll()});
 document.addEventListener('input',e=>{const t=e.target;
- if(t.dataset.loc){S.ci.alloc[t.dataset.loc]=t.value.replace(/\D/g,'');const pos=t.selectionStart;renderAll();const n=document.querySelector(`[data-loc="${t.dataset.loc}"]`);if(n){n.focus();n.setSelectionRange(pos,pos)}}
+ const keep=()=>{const id=t.id,pos=t.selectionStart;renderAll();const n=document.getElementById(id);if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(_){}}};
+ if(t.dataset.ciq){const k=t.dataset.ciq;(S.ci.alloc[k]=S.ci.alloc[k]||{})[t.dataset.loc]=t.value.replace(/\D/g,'');keep()}
+ else if(t.dataset.ex){S.ci.expl[t.dataset.ex]=t.value;keep()}
+ else if(t.id==='fx'){S.rb.expl=t.value;keep()}
  else if(t.dataset.f==='ps'){S.shop.q=t.value;renderAll();const n=$('#ps');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
  else if(t.dataset.f==='nn'){S.shop.nn=t.value;renderAll();const n=$('#nn');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
  else if(t.dataset.f==='nq'){S.shop.nq=t.value.replace(/\D/g,'');renderAll();const n=$('#nq2');n.focus();n.setSelectionRange(n.value.length,n.value.length)}
  else if(t.dataset.f==='newq'){S.rb.newq=t.value.replace(/\D/g,'');renderAll();const n=$('#nq');n.focus();n.setSelectionRange(n.value.length,n.value.length)}});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.f==='vend'){S.shop.v=t.value;S.shop.sel=null;S.shop.err='';S.shop.mode=null;S.shop.msg=null;renderAll()}
  else if(t.dataset.f==='nu'){S.shop.nu=t.value;renderAll()}
- else if(t.dataset.f==='item'){S.rb.item=t.value;S.rb.loc=ITEMS[t.value].locs[0];S.rb.newq='';S.rb.from=ITEMS[t.value].back;S.rb.msg=null;renderAll()}
- else if(t.dataset.f==='loc'){S.rb.loc=t.value;S.rb.newq='';S.rb.msg=null;renderAll()}
- else if(t.dataset.f==='from'){S.rb.from=t.value.replace(/ \(\d+\)$/,'');renderAll()}});
+ else if(t.dataset.f==='item'){S.rb.item=t.value;S.rb.loc=ITEMS[t.value].locs[0];S.rb.newq='';S.rb.foundOpen=false;S.rb.expl='';S.rb.msg=null;renderAll()}
+ else if(t.dataset.f==='loc'){S.rb.loc=t.value;S.rb.newq='';S.rb.foundOpen=false;S.rb.expl='';S.rb.msg=null;renderAll()}});
 renderAll();
 </script>
