@@ -326,7 +326,7 @@ function build(){
    <div class="fr"><h3>Kristyn: shopping list by vendor</h3><div class="phone" id="sl-${k}"></div></div>
    <div class="fr admin-fr"><h3>Admin: place items on shelves in bulk</h3><div id="adm-${k}"></div></div>
   </div></section>`).join('');
- adInit();for(const k of Object.keys(OPTS)){mountAdmin(k);renderQI(k);renderSL(k)}renderAdmin();pick('a');let f=0;try{f=Number(localStorage.getItem('ci-font'))||0}catch(e){}applyFont(f<FONTS.length?f:0)}
+ adInit();for(const k of Object.keys(OPTS)){mountAdmin(k);renderQI(k);renderSL(k)}renderAdmin();pick('a');let f=4;try{const v=localStorage.getItem('ci-font');if(v!==null)f=Number(v)||0}catch(e){}applyFont(f<FONTS.length?f:0)}
 const FONTS=[
  ['Option default',null,null,'Each option keeps the typeface it was designed with.'],
  ['Atkinson Hyperlegible','Atkinson Hyperlegible','Atkinson Hyperlegible','Drawn for low-vision readers; every letter and digit is unmistakable. Strong fit for 6 vs 8 and 1 vs 7 on a quick count.'],
