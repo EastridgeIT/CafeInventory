@@ -27,7 +27,12 @@ updated: 2026-10-06
 | A place the cafe buys from | **Vendor** (`vendor`) | Costco.com, Chef Store, Fred Meyer. Avoid "supplier", "store", "source". |
 | An item's approved vendor | **Item vendor** (`item_vendor`) | Ranked by `preference`. Never interchange with Item location (where stock sits vs. where it's bought). |
 | Items that need replacing, viewed by vendor | **Shopping list** (`shopping_list`) | Derived, not stored. |
-| A recorded buy/order of an item | **Purchase** (`purchase`) | Append-only. |
+| A recorded buy of an item (quantity) | **Purchase** (`purchase`) | Append-only. Adds to Undelivered. |
+| System location holding bought-but-not-shelved stock | **Undelivered** (`location.kind = 'undelivered'`) | Avoid "on order", "in transit". Not countable. |
+| Stock that moves between places between counts | **Stock movement** (`stock_movement`) | Signed `delta`; transfers are two rows in one `group_id`. |
+| Screen: put delivered stock on shelves | **Check in** (`check_in`) | Avoid "receive". |
+| Screen: move stock between places, total unchanged | **Rebalance** (`rebalance`) | Avoid "transfer" in the UI. |
+| An item's default backstock place | **Backstock location** (`item_location.is_backstock`) | Default source for Rebalance. |
 | How an item is measured | **Measurement method** (`measurement_method`: `whole` \| `decimal` \| `level`) | Avoid "count mode", "unit type". |
 | Largest number shown as a one-tap button for an item | **Quick max** (`quick_max`) | Must be ≥ par level. Avoid "button limit", "max count". |
 | Removing a mistaken count so it never counted | **Void** / UI label **Reset this count** (`voided_at`) | Never "delete" or "revert". Voided rows are excluded from every calculation. |

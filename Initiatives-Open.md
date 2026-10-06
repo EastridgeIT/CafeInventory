@@ -40,7 +40,7 @@ Entry template: `knowledge/templates/initiative.md`. IDs are stable and never re
 - **Fleshing-out notes:** Toast API access requires partner/integration approval, so check that first. `toast_employee_ref` on users (ADR-0004) prepares the ground.
 - **Related:** `knowledge/decisions/0004-pin-login.md`
 
-### INIT-0005 — Per-vendor shopping lists
+### INIT-0005 — Per-vendor shopping lists (extended 2026-10-06: quantity purchased, Undelivered, check-in, rebalance)
 - **Status:** Fleshing-out · **Source:** User · **Added:** 2026-10-06
 - **Serves:** Cafe Manager (Kristyn) shopping efficiently; replaces par-level reorder idea INIT-0002 (merged here)
 - **Idea:** Shopping lists filtered by vendor, items with multiple preferred vendors appear under each, check-off removes them everywhere.

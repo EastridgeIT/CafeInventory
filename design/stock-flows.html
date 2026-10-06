@@ -1,0 +1,173 @@
+<title>Cafe Inventory Stock Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: three phone frames side by side (Shopping list, Check in, Rebalance) above a live "stock by place" ledger. */
+/* Tokens: option A (guided card) palette and Public Sans, as chosen for the app. */
+:root{--bg:#EEF3F6;--sf:#FFFFFF;--ink:#14283C;--mu:#566A7C;--ln:#D3DEE6;--ac:#1F55D6;--aci:#FFFFFF;--gd:#1E7B4C;--wn:#B4411A;--so:#DDE8FB;--r:18px;--f:'Public Sans',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A24;--sf:#172635;--ink:#E8F0F6;--mu:#9DB0C0;--ln:#2A3E50;--ac:#7FA6FF;--aci:#0B1B3D;--gd:#5FCB92;--wn:#FF9C7A;--so:#1E3358;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f);margin:0;padding-inline:16px;padding-block:20px 56px;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font:800 clamp(1.7rem,4vw,2.3rem)/1.1 var(--f);margin:0 0 8px;text-wrap:balance}
+.lede{max-width:70ch;color:var(--mu);margin:0 0 20px}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 24px;margin:0 0 24px;padding:0;list-style:none;max-width:1000px}
+.how li{background:var(--sf);border-radius:14px;padding:12px 14px;font-size:.93rem}.how b{display:block;margin-bottom:2px}
+.frames{display:flex;flex-wrap:wrap;gap:28px 32px;align-items:flex-start}
+.fr{min-width:0;max-width:100%}.fr>h2{font-size:.95rem;margin:0 0 8px;color:var(--mu)}
+.phone{width:360px;max-width:100%;height:660px;background:var(--bg);border:1px solid var(--ln);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.12);position:relative}
+.sc{flex:1;min-height:0;overflow:auto;padding:0 14px 14px}
+.hd{padding:16px 16px 8px}.hd h3{margin:0;font:800 22px/1.15 var(--f)}.hd p{margin:2px 0 0;color:var(--mu);font-size:14px}
+.btn{min-height:50px;padding:0 16px;border-radius:14px;border:2px solid var(--ln);background:var(--sf);color:var(--ink);font:700 16px var(--f);cursor:pointer}
+.btn.p{background:var(--ac);border-color:var(--ac);color:var(--aci)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:44px;font-size:15px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,.item:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.vt{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 10px;scrollbar-width:none}
+.vt button{flex:none;cursor:pointer;font:700 15px var(--f);padding:9px 14px;border-radius:99px;border:2px solid var(--ln);background:var(--sf);color:var(--ink)}
+.vt button[aria-pressed="true"]{background:var(--ac);border-color:var(--ac);color:var(--aci)}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;width:100%;text-align:left;cursor:pointer;background:var(--sf);border:0;border-radius:var(--r);padding:14px 16px;margin-bottom:10px;color:inherit;font:inherit}
+.item b{font-weight:700;font-size:17px}.item .q{font-weight:800;text-align:right}.item small{color:var(--mu);font-size:13px;grid-column:1 / span 2}
+.pref{display:inline-block;font-size:12px;font-weight:700;color:var(--gd);border:1px solid var(--gd);border-radius:99px;padding:0 7px;margin-left:6px}
+.card{background:var(--sf);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.card h4{margin:0;font:800 22px/1.15 var(--f)}
+.mu{color:var(--mu)}.small{font-size:14px}.err{color:var(--wn);font-weight:700;font-size:15px}.ok{color:var(--gd);font-weight:700}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:2px solid var(--ln);border-radius:12px;min-height:48px;padding:0 12px;width:100%}
+input.big{font-size:36px;font-weight:800;text-align:center;min-height:72px}
+.row{display:flex;gap:8px;align-items:center}.row>*{min-width:0}.grow{flex:1}
+.lab{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px;color:var(--mu)}
+.alloc{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center}
+.alloc span{font-weight:700}
+.toast{margin:8px 14px 0;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:15px}
+.toast button{all:unset;cursor:pointer;font-weight:800;text-decoration:underline}
+.link{all:unset;cursor:pointer;color:var(--ac);text-decoration:underline;font-size:15px}
+.empty{padding:28px 16px;text-align:center;color:var(--mu)}
+.mv{background:var(--so);border-radius:12px;padding:10px 12px;font-weight:600}
+.ledger{margin-top:32px}.ledger h2{font-size:1.2rem;margin:0 0 4px}.ledger>p{color:var(--mu);margin:0 0 12px;max-width:70ch}
+.tw{overflow-x:auto;background:var(--sf);border-radius:var(--r);border:1px solid var(--ln)}
+table{border-collapse:collapse;width:100%;min-width:620px;font-size:15px}
+th{text-align:right;font-size:13px;color:var(--mu);padding:10px 14px;border-bottom:1px solid var(--ln)}th:first-child,td:first-child{text-align:left}
+td{padding:10px 14px;border-bottom:1px solid var(--ln);text-align:right}tr:last-child td{border-bottom:0}
+td.u{color:var(--wn);font-weight:700}td.t{font-weight:800}
+.flash{animation:fl 1.2s}@keyframes fl{from{background:var(--so)}to{background:transparent}}
+.log{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:14px}
+.log li{background:var(--sf);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;gap:10px}
+.log button{all:unset;cursor:pointer;color:var(--ac);font-weight:700;text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.flash{animation:none}}
+</style>
+
+<div class="wrap">
+  <h1>Buying, checking in and moving stock</h1>
+  <p class="lede">Working demo of the three new flows, with sample cafe items. Everything shares one set of numbers: buy something and watch Undelivered grow, put it away and watch it land on shelves, then rebalance. The table at the bottom updates live and shows that only a purchase changes the total.</p>
+  <ol class="how">
+    <li><b>1 · Shopping list</b>Tap an item, enter how many you bought. It goes straight into stock as Undelivered.</li>
+    <li><b>2 · Check in</b>When it arrives, split it across places: 8 here, 12 there. Leftover stays undelivered.</li>
+    <li><b>3 · Rebalance</b>Set the new quantity for one place. The difference comes from (or goes to) another place. The total never changes.</li>
+  </ol>
+  <div class="frames">
+    <div class="fr"><h2>Kristyn: shopping list</h2><div class="phone" id="p1"></div></div>
+    <div class="fr"><h2>Anyone: check in deliveries</h2><div class="phone" id="p2"></div></div>
+    <div class="fr"><h2>Anyone: rebalance</h2><div class="phone" id="p3"></div></div>
+  </div>
+  <section class="ledger" aria-live="polite">
+    <h2>Stock by place</h2>
+    <p>This is what the database derives from counts and movements. Undelivered counts toward the total, so a purchase removes the need to buy again.</p>
+    <div class="tw" id="ledger"></div>
+    <ul class="log" id="log"></ul>
+  </section>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const PLACES=['Cafe Counter','Beverage Case','Pantry','Undelivered'];
+const ITEMS={
+ coke:{n:'Coke bottles',u:'bottles',par:48,vend:['Costco.com','Fred Meyer','Safeway'],pref:'Costco.com',locs:['Beverage Case','Pantry'],back:'Pantry'},
+ oat:{n:'Oat milk',u:'cartons',par:12,vend:['Costco.com','Fred Meyer'],pref:'Costco.com',locs:['Cafe Counter','Pantry'],back:'Pantry'},
+ cups:{n:'12 oz paper cups',u:'sleeves',par:20,vend:['Chef Store','Costco.com'],pref:'Chef Store',locs:['Cafe Counter','Pantry'],back:'Pantry'}};
+const bal={coke:{'Beverage Case':5,Pantry:16,Undelivered:0},oat:{'Cafe Counter':2,Pantry:3,Undelivered:0},cups:{'Cafe Counter':6,Pantry:4,Undelivered:0}};
+const VENDORS=['Costco.com','Fred Meyer','Safeway','Chef Store'];
+const log=[];let seq=0;let flash=null;
+const S={shop:{v:'Costco.com',sel:null,err:'',msg:null},ci:{sel:null,alloc:{},msg:null},rb:{item:'coke',loc:'Beverage Case',newq:'',from:'Pantry',msg:null}};
+const total=k=>Object.values(bal[k]).reduce((a,b)=>a+b,0);
+const need=k=>Math.max(0,ITEMS[k].par-total(k));
+const get=(k,l)=>bal[k][l]??0;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function move(kind,k,legs,text){ // legs: [[place, delta]]
+ const id=++seq;for(const [p,d] of legs)bal[k][p]=get(k,p)+d;log.unshift({id,kind,k,legs,text,undone:false});flash=k;}
+function undo(id){const e=log.find(x=>x.id===id);if(!e||e.undone)return;e.undone=true;for(const [p,d] of e.legs)bal[e.k][p]=get(e.k,p)-d;flash=e.k;renderAll()}
+const toast=(o,m)=>m?`<div class="toast"><span>${esc(m.text)}</span>${m.id?`<button data-a="undo" data-id="${m.id}">Undo</button>`:''}</div>`:'';
+
+/* 1 Shopping list */
+function r1(){const s=S.shop;
+ const items=Object.keys(ITEMS).filter(k=>ITEMS[k].vend.includes(s.v)&&need(k)>0).sort((a,b)=>(ITEMS[b].pref===s.v)-(ITEMS[a].pref===s.v));
+ let h=`<div class="hd"><h3>Shopping list</h3><p>${s.v}: everything you could get here</p></div><div class="vt">${VENDORS.map(v=>`<button data-a="vend" data-v="${v}" aria-pressed="${v===s.v}">${v}</button>`).join('')}</div>${toast(1,s.msg)}<div class="sc">`;
+ if(s.sel){const k=s.sel,n=need(k),it=ITEMS[k];
+  h+=`<div class="card"><h4>${it.n}</h4><div class="mu small">Need ${n} more · stock now ${total(k)} of ${it.par}${get(k,'Undelivered')?` (includes ${get(k,'Undelivered')} undelivered)`:''}</div>
+  <button class="btn p" data-a="buy" data-q="${n}">Bought ${n} ${it.u}</button>
+  <label class="lab" for="bq">Or a different number</label><div class="row"><input id="bq" class="big" inputmode="numeric" pattern="[0-9]*" placeholder="0" autocomplete="off"><button class="btn" data-a="buyq">Save</button></div>
+  ${s.err?`<div class="err" role="alert">${s.err}</div>`:''}<button class="link" data-a="cancel">Cancel</button></div>`;}
+ else if(!items.length)h+=`<div class="empty"><b>Nothing left to buy at ${s.v}.</b><br>Anything bought is already counted as undelivered stock.</div>`;
+ else h+=items.map(k=>{const it=ITEMS[k];return `<button class="item" data-a="pick" data-k="${k}"><b>${it.n}${it.pref===s.v?'<span class="pref">Preferred here</span>':''}</b><span class="q">Need ${need(k)}</span><small>${total(k)} of ${it.par} in stock${it.vend.length>1?' · also at '+it.vend.filter(x=>x!==s.v).join(', '):''}</small></button>`}).join('');
+ return h+'</div>'}
+
+/* 2 Check in */
+function r2(){const s=S.ci;const items=Object.keys(ITEMS).filter(k=>get(k,'Undelivered')>0);
+ let h=`<div class="hd"><h3>Check in deliveries</h3><p>${items.length?'Tap an item to put it away':'Nothing waiting'}</p></div>${toast(2,s.msg)}<div class="sc">`;
+ if(s.sel&&get(s.sel,'Undelivered')>0){const k=s.sel,it=ITEMS[k],u=get(k,'Undelivered');const placed=Object.values(s.alloc).reduce((a,b)=>a+(+b||0),0),left=u-placed;
+  h+=`<div class="card"><h4>${it.n}</h4><div class="mu small">${u} ${it.u} undelivered. Where did it go?</div>
+  ${it.locs.map(l=>`<div class="alloc"><span>${l}${l===it.back?' <small class="mu">(backstock)</small>':''}</span><input data-loc="${l}" aria-label="${l} quantity" inputmode="numeric" pattern="[0-9]*" value="${s.alloc[l]??''}" placeholder="0"></div>`).join('')}
+  <div class="${left<0?'err':'mu'}">${left<0?`That is ${-left} more than were undelivered.`:left===0?'All placed.':`${left} will stay undelivered.`}</div>
+  <button class="btn p" data-a="putaway" ${placed<=0||left<0?'disabled':''}>Put away ${placed>0?placed:''}</button>
+  <div class="row"><button class="btn sm grow" data-a="cancel2">Back</button><button class="btn sm grow" data-a="notcoming">Not coming (clear ${u})</button></div></div>`;}
+ else if(!items.length)h+=`<div class="empty"><b>No deliveries waiting.</b><br>Buy something on the shopping list and it will appear here.</div>`;
+ else h+=items.map(k=>`<button class="item" data-a="pick2" data-k="${k}"><b>${ITEMS[k].n}</b><span class="q">${get(k,'Undelivered')} ${ITEMS[k].u}</span><small>Undelivered</small></button>`).join('');
+ return h+'</div>'}
+
+/* 3 Rebalance */
+function r3(){const s=S.rb,it=ITEMS[s.item];
+ const cur=get(s.item,s.loc),nq=s.newq===''?null:Number(s.newq),diff=nq===null?0:nq-cur;
+ const others=[...it.locs.filter(l=>l!==s.loc),'Undelivered'];if(!others.includes(s.from))s.from=others.includes(it.back)?it.back:others[0];
+ const src=get(s.item,s.from);let line='',bad=false;
+ if(nq!==null&&diff>0){bad=src<diff;line=`Moving ${diff} from ${s.from} (has ${src}) to ${s.loc}`+(bad?'. Not enough there. Count '+s.from+' first, or pick another place.':'');}
+ else if(nq!==null&&diff<0){line=`Moving ${-diff} from ${s.loc} to ${s.from}`}
+ let h=`<div class="hd"><h3>Rebalance</h3><p>Move stock between places. The total stays the same.</p></div>${toast(3,s.msg)}<div class="sc"><div class="card">
+ <label class="lab">Item<select data-f="item">${Object.keys(ITEMS).map(k=>`<option value="${k}" ${k===s.item?'selected':''}>${ITEMS[k].n}</option>`).join('')}</select></label>
+ <label class="lab">Set the quantity in<select data-f="loc">${it.locs.map(l=>`<option ${l===s.loc?'selected':''}>${l}</option>`).join('')}</select></label>
+ <div class="mu small">${s.loc} now has ${cur} ${it.u}</div>
+ <label class="lab" for="nq">New quantity</label><input id="nq" class="big" data-f="newq" inputmode="numeric" pattern="[0-9]*" placeholder="${cur}" value="${esc(s.newq)}" autocomplete="off">
+ <label class="lab">${diff<0?'Move to':'Move from'}<select data-f="from">${others.map(l=>`<option ${l===s.from?'selected':''}>${l}${l==='Undelivered'?'':''} (${get(s.item,l)})</option>`).join('')}</select></label>
+ ${line?`<div class="mv ${bad?'err':''}">${line}</div>`:''}
+ <button class="btn p" data-a="rebalance" ${nq===null||diff===0||bad||!Number.isInteger(nq)||nq<0?'disabled':''}>Save</button></div></div>`;
+ return h}
+
+function ledger(){let h=`<table><thead><tr><th>Item</th>${PLACES.map(p=>`<th>${p}</th>`).join('')}<th>Total</th><th>Par</th></tr></thead><tbody>`;
+ for(const k of Object.keys(ITEMS)){h+=`<tr class="${flash===k?'flash':''}"><td><b>${ITEMS[k].n}</b></td>${PLACES.map(p=>`<td class="${p==='Undelivered'&&get(k,p)?'u':''}">${ITEMS[k].locs.includes(p)||p==='Undelivered'?get(k,p):'<span class="mu">·</span>'}</td>`).join('')}<td class="t">${total(k)}</td><td>${ITEMS[k].par}</td></tr>`}
+ return h+'</tbody></table>'}
+function renderLog(){$('#log').innerHTML=log.slice(0,6).map(e=>`<li><span>${e.undone?'<s>':''}${esc(e.text)}${e.undone?'</s> (undone)':''}</span>${e.undone?'':`<button data-a="undo" data-id="${e.id}">Undo</button>`}</li>`).join('')}
+function renderAll(){$('#p1').innerHTML=r1();$('#p2').innerHTML=r2();$('#p3').innerHTML=r3();$('#ledger').innerHTML=ledger();renderLog()}
+
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t)return;const a=t.dataset.a,s=S;
+ if(a==='vend'){s.shop.v=t.dataset.v;s.shop.sel=null;s.shop.err=''}
+ else if(a==='pick'){s.shop.sel=t.dataset.k;s.shop.err='';s.shop.msg=null}
+ else if(a==='cancel'){s.shop.sel=null;s.shop.err=''}
+ else if(a==='buy'||a==='buyq'){const k=s.shop.sel,q=a==='buy'?+t.dataset.q:Number(($('#bq')||{}).value);
+  if(!Number.isInteger(q)||q<=0){s.shop.err='Enter a whole number of 1 or more.';renderAll();return}
+  move('purchase',k,[['Undelivered',q]],`Bought ${q} ${ITEMS[k].n} at ${s.shop.v}. Added to Undelivered.`);s.shop.msg={text:`Added ${q} ${ITEMS[k].n} to Undelivered.`,id:seq};s.shop.sel=null;s.shop.err=''}
+ else if(a==='pick2'){s.ci.sel=t.dataset.k;const k=t.dataset.k;s.ci.alloc={[ITEMS[k].back]:get(k,'Undelivered')};s.ci.msg=null}
+ else if(a==='cancel2'){s.ci.sel=null}
+ else if(a==='putaway'){const k=s.ci.sel,legs=[];let n=0;for(const [l,q] of Object.entries(s.ci.alloc)){const v=+q||0;if(v>0){legs.push([l,v]);n+=v}}
+  move('check_in',k,[['Undelivered',-n],...legs],`Put away ${n} ${ITEMS[k].n}: ${legs.map(([l,v])=>v+' to '+l).join(', ')}.`);s.ci.msg={text:`Put away ${n} ${ITEMS[k].n}.`,id:seq};s.ci.sel=null}
+ else if(a==='notcoming'){const k=s.ci.sel,u=get(k,'Undelivered');move('cancel',k,[['Undelivered',-u]],`Cleared ${u} undelivered ${ITEMS[k].n} (not coming).`);s.ci.msg={text:`Cleared ${u} undelivered.`,id:seq};s.ci.sel=null}
+ else if(a==='rebalance'){const r=s.rb,k=r.item,cur=get(k,r.loc),nq=Number(r.newq),d=nq-cur;
+  move('rebalance',k,[[r.loc,d],[r.from,-d]],d>0?`Rebalanced ${ITEMS[k].n}: ${d} from ${r.from} to ${r.loc} (${cur} to ${nq}).`:`Rebalanced ${ITEMS[k].n}: ${-d} from ${r.loc} to ${r.from} (${cur} to ${nq}).`);
+  r.msg={text:`${r.loc} is now ${nq}. Total unchanged.`,id:seq};r.newq=''}
+ else if(a==='undo'){const id=+t.dataset.id;undo(id);for(const m of [s.shop,s.ci,s.rb])if(m.msg&&m.msg.id===id)m.msg=null;return}
+ renderAll()});
+document.addEventListener('input',e=>{const t=e.target;
+ if(t.dataset.loc){S.ci.alloc[t.dataset.loc]=t.value.replace(/\D/g,'');const pos=t.selectionStart;renderAll();const n=document.querySelector(`[data-loc="${t.dataset.loc}"]`);if(n){n.focus();n.setSelectionRange(pos,pos)}}
+ else if(t.dataset.f==='newq'){S.rb.newq=t.value.replace(/\D/g,'');renderAll();const n=$('#nq');n.focus();n.setSelectionRange(n.value.length,n.value.length)}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.f==='item'){S.rb.item=t.value;S.rb.loc=ITEMS[t.value].locs[0];S.rb.newq='';S.rb.from=ITEMS[t.value].back;S.rb.msg=null;renderAll()}
+ else if(t.dataset.f==='loc'){S.rb.loc=t.value;S.rb.newq='';S.rb.msg=null;renderAll()}
+ else if(t.dataset.f==='from'){S.rb.from=t.value.replace(/ \(\d+\)$/,'');renderAll()}});
+renderAll();
+</script>

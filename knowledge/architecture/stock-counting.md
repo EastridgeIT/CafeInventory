@@ -27,12 +27,27 @@ Source: the user's requirements, 2026-10-06. Feature test: easy for volunteers, 
 
 - `vendor` — `id`, `name` (Costco.com, Chef Store, Fred Meyer, Safeway, …), `kind` (`online` | `in_store`), `sort_order`, `active`.
 - `item_vendor` — `item_id`, `vendor_id`, `preference` (rank: 1 = preferred), optional `vendor_url`/`vendor_sku` later. An item can have several vendors (Coke: Costco.com, Fred Meyer, Safeway).
-- `purchase` — **append-only**: `id`, `item_id`, `vendor_id`, `quantity`, `status` (`ordered` | `bought`), `by_user`, `at`. Created when someone checks an item off the shopping list.
+- `purchase` — **append-only**: `id`, `item_id`, `vendor_id`, `quantity`, `by_user`, `purchased_at` (+ void columns). One row each time someone records "I bought N" on the shopping list. (Replaces the earlier `status` ordered/bought idea: an online order and an in-store buy both land in Undelivered.)
+- `location.kind` (`normal` | `undelivered`): exactly one system location, **"Undelivered"**, holds purchased stock until it is checked in. It can't be renamed, deleted, shelved, or counted in Quick Inventory.
+- `stock_movement` — **append-only**, the ledger of stock that moves *between* counts: `id`, `item_id`, `location_id`, `delta` (signed, never 0), `kind` (`purchase` · `check_in` · `rebalance` · `cancel`), `group_id` (ties the legs of one action together), `purchase_id` (for purchases), `by_user`, `at`, and void columns. A transfer is two rows (−n at the source, +n at the destination) in one `group_id`; a purchase is one row (+n at Undelivered).
+
+## Balance per location (quantity items)
+`balance(item, location)` = the latest active count's quantity at that location (0 if never counted) **plus the sum of active movement deltas at that location after that count's time**. A count is the truth at its moment, so movements recorded *before* a count are absorbed by it. `current_stock(item)` = sum of balances over **all locations including Undelivered**, so a purchase immediately counts toward stock and the item stops showing as needed. Screens show "On hand 21 · plus 24 undelivered". "More than X" counts use X as the baseline (approximate). Balances are never stored, always derived (through `active_stock_count` and an `active_stock_movement` view). Level-measured items have no numeric balance: movements don't apply to them; checking one in sets its level to **Full** at the chosen location (a new case).
+
+## Purchases, check-in, rebalance (user, 2026-10-06; prototype: `design/stock-flows.html`)
+1. **Buy (on the shopping list):** the check box becomes a **quantity**. Tap an item: the card offers one big button with the suggested amount ("Bought 27"), a keypad for a different number, and Save. This records a `purchase` (vendor = the vendor tab she is on) and a `+n` movement at Undelivered. Buying less than needed leaves the rest on the list automatically (the need is recomputed from stock including undelivered).
+2. **Check in deliveries (own screen):** lists items with stock in Undelivered. Tap one, split the delivered quantity across places ("8 here, 12 there"; rows default to the item's locations, prefilled with everything going to its default backstock), and **Put away**. Writes `−n` at Undelivered and `+n` at each destination (`check_in`). Anything not placed stays undelivered (partial deliveries). **"Not coming"** clears the remainder (`cancel`, `−n` at Undelivered) for short or cancelled orders.
+3. **Rebalance (own screen):** moves stock between places without changing the total. Pick the item, pick the place you are setting (default: its front/home location), type the new quantity. If it goes **up** (5 → 8) a **"Move from"** dropdown (default: the item's backstock location; also other locations and **Undelivered**) shows where the 3 come from; if it goes **down**, a **"Move to"** dropdown defaults to backstock. Saves a two-leg `rebalance`. If the source doesn't have enough, saving is blocked with the source's balance shown and a link to count it first (open question below).
+4. **Undo:** an immediate Undo (and Reset on the latest action) **voids the whole group**, the same pattern as counts. Who can void: whoever made it, plus Manager/Admin.
+5. **Items need a backstock location:** `item_location.is_backstock` (0/1, at most one per item) marks the default source/destination.
+
+## Roles (proposed; confirm)
+Anyone signed in can do Buy, Check-in, Rebalance and Reset their own actions; Manager/Admin can void anyone's.
 
 ## Shopping lists (derived, not stored)
-- An item **needs replacing** when `current_stock < par_level` and no open `purchase` covers the gap. Suggested quantity = `par_level − current_stock`. Volunteers can also tap **"We're out / low"** on any item to force it onto the list.
+- An item **needs replacing** when `current_stock < par_level`, where `current_stock` already includes Undelivered (so a purchase removes the need at once). Suggested quantity = `par_level − current_stock`. Volunteers can also tap **"We're out / low"** on any item to force it onto the list.
 - **View by vendor:** shows every needing item that has that vendor in `item_vendor`, so standing in Fred Meyer shows *everything she could get there*. An item appears under each of its vendors and is marked "also at: Costco.com, Safeway"; preferred-vendor items sort first.
-- **Check-off:** marking an item bought/ordered creates a `purchase`; the item disappears from **all** vendor views immediately (no double buying). The next count of that item closes the loop and clears the purchase.
+- **Buying:** entering the quantity bought creates a `purchase` and the Undelivered movement; the need drops (or disappears) in **all** vendor views at once, so nobody buys it twice. Check-in later moves it to shelves.
 - Vendor view is a first-class screen: a vendor picker at the top (one tap), big check boxes, works on a phone in a store aisle.
 
 ## Measurement methods
