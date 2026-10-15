@@ -194,3 +194,47 @@ describe("places", () => {
     expect((await call(`${base}/racks/${rid}`, { method: "DELETE", cookie: c, body: {} })).status).toBe(200);
   });
 });
+
+describe("manual starting counts", () => {
+  async function place(name: string) {
+    const id = ulid();
+    await env.DB.prepare("INSERT INTO location (id, name) VALUES (?, ?)").bind(id, name).run();
+    return id;
+  }
+  const putCount = (cookie: string, id: string, body: object) => call(`${base}/items/${id}/count`, { method: "PUT", cookie, body });
+  type Counted = Item & { on_hand: number | null; counts: { location_name: string; quantity: number | null; level: string | null }[] };
+
+  it("records a count, replaces it with the newest, and sums places", async () => {
+    const c = await admin();
+    const a = await place("Pantry"), b = await place("Fridge");
+    const { item } = (await (await mkItem(c, { name: "Oat Milk", unit_label: "cartons" })).json()) as { item: Item };
+    expect((await items(c)).items[0] as Counted).toMatchObject({ on_hand: null, counts: [] });
+    expect((await putCount(c, item.id, { location_id: a, quantity: 6 })).status).toBe(200);
+    expect((await putCount(c, item.id, { location_id: a, quantity: 4 })).status).toBe(200);
+    const res = await putCount(c, item.id, { location_id: b, quantity: 2.5 });
+    const got = ((await res.json()) as { item: Counted }).item;
+    expect(got.on_hand).toBe(6.5);
+    expect(got.counts.map((x) => [x.location_name, x.quantity])).toEqual([["Fridge", 2.5], ["Pantry", 4]]);
+    expect((await env.DB.prepare("SELECT count(*) AS n FROM stock_count").first<{ n: number }>())?.n).toBe(3); // history kept
+  });
+
+  it("takes a fullness level for level items and refuses the wrong kind", async () => {
+    const c = await admin();
+    const a = await place("Pantry");
+    const { item } = (await (await mkItem(c, { name: "Syrup", measurement_method: "level" })).json()) as { item: Item };
+    expect((await putCount(c, item.id, { location_id: a, quantity: 3 })).status).toBe(400);
+    const got = ((await (await putCount(c, item.id, { location_id: a, level: "under_half" })).json()) as { item: Counted }).item;
+    expect(got.counts[0]?.level).toBe("under_half");
+    expect(got.on_hand).toBeNull();
+  });
+
+  it("rejects bad places, negatives and unknown items", async () => {
+    const c = await admin();
+    const a = await place("Pantry");
+    const { item } = (await (await mkItem(c, { name: "Cups" })).json()) as { item: Item };
+    expect((await putCount(c, item.id, { location_id: "UNDELIVERED", quantity: 1 })).status).toBe(400);
+    expect((await putCount(c, item.id, { location_id: "nope", quantity: 1 })).status).toBe(400);
+    expect((await putCount(c, item.id, { location_id: a, quantity: -1 })).status).toBe(400);
+    expect((await putCount(c, "missing", { location_id: a, quantity: 1 })).status).toBe(404);
+  });
+});

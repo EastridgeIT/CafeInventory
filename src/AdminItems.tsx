@@ -4,11 +4,16 @@ import { api, ApiError } from "./api";
 
 type Variant = { id?: string; name: string; equals: number | null };
 type Method = "whole" | "decimal" | "level";
-type Item = {
+type ItemBase = {
   id: string; name: string; category: string | null; unit_label: string; measurement_method: Method; quick_max: number | null; par_level: number | null;
   in_quick_inventory: boolean; ask_markout: boolean; needs_review: boolean; active: boolean; variants: Variant[]; buy_variant_id: string | null; count_variant_id: string | null;
 };
+type Place = { id: string; name: string; kind: string; active: boolean };
+type Level = "full" | "over_half" | "under_half" | "low" | "out";
+type Count = { location_id: string; location_name: string; quantity: number | null; level: Level | null; counted_at: string };
+type Item = ItemBase & { counts: Count[]; on_hand: number | null };
 type List = { items: Item[]; categories: string[] };
+const LEVELS: Record<Level, string> = { full: "Full", over_half: "More than half", under_half: "Less than half", low: "Low", out: "Out" };
 
 const METHODS: Record<Method, string> = { whole: "Whole numbers", decimal: "Halves and decimals", level: "Fullness level (open + sealed)" };
 const errText = (e: unknown): string => {
@@ -28,6 +33,7 @@ const errText = (e: unknown): string => {
 
 export function AdminItems() {
   const [data, setData] = useState<List | null>(null);
+  const [places, setPlaces] = useState<Place[]>([]);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
   const [review, setReview] = useState(false);
@@ -43,6 +49,9 @@ export function AdminItems() {
     setData(await api<List>(`/admin/catalog/items?${p}`));
   }, [q, cat, review]);
   useEffect(() => {
+    api<{ locations: Place[] }>("/admin/catalog/places").then((r) => setPlaces(r.locations.filter((l) => l.kind === "normal" && l.active))).catch(() => setError("Couldn't load places."));
+  }, []);
+  useEffect(() => {
     const t = setTimeout(() => load().catch(() => setError("Couldn't load items.")), 200);
     return () => clearTimeout(t);
   }, [load]);
@@ -57,6 +66,19 @@ export function AdminItems() {
       return true;
     } catch (e) {
       setError(errText(e));
+      return false;
+    }
+  };
+
+  const saveCount = async (it: Item, body: object): Promise<boolean> => {
+    setError(""); setNote("");
+    try {
+      await api(`/admin/catalog/items/${it.id}/count`, { method: "PUT", body });
+      setNote(`Saved the count for ${it.name}.`);
+      await load();
+      return true;
+    } catch (e) {
+      setError(e instanceof ApiError && e.code === "bad_location" ? "Pick a place that is active." : "That count didn't save. Check your connection and try again.");
       return false;
     }
   };
@@ -91,6 +113,7 @@ export function AdminItems() {
             {it.variants.length > 0 && (
               <div className="muted small">Variants: {it.variants.map((v) => `${v.name}${v.equals !== null && v.equals !== 1 ? ` (${v.equals})` : v.equals === null ? " (? )" : ""}${v.id === it.buy_variant_id ? " · buy" : ""}${v.id === it.count_variant_id ? " · count" : ""}`).join(", ")}</div>
             )}
+            <CountBox item={it} places={places} onSave={(b) => saveCount(it, b)} />
             {editing === it.id ? (
               <ItemForm item={it} categories={data.categories} onSave={(b) => save(it.id, b)} onCancel={() => setEditing(null)} />
             ) : (
@@ -175,5 +198,35 @@ function ItemForm({ item, categories, onSave, onCancel }: { item?: Item; categor
       <label className="check"><input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} /><span><strong>Setup is complete</strong><small className="muted">Unchecked items are drafts and stay out of Quick Inventory.</small></span></label>
       <div className="row"><button type="button" className="btn" onClick={onCancel}>Cancel</button><button className="btn primary grow" type="submit" disabled={!name.trim()}>{item ? "Save" : "Add item"}</button></div>
     </form>
+  );
+}
+
+function CountBox({ item, places, onSave }: { item: Item; places: Place[]; onSave: (b: object) => Promise<boolean> }) {
+  const [loc, setLoc] = useState(item.counts[0]?.location_id ?? places[0]?.id ?? "");
+  const shown = item.counts.find((c) => c.location_id === loc);
+  const [val, setVal] = useState("");
+  const isLevel = item.measurement_method === "level";
+  useEffect(() => { setVal(""); }, [loc, item.counts]);
+  const where = item.counts.map((c) => `${c.location_name}: ${c.quantity !== null ? c.quantity : c.level ? LEVELS[c.level] : "?"}`);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!loc || val === "") return;
+    await onSave(isLevel ? { location_id: loc, level: val } : { location_id: loc, quantity: Number(val) });
+  }
+  return (
+    <div className="muted small">
+      <div><b>Current count:</b> {item.counts.length === 0 ? "not counted yet" : `${item.on_hand !== null ? `${item.on_hand} ${item.unit_label}` : ""}${item.counts.length > 1 || item.on_hand === null ? ` (${where.join("; ")})` : ""} · ${new Date(shown?.counted_at ?? item.counts[0]!.counted_at).toLocaleDateString()}`}</div>
+      {places.length === 0 ? <p>Add a place under Admin &gt; Places to start entering counts.</p> : (
+        <form className="row wrap" onSubmit={submit}>
+          {places.length > 1 && <select aria-label={`Place for ${item.name}`} value={loc} onChange={(e) => setLoc(e.target.value)}>{places.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
+          {isLevel ? (
+            <select aria-label={`Fullness of ${item.name}`} value={val} onChange={(e) => setVal(e.target.value)}><option value="">How full?</option>{(Object.keys(LEVELS) as Level[]).map((l) => <option key={l} value={l}>{LEVELS[l]}</option>)}</select>
+          ) : (
+            <input aria-label={`Current count of ${item.name}`} type="number" inputMode="decimal" min="0" step={item.measurement_method === "decimal" ? "any" : "1"} value={val} onChange={(e) => setVal(e.target.value)} placeholder={`${places.length > 1 ? "Count here" : "New count"} (${item.unit_label})`} />
+          )}
+          <button className="btn sm" type="submit" disabled={val === ""}>Save count</button>
+        </form>
+      )}
+    </div>
   );
 }

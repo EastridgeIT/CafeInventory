@@ -37,8 +37,45 @@ async function loadItems(db: D1Database, where = "", binds: unknown[] = []) {
   const vs = await db.prepare("SELECT id, item_id, name, equals_base_units, sort_order FROM item_variant WHERE active = 1 ORDER BY sort_order, name").all<{ id: string; item_id: string; name: string; equals_base_units: number | null }>();
   const by = new Map<string, { id: string; name: string; equals: number | null }[]>();
   for (const v of vs.results) by.set(v.item_id, [...(by.get(v.item_id) ?? []), { id: v.id, name: v.name, equals: num(v.equals_base_units) }]);
-  return results.map((r) => ({ ...r, in_quick_inventory: !!r.in_quick_inventory, ask_markout: !!r.ask_markout, needs_review: !!r.needs_review, active: !!r.active, variants: by.get(r.id) ?? [] }));
+  // Latest non-voided count per item and place (ULIDs sort by time, so max(id) is the newest).
+  const cs = await db.prepare(
+    `SELECT s.item_id, s.location_id, l.name AS location_name, s.quantity, s.level, s.counted_at
+     FROM active_stock_count s JOIN location l ON l.id = s.location_id
+     WHERE s.id = (SELECT max(x.id) FROM active_stock_count x WHERE x.item_id = s.item_id AND x.location_id = s.location_id)
+     ORDER BY l.sort_order, lower(l.name)`,
+  ).all<{ item_id: string; location_id: string; location_name: string; quantity: number | null; level: string | null; counted_at: string }>();
+  const counts = new Map<string, { location_id: string; location_name: string; quantity: number | null; level: string | null; counted_at: string }[]>();
+  for (const s of cs.results) counts.set(s.item_id, [...(counts.get(s.item_id) ?? []), { location_id: s.location_id, location_name: s.location_name, quantity: num(s.quantity), level: s.level, counted_at: s.counted_at }]);
+  return results.map((r) => {
+    const cur = counts.get(r.id) ?? [];
+    const qs = cur.filter((x) => x.quantity !== null);
+    return {
+      ...r, in_quick_inventory: !!r.in_quick_inventory, ask_markout: !!r.ask_markout, needs_review: !!r.needs_review, active: !!r.active, variants: by.get(r.id) ?? [],
+      counts: cur, on_hand: qs.length ? qs.reduce((n, x) => n + (x.quantity ?? 0), 0) : null,
+    };
+  });
 }
+
+// Manual starting count: records the item's current quantity (or fullness level) in one place. Append-only, like every count.
+const countIn = z.union([
+  z.object({ location_id: z.string().min(1).max(40), quantity: z.number().min(0).max(1_000_000) }),
+  z.object({ location_id: z.string().min(1).max(40), level: z.enum(["full", "over_half", "under_half", "low", "out"]) }),
+]);
+catalogRoutes.put("/items/:id/count", async (c) => {
+  const id = c.req.param("id");
+  const p = countIn.safeParse(await c.req.json().catch(() => null));
+  if (!p.success) return err(c, 400, "invalid_request");
+  const d = p.data;
+  const item = await c.env.DB.prepare("SELECT measurement_method FROM item WHERE id = ?").bind(id).first<{ measurement_method: string }>();
+  if (!item) return err(c, 404, "not_found");
+  const loc = await c.env.DB.prepare("SELECT kind, active FROM location WHERE id = ?").bind(d.location_id).first<{ kind: string; active: number }>();
+  if (!loc || loc.kind !== "normal" || !loc.active) return err(c, 400, "bad_location");
+  const isLevel = "level" in d;
+  if (isLevel !== (item.measurement_method === "level")) return err(c, 400, "wrong_measurement");
+  await c.env.DB.prepare("INSERT INTO stock_count (id, item_id, location_id, quantity, level, counted_by, counted_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .bind(ulid(), id, d.location_id, isLevel ? null : d.quantity, isLevel ? d.level : null, c.get("user").id, nowIso()).run();
+  return c.json({ item: (await loadItems(c.env.DB, "WHERE id = ?", [id]))[0] });
+});
 
 catalogRoutes.get("/items", async (c) => {
   const q = (c.req.query("q") ?? "").trim().toLowerCase();
