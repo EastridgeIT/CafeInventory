@@ -204,27 +204,31 @@ function ItemForm({ item, categories, onSave, onCancel }: { item?: Item; categor
 function CountBox({ item, places, onSave }: { item: Item; places: Place[]; onSave: (b: object) => Promise<boolean> }) {
   const [loc, setLoc] = useState(item.counts[0]?.location_id ?? places[0]?.id ?? "");
   const shown = item.counts.find((c) => c.location_id === loc);
-  const [val, setVal] = useState("");
+  const current = shown ? String(shown.quantity ?? shown.level ?? "") : "";
+  const [val, setVal] = useState(current);
+  const [saved, setSaved] = useState(false);
   const isLevel = item.measurement_method === "level";
-  useEffect(() => { setVal(""); }, [loc, item.counts]);
+  // The field keeps showing the saved count for the chosen place, so a save never looks like it vanished.
+  useEffect(() => { setVal(current); }, [loc, current]);
   const where = item.counts.map((c) => `${c.location_name}: ${c.quantity !== null ? c.quantity : c.level ? LEVELS[c.level] : "?"}`);
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!loc || val === "") return;
-    await onSave(isLevel ? { location_id: loc, level: val } : { location_id: loc, quantity: Number(val) });
+    setSaved(false);
+    if (await onSave(isLevel ? { location_id: loc, level: val } : { location_id: loc, quantity: Number(val) })) setSaved(true);
   }
   return (
-    <div className="muted small">
+    <div className="countbox muted small">
       <div><b>Current count:</b> {item.counts.length === 0 ? "not counted yet" : `${item.on_hand !== null ? `${item.on_hand} ${item.unit_label}` : ""}${item.counts.length > 1 || item.on_hand === null ? ` (${where.join("; ")})` : ""} · ${new Date(shown?.counted_at ?? item.counts[0]!.counted_at).toLocaleDateString()}`}</div>
       {places.length === 0 ? <p>Add a place under Admin &gt; Places to start entering counts.</p> : (
         <form className="row wrap" onSubmit={submit}>
-          {places.length > 1 && <select aria-label={`Place for ${item.name}`} value={loc} onChange={(e) => setLoc(e.target.value)}>{places.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
+          {places.length > 1 && <select aria-label={`Place for ${item.name}`} value={loc} onChange={(e) => { setLoc(e.target.value); setSaved(false); }}>{places.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
           {isLevel ? (
-            <select aria-label={`Fullness of ${item.name}`} value={val} onChange={(e) => setVal(e.target.value)}><option value="">How full?</option>{(Object.keys(LEVELS) as Level[]).map((l) => <option key={l} value={l}>{LEVELS[l]}</option>)}</select>
+            <select aria-label={`Fullness of ${item.name}`} value={val} onChange={(e) => { setVal(e.target.value); setSaved(false); }}><option value="">How full?</option>{(Object.keys(LEVELS) as Level[]).map((l) => <option key={l} value={l}>{LEVELS[l]}</option>)}</select>
           ) : (
-            <input aria-label={`Current count of ${item.name}`} type="number" inputMode="decimal" min="0" step={item.measurement_method === "decimal" ? "any" : "1"} value={val} onChange={(e) => setVal(e.target.value)} placeholder={`${places.length > 1 ? "Count here" : "New count"} (${item.unit_label})`} />
+            <input aria-label={`Current count of ${item.name}`} type="number" inputMode="decimal" min="0" step={item.measurement_method === "decimal" ? "any" : "1"} value={val} onChange={(e) => { setVal(e.target.value); setSaved(false); }} placeholder={`${places.length > 1 ? "Count here" : "New count"} (${item.unit_label})`} />
           )}
-          <button className="btn sm" type="submit" disabled={val === ""}>Save count</button>
+          <button className="btn sm" type="submit" disabled={val === "" || val === current}>Save count</button>{saved && val === current && <span className="ok small" role="status">Saved ✓</span>}
         </form>
       )}
     </div>

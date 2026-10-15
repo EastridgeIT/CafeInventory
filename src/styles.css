@@ -11,6 +11,7 @@
   --ok: #1e7b4c;
   --warn: #b4411a;
   --radius: 18px;
+  --control-h: 48px;
   --font-ui: "Public Sans Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme: light;
 }
@@ -57,14 +58,14 @@ a { color: var(--brand); }
 .back { display: inline-block; margin-bottom: 12px; }
 
 .btn {
-  min-height: 48px; padding: 0 18px; border-radius: 14px; border: 2px solid var(--line);
+  min-height: var(--control-h); padding: 0 18px; border-radius: 12px; border: 2px solid var(--line);
   background: var(--surface); color: var(--text); font: 700 1rem var(--font-ui); cursor: pointer;
 }
 .btn:hover:not(:disabled) { border-color: var(--brand); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
 .btn.danger { background: var(--warn); border-color: var(--warn); color: var(--bg); }
-.btn.sm { min-height: 44px; padding: 0 14px; font-size: 0.95rem; }
+.btn.sm { min-height: var(--control-h); padding: 0 14px; font-size: 0.95rem; }
 .btn.big { width: 100%; min-height: 64px; font-size: 1.25rem; text-align: left; padding: 0 20px; }
 :is(.btn, a, input, select):focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 
@@ -72,22 +73,29 @@ a { color: var(--brand); }
 .names { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .pin, input, select {
   font: inherit; color: var(--text); background: var(--bg); border: 2px solid var(--line);
-  border-radius: 12px; min-height: 48px; padding: 0 12px; width: 100%;
+  border-radius: 12px; min-height: var(--control-h); padding: 0 12px; width: 100%; line-height: 1.25;
 }
 .pin { font-size: 2.25rem; font-weight: 700; text-align: center; letter-spacing: 0.4em; min-height: 76px; }
 input:focus, select:focus { border-color: var(--brand); outline: 3px solid var(--soft); }
 .form { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .form label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 0.95rem; }
-.row { display: flex; gap: 10px; }
+.row { display: flex; gap: 10px; align-items: flex-end; }
+.row > input, .row > select { flex: 1 1 140px; width: auto; min-width: 0; }
+.row > .btn { flex: none; }
 .row.wrap { flex-wrap: wrap; }
 .grow { flex: 1; }
 
 .reminders { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
 .reminders h3 { margin: 0 0 6px; font-size: 1.1rem; }
 .reminders .none { margin: 0; color: var(--muted); }
-.toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; align-items: stretch; }
+.toolbar .btn { flex: 1 1 auto; }
+.countbox { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.countbox p { margin: 0; }
+.countbox .row { margin-top: 0; }
+.card > .row { margin-top: 12px; }
 .toolbar input[type=search] { flex: 1 1 200px; width: auto; }
-.toolbar select { width: auto; flex: 0 1 220px; }
+.toolbar select { width: auto; flex: 1 1 180px; }
 .btn[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
 button.link { all: unset; cursor: pointer; color: var(--brand); text-decoration: underline; font: 600 0.95rem var(--font-ui); min-height: 44px; padding: 0 8px; display: inline-flex; align-items: center; }
 button.link:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; border-radius: 6px; }
