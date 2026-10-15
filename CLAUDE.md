@@ -47,7 +47,18 @@ Full contract: `knowledge/conventions/partnership-contract.md`.
 - **Changelog every publish**, categorized, with build + ISO-8601 UTC timestamp: `knowledge/conventions/changelog-and-releases.md`.
 - **Knowledge-writing standard** (how to write/maintain these files): `knowledge/conventions/knowledge-writing-standard.md`.
 - **Naming:** never hardcode user-facing strings arbitrarily; use canonical keys from the lexicon: `knowledge/conventions/naming-lexicon.md`.
+- **Session coordination:** one PM, one infra and one topic session per piece of work (a topic builds it end to end on its own branch); specialists are subagents in `.claude/agents/` (design-ux-frontend is mandatory for any UI change); list your areas on the topic issue, overlapping topics run in sequence, shared hotspots land first with the PM's OK; use judgment and stop only for production, real people, new spend, a public store release or rewriting history. Take your seat (`seat take <role>`; lost? `whoami`), keep your checkpoint current, title yourself `<CODE> 🔸 <icon> <role or name>` outside FORGE. Detail loads from `coordination/CLAUDE.md`.
+- **Sessions:** one **PM** (the user's single point of contact; keeps the board and the list of what waits on the user; accepts finished work), one **infra** (the only holder of production credentials), one **topic** session per piece of work (it builds its work end to end on `seat/topic-<slug>` and retires when merged). Who is who: `coordination/ROSTER.md`. Titles: `<CODE> 🔸 <icon> <role or name>`; on FORGE never rename a seat.
+- **Specialists are subagents** in `.claude/agents/` (index there): design-ux-frontend (mandatory for any UI change), api, integrations, finance, canon, reviewer, and the Opus helpers planner, debugger and risk-reviewer on their triggers. The reviewer checks every topic before acceptance. Sonnet by default; log each Opus call as one line on the topic issue.
+- **Conflicts between topics:** list the areas you will touch on the topic issue; overlapping topics run one after the other; shared hotspots land first as a small change the PM approves; others rebase. At most 2 to 3 topics are open.
+- **Use judgment.** If instructions conflict, pick the sensible reading, note why, and carry on. Stop and ask only for production, anything that reaches real people, new spend, a public store release, and force pushes or deleting history.
+- **Lost after a compaction?** `node scripts/coord.mjs whoami`, then your checkpoint (`coordination/BOOT.md`). On FORGE read `coordination/FORGE.md` first.
 
+---
+
+## Who is who
+
+@coordination/ROSTER.md
 ---
 
 ## Knowledge index — read on demand (do NOT read all of these each session)
@@ -61,6 +72,16 @@ Full contract: `knowledge/conventions/partnership-contract.md`.
 - [naming-lexicon.md](knowledge/conventions/naming-lexicon.md) — ubiquitous language; canonical object names. READ WHEN: naming anything in code, DB, API, or UI.
 - [initiatives.md](knowledge/conventions/initiatives.md) — how the Initiatives system works. READ WHEN: capturing, fleshing out, or completing an initiative.
 - [code-documentation.md](knowledge/conventions/code-documentation.md) — code commenting standard. READ WHEN: writing or reviewing code.
+- [session-coordination.md](knowledge/conventions/session-coordination.md) — the sessions, topics, subagents, seats, requests and handoffs between parallel sessions on GitHub Issues. READ WHEN: starting a session, opening a topic, needing something from another area, finishing work another area depends on, or taking over, leaving or proposing a role.
+- [coordination/ROLES.md](coordination/ROLES.md) — the seats, who owns each area, naming, reporting and the role-proposals table. READ WHEN: posting a request, taking a seat, calling a specialist, or asking who owns an area.
+- [coordination/PM.md](coordination/PM.md) — the PM's handbook: routine, topics, routing, meetings, proposals, limits. READ WHEN: holding or taking the PM seat, or running or joining a meeting.
+- [coordination/SESSIONS.md](coordination/SESSIONS.md) — who reports to whom and when each session was last reachable. READ WHEN: a session has no seat, or the PM is checking who is accounted for.
+- [coordination/BOOT.md](coordination/BOOT.md) — checkpoints, compaction, replacing a session, the boot prompt. READ WHEN: a session compacts, breaks or is replaced.
+- [coordination/COMMS.md](coordination/COMMS.md) — how sessions message each other. READ WHEN: messaging another session or checking you can.
+- [coordination/FORGE.md](coordination/FORGE.md) — running the sessions as FORGE seats: titles, parking, git, the gates, topics. READ WHEN: `$FORGE_SEAT` is set in your shell.
+- [coordination/OPEN-LOOPS.md](coordination/OPEN-LOOPS.md) — every ask in flight. READ WHEN: holding the PM seat, or asking who owes what.
+- [.claude/agents/README.md](.claude/agents/README.md) — the subagents, their models and the Opus triggers. READ WHEN: a topic needs a specialist part, a review or a plan.
+- [docs/DECISIONS.md](docs/DECISIONS.md) — the decision log (D-NN) from meetings and rule reviews. READ WHEN: a meeting ended, or someone says "we agreed this".
 
 **Architecture / the big picture**
 - [hosting-and-deployment.md](knowledge/architecture/hosting-and-deployment.md) — Cloudflare hosting at inventory.jammin.cafe, API token scope & storage. READ WHEN: deploying, configuring Cloudflare/DNS, or handling the API token.
